@@ -1,0 +1,48 @@
+﻿<Page
+    x:Class="FilesEncryptor.pages.BifurcatorPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesEncryptor.pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <TextBlock
+            Text="Seleccione una opción"
+            RelativePanel.Above="buttonsPanel"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            Padding="40,20,40,10"
+            FontSize="25"    
+            Foreground="#99000000"
+            FontWeight="Light"
+            TextWrapping="WrapWholeWords"
+            TextAlignment="Center"
+            />
+        <StackPanel
+            x:Name="buttonsPanel"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.AlignVerticalCenterWithPanel="True"
+            MaxWidth="500"
+            >
+            <Button
+                x:Name="compressFileBt"
+                Content="Comprimir un archivo"
+                HorizontalAlignment="Stretch"                
+                Padding="0,15"
+                Margin="20,10"
+                Click="CompressFileBt_Click"
+            />
+            <Button
+                x:Name="uncompressFileBt"            
+                Content="Descomprimir un archivo"
+                HorizontalAlignment="Stretch"
+                Padding="0,15"
+                Margin="20,10"
+                Click="UncompressFileBt_Click"
+            />
+        </StackPanel>
+    </RelativePanel>
+</Page>

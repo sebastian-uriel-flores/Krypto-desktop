@@ -1,0 +1,233 @@
+﻿<Page
+    x:Class="FilesEncryptor.pages.CompressFilePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FilesEncryptor.pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+        <Grid.Resources>
+            <Style 
+                x:Key="HeaderStyle"
+                TargetType="TextBlock"           
+                BasedOn="{StaticResource BaseTextBlockStyle}"
+                >
+                <Setter Property="FontSize" Value="46" />
+                <Setter Property="FontWeight" Value="Light" />
+                <Setter Property="OpticalMarginAlignment" Value="TrimSideBearings" />
+                <Setter Property="Foreground" Value="#99000000"/>
+                <Setter Property="Padding" Value="30,15"/>                
+                <Setter Property="RelativePanel.AlignHorizontalCenterWithPanel" Value="True"/>
+            </Style>
+            <Style
+                x:Key="LineDividerStyle"
+                TargetType="Rectangle"
+                >
+                <Setter Property="RelativePanel.AlignLeftWithPanel" Value="True"/>
+                <Setter Property="RelativePanel.AlignRightWithPanel" Value="True"/>
+                <Setter Property="Margin" Value="20,0"/>
+                <Setter Property="StrokeThickness" Value="0"/>
+                <Setter Property="Fill" Value="#99DAD8D8"/>
+                <Setter Property="Height" Value="0.8"/>
+            </Style>
+        </Grid.Resources>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <RelativePanel>
+            
+            <TextBlock
+                x:Name="origTextHeader"                
+                Text="Texto original"                
+                Style="{ThemeResource HeaderStyle}"
+                />
+            <Rectangle
+                x:Name="origTextHeaderDivider"
+                RelativePanel.Below="origTextHeader"
+                Style="{StaticResource LineDividerStyle}"
+                />
+            <TextBlock
+                x:Name="origTextSubheader"
+                Text="Seleccione un archivo de texto para comprimirlo"                
+                RelativePanel.Below="origTextHeaderDivider"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                Padding="20,20,20,10"
+                FontSize="25"    
+                Foreground="#99000000"
+                FontWeight="Light"
+                TextWrapping="WrapWholeWords"
+                TextAlignment="Center"
+                />
+            <Button 
+                x:Name="selectFileBt"
+                Content="Examinar..." 
+                Padding="30,15"
+                Background="DodgerBlue"
+                Margin="40,0,40,30"
+                Foreground="White"
+                MinWidth="150"
+                RelativePanel.Below="origTextSubheader"
+                HorizontalAlignment="Stretch"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"                
+                Click="SelectFileBt_Click"
+                />
+
+            <ScrollViewer
+                x:Name="origTextContainer"
+                Background="#66D3D3D3" 
+                Height="Auto"                
+                Margin="40,0"
+                RelativePanel.Below="selectFileBt"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                RelativePanel.Above="origTextExtraData"
+                Visibility="Collapsed"
+                HorizontalScrollMode="Enabled"
+                HorizontalScrollBarVisibility="Visible"
+                >
+                <TextBlock
+                    x:Name="origText"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    TextWrapping="WrapWholeWords"                    
+                    Margin="10"
+                    />
+            </ScrollViewer>
+
+            <StackPanel 
+                x:Name="origTextExtraData"
+                Orientation="Horizontal"
+                RelativePanel.Above="compressBt"
+                RelativePanel.AlignRightWithPanel="True"                
+                Margin="40,0"
+                Visibility="Collapsed"
+                >
+                <TextBlock
+                    x:Name="origTextLength"                                    
+                    TextAlignment="Right"
+                    FontWeight="SemiLight"
+                    Padding="5,0"
+                    />
+                <TextBlock                
+                    TextAlignment="Right"
+                    FontWeight="SemiLight"
+                    Text="caracteres"
+                    />
+            </StackPanel>
+
+            <Button
+                x:Name="compressBt"
+                Content="Comprimir"
+                RelativePanel.AlignBottomWithPanel="True"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                HorizontalAlignment="Stretch"
+                Padding="30,15"
+                Margin="40,20"
+                MinWidth="150"
+                Background="DodgerBlue"
+                Foreground="White"
+                Visibility="Collapsed"
+                Click="CompressBt_Click"
+                />
+        </RelativePanel>
+
+        <RelativePanel
+            x:Name="compTextPanel"
+            Grid.Column="1"
+            Visibility="Collapsed"
+            >
+            <TextBlock
+                x:Name="compTextHeader"
+                Text="Texto comprimido"
+                Style="{ThemeResource HeaderStyle}"
+                />
+            <Rectangle
+                x:Name="compTextHeaderDivider"
+                RelativePanel.Below="compTextHeader"
+                Style="{StaticResource LineDividerStyle}"
+                />
+            
+            <ScrollViewer
+                x:Name="compTextContainer"
+                Background="#66D3D3D3" 
+                Height="Auto"                
+                Margin="40,30,40,0"
+                RelativePanel.Below="compTextHeaderDivider"
+                RelativePanel.Above="compTextExtraData"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"                
+                HorizontalScrollMode="Enabled"
+                HorizontalScrollBarVisibility="Visible"
+                >
+                <TextBlock
+                    x:Name="compText"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    TextWrapping="WrapWholeWords"                    
+                    Margin="10"
+                    />
+            </ScrollViewer>
+            <StackPanel 
+                x:Name="compTextExtraData"
+                Orientation="Horizontal"
+                RelativePanel.Above="saveBt"
+                RelativePanel.AlignRightWithPanel="True"                
+                Margin="40,0"
+                >
+                <TextBlock
+                    x:Name="compTextLength"                                    
+                    TextAlignment="Right"
+                    FontWeight="SemiLight"
+                    Padding="5,0"
+                    />
+                <TextBlock                
+                    TextAlignment="Right"
+                    FontWeight="SemiLight"
+                    Text="caracteres"
+                    />
+            </StackPanel>
+            
+
+            <Button
+                x:Name="saveBt"
+                Content="Guardar"
+                RelativePanel.AlignBottomWithPanel="True"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                HorizontalAlignment="Stretch"
+                Padding="30,15"
+                Margin="40,20"
+                MinWidth="150"
+                Background="MediumSpringGreen"
+                Foreground="White"
+                Click="SaveBt_Click"
+                />
+        </RelativePanel>
+
+        <RelativePanel
+            x:Name="progressPanel"
+            Grid.ColumnSpan="2"
+            Background="#7F000000"
+            Visibility="Collapsed"
+            >
+            <ProgressRing
+                RelativePanel.AlignHorizontalCenterWithPanel="True"
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                Height="100"
+                Width="100"
+                Foreground="DodgerBlue"
+                IsActive="True"
+                />
+        </RelativePanel>
+    </Grid>
+</Page>
+
