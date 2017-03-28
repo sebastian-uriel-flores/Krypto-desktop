@@ -99,6 +99,7 @@
     <Compile Include="CommonUtils.cs" />
     <Compile Include="dto\EncodedString.cs" />
     <Compile Include="dto\HuffmanEncodeResult.cs" />
+    <Compile Include="HuffmanCompressor.cs" />
     <Compile Include="HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>

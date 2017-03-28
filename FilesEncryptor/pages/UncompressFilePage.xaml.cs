@@ -1,10 +1,14 @@
-﻿using System;
+﻿using FilesEncryptor.dto;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -23,6 +27,9 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class UncompressFilePage : Page
     {
+        private StorageFile compTextFile;
+        private string compTextStr;
+
         public UncompressFilePage()
         {
             this.InitializeComponent();            
@@ -45,5 +52,57 @@ namespace FilesEncryptor.pages
                     AppViewBackButtonVisibility.Collapsed;
             }
         }
+
+        private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
+        {
+            compTextFile = null;
+            compTextStr = null;
+
+            var picker = new FileOpenPicker()
+            {
+                ViewMode = PickerViewMode.Thumbnail,
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+            };
+            picker.FileTypeFilter.Add(".huf");
+
+            compTextFile = await picker.PickSingleFileAsync();
+
+            ShowProgressPanel();
+
+            origTextContainer.Visibility = Visibility.Collapsed;
+            origTextExtraData.Visibility = Visibility.Collapsed;
+            uncompressBt.Visibility = Visibility.Collapsed;
+            origTextPanel.Visibility = Visibility.Collapsed;
+
+            if (compTextFile != null)
+            {
+                HuffmanEncodeResult encodedText = await HuffmanCompressor.Uncompress(compTextFile);
+
+                if (encodedText != null)
+                {
+                    origTextContainer.Visibility = Visibility.Visible;
+                    uncompressBt.Visibility = Visibility.Visible;
+                    origTextExtraData.Visibility = Visibility.Visible;
+                    origText.Text = compTextStr;
+                    origTextLength.Text = compTextStr.Length.ToString();
+                }
+
+                HideProgressPanel();
+            }
+        }
+
+        private void UncompressBt_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void SaveBt_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
+
+        private void HideProgressPanel() => progressPanel.Visibility = Visibility.Collapsed;
     }
 }

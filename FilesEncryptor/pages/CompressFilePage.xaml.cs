@@ -94,7 +94,7 @@ namespace FilesEncryptor.pages
                         }
                     }
 
-                        //origTextStr = await FileIO.ReadTextAsync(origTextFile, Windows.Storage.Streams.UnicodeEncoding.Utf8);
+                    stream.Dispose();
                 }
                 catch (Exception)
                 {
@@ -146,7 +146,7 @@ namespace FilesEncryptor.pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
                 SuggestedFileName = origTextFile.DisplayName
             };
-            savePicker.FileTypeChoices.Add("Huffman encrypted file", new List<string>() { ".txt" });
+            savePicker.FileTypeChoices.Add("Huffman encrypted file", new List<string>() { ".huf" });
 
             StorageFile file = await savePicker.PickSaveFileAsync();
 
@@ -154,13 +154,40 @@ namespace FilesEncryptor.pages
             {
                 ShowProgressPanel();
 
-                string fileContent = string.Format("{0}.{1}.{2}", _encodeResult.EncodedProbabilitiesTable, _encodeResult.Encoded.Code.Count, compText.Text);
+                //string fileContent = await HuffmanCompressor.Compress(_encodeResult);
 
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
-                // write to file
-                await FileIO.WriteTextAsync(file, fileContent);
+
+                //Encoding u16LE = Encoding.UTF8;
+                //int probabilitiesTableLength = u16LE.GetByteCount(_encodeResult.EncodedProbabilitiesTable);
+                
+                /*await FileIO.WriteTextAsync(file, string.Format("{0}.{1}{2}.{3}",
+                            probabilitiesTableLength,
+                            _encodeResult.EncodedProbabilitiesTable,
+                            _encodeResult.Encoded.CodeLength,
+                            _encodeResult.Encoded.GetEncodedString())
+                            , Windows.Storage.Streams.UnicodeEncoding.Utf8);*/
+                var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
+
+                using (var outputStream = stream.GetOutputStreamAt(0))
+                {
+                    using (var dataWriter = new DataWriter(outputStream))
+                    {
+                        uint probabilitiesTableLength = dataWriter.MeasureString(_encodeResult.EncodedProbabilitiesTable);
+                        dataWriter.WriteString(string.Format("{0}.{1}{2}.{3}",
+                            probabilitiesTableLength,
+                            _encodeResult.EncodedProbabilitiesTable,
+                            _encodeResult.Encoded.CodeLength,
+                            _encodeResult.Encoded.GetEncodedString()));
+
+                        await dataWriter.StoreAsync();
+                        await outputStream.FlushAsync();
+                    }
+                }
+                stream.Dispose(); // Or use the stream variable (see previous code snippet) with a using statement as well.
+                
                 // Let Windows know that we're finished changing the file so
                 // the other app can update the remote version of the file.
                 // Completing updates may require Windows to ask for user input.

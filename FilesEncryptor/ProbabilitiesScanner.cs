@@ -58,8 +58,9 @@ namespace FilesEncryptor
                             : 0);
 
                     _codesTable = ApplyHuffman(probabilitiesList);
-                    EncodedProbabilitiesTable = _codesTable.Select(pair => string.Format("{0}_{1}-", pair.Key, pair.Value.GetEncodedString()))
-                    .Aggregate((a, b) => a + "-" + b);
+                    EncodedProbabilitiesTable = 
+                        _codesTable.Select(pair => string.Format("{0}{1}{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
+                        .Aggregate((a, b) => a + b);
                 }
             });
         }
