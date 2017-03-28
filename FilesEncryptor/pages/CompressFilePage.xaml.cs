@@ -109,9 +109,9 @@ namespace FilesEncryptor.pages
                     origText.Text = origTextStr;
                     origTextLength.Text = origTextStr.Length.ToString();
                 }
-
-                HideProgressPanel();
             }
+
+            HideProgressPanel();
         }
 
         private async void CompressBt_Click(object sender, RoutedEventArgs e)
