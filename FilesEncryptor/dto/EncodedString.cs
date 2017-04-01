@@ -8,8 +8,12 @@ namespace FilesEncryptor.dto
 {
     public class EncodedString
     {
+        #region CONSTS
+
         public static EncodedString ZERO => new EncodedString(new List<byte> { 0 }, 1).Copy(); 
         public static EncodedString ONE => new EncodedString(new List<byte> { 128 }, 1).Copy();
+
+        #endregion
 
         public List<byte> Code { get; private set; }
 
@@ -43,7 +47,7 @@ namespace FilesEncryptor.dto
         {
             if (newCode != null)
             {
-                if (Code == null)
+                if (Code == null || CodeLength == 0)
                 {
                     Code = newCode.Code;
                 }

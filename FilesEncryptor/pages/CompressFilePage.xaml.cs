@@ -32,6 +32,9 @@ namespace FilesEncryptor.pages
         private string origTextStr;
         private HuffmanEncodeResult _encodeResult;
 
+        //{lProbTab}:{{key}{length}:{code}{key} ... {length}:{code}}{lText}:{text}
+        private const string COMPRESSED_FILE_FORMAT = "{1}:{2}{3}:{4}";
+
         public CompressFilePage()
         {
             this.InitializeComponent();
@@ -154,21 +157,10 @@ namespace FilesEncryptor.pages
             {
                 ShowProgressPanel();
 
-                //string fileContent = await HuffmanCompressor.Compress(_encodeResult);
-
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
 
-                //Encoding u16LE = Encoding.UTF8;
-                //int probabilitiesTableLength = u16LE.GetByteCount(_encodeResult.EncodedProbabilitiesTable);
-                
-                /*await FileIO.WriteTextAsync(file, string.Format("{0}.{1}{2}.{3}",
-                            probabilitiesTableLength,
-                            _encodeResult.EncodedProbabilitiesTable,
-                            _encodeResult.Encoded.CodeLength,
-                            _encodeResult.Encoded.GetEncodedString())
-                            , Windows.Storage.Streams.UnicodeEncoding.Utf8);*/
                 var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
 
                 using (var outputStream = stream.GetOutputStreamAt(0))
@@ -176,7 +168,7 @@ namespace FilesEncryptor.pages
                     using (var dataWriter = new DataWriter(outputStream))
                     {
                         uint probabilitiesTableLength = dataWriter.MeasureString(_encodeResult.EncodedProbabilitiesTable);
-                        dataWriter.WriteString(string.Format("{0}.{1}{2}.{3}",
+                        dataWriter.WriteString(string.Format(COMPRESSED_FILE_FORMAT,
                             probabilitiesTableLength,
                             _encodeResult.EncodedProbabilitiesTable,
                             _encodeResult.Encoded.CodeLength,

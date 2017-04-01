@@ -22,6 +22,10 @@ namespace FilesEncryptor
 
         public EncodedString GetCode(char c) => _codesTable != null && _codesTable.ContainsKey(c) ? _codesTable[c].Copy() : null;
 
+        public bool ContainsChar(EncodedString encoded) => _codesTable != null && _codesTable.Values.Count(enc => enc.Code.SequenceEqual(encoded.Code)) == 1;
+
+        public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Code.SequenceEqual(encoded.Code)).Key;
+
         public async Task ScanProbabilities()
         {
             await Task.Factory.StartNew(() =>
@@ -59,7 +63,7 @@ namespace FilesEncryptor
 
                     _codesTable = ApplyHuffman(probabilitiesList);
                     EncodedProbabilitiesTable = 
-                        _codesTable.Select(pair => string.Format("{0}{1}{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
+                        _codesTable.Select(pair => string.Format("{0}{1}:{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
                         .Aggregate((a, b) => a + b);
                 }
             });

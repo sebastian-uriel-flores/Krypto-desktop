@@ -63,6 +63,26 @@ namespace FilesEncryptor
                     stream.Dispose();
 
                     //Ahora, armo la tablas de probabilidades
+                    Dictionary<char, EncodedString> table = new Dictionary<char, EncodedString>();
+                    char key;
+                    bool hasKey = false;
+                    int cLength = -1;
+                    List<byte> code;
+                    
+                    foreach (char c in probTableString)
+                    {
+                        if(!hasKey)
+                        {
+                            key = c;
+                            hasKey = true;
+                        }
+                        else
+                        {
+                            cLength=
+                        }
+                    }
+
+
                     /*TODO: Reestructurar ProbabilitiesScanner para que pueda recibir un
                      * un texto comun y calcular las probabilidades,
                      * o bien, recibir una tabla de probabilidades codificada 
