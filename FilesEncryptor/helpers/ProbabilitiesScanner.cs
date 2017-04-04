@@ -1,11 +1,12 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor
+namespace FilesEncryptor.helpers
 {
     public class ProbabilitiesScanner
     {
@@ -14,28 +15,49 @@ namespace FilesEncryptor
 
         public string Text { get; set; }
 
-        public ProbabilitiesScanner(string text)
+        private ProbabilitiesScanner()
         {
-            Text = text;
+            Text = "";
             _codesTable = new Dictionary<char, EncodedString>();
         }
 
         public EncodedString GetCode(char c) => _codesTable != null && _codesTable.ContainsKey(c) ? _codesTable[c].Copy() : null;
 
-        public bool ContainsChar(EncodedString encoded) => _codesTable != null && _codesTable.Values.Count(enc => enc.Code.SequenceEqual(encoded.Code)) == 1;
+        public bool ContainsChar(EncodedString encoded)
+        {
+            if(_codesTable != null)
+            {
+                foreach(EncodedString enc in _codesTable.Values)
+                {
+                    if(enc.Equals(encoded))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+            
+            //=> _codesTable != null && _codesTable.Values.Count(enc => enc.Code.SequenceEqual(encoded.Code)) == 1;
 
         public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Code.SequenceEqual(encoded.Code)).Key;
 
-        public async Task ScanProbabilities()
+        #region FROM_TEXT
+
+        public static async Task<ProbabilitiesScanner> FromText(string text)
         {
+            ProbabilitiesScanner scanner = new ProbabilitiesScanner();
+
             await Task.Factory.StartNew(() =>
             {
-                if (Text != null)
+                if (text != null)
                 {
+                    scanner.Text = text;
                     Dictionary<char, float> charsCount = new Dictionary<char, float>();
 
                     //Primero, obtengo las cantidades de cada caracter del texto
-                    foreach (char c in Text)
+                    foreach (char c in text)
                     {
                         if (charsCount.ContainsKey(c))
                         {
@@ -50,7 +72,7 @@ namespace FilesEncryptor
                     //Ahora que tengo las cantidades, calculo las probabilidades
                     foreach (char key in charsCount.Keys.ToList())
                     {
-                        charsCount[key] /= Text.Length;
+                        charsCount[key] /= text.Length;
                     }
 
                     //A continuacion, ordeno las probabilidades de mayor a menor
@@ -61,15 +83,17 @@ namespace FilesEncryptor
                             ? -1
                             : 0);
 
-                    _codesTable = ApplyHuffman(probabilitiesList);
-                    EncodedProbabilitiesTable = 
-                        _codesTable.Select(pair => string.Format("{0}{1}:{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
+                    scanner._codesTable = ApplyHuffman(probabilitiesList);
+                    scanner.EncodedProbabilitiesTable =
+                        scanner._codesTable.Select(pair => string.Format("{0}{1}:{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
                         .Aggregate((a, b) => a + b);
                 }
             });
+
+            return scanner;
         }
 
-        private Dictionary<char, EncodedString> ApplyHuffman(List<KeyValuePair<char, float>> probabilities)
+        private static Dictionary<char, EncodedString> ApplyHuffman(List<KeyValuePair<char, float>> probabilities)
         {
             //Creo el arbol Huffman
             List<List<HuffmanTreeNode>> huffmanTree = new List<List<HuffmanTreeNode>>();
@@ -144,7 +168,7 @@ namespace FilesEncryptor
             return codesTable;
         }
 
-        private void SetParentsCodesRecursively(HuffmanTreeNode node, EncodedString code)
+        private static void SetParentsCodesRecursively(HuffmanTreeNode node, EncodedString code)
         {
             node.Code = code;
             
@@ -172,6 +196,65 @@ namespace FilesEncryptor
                 }
             }
         }
+            
+        #endregion
+
+        #region FROM_ENCODED_TABLE
+
+        public static async Task<ProbabilitiesScanner> FromEncodedTable(string encoded, Encoding encoding)
+        {
+            ProbabilitiesScanner scanner = new ProbabilitiesScanner();
+
+            await Task.Factory.StartNew(() =>
+            {
+                while (encoded.Count() > 0)
+                {
+                    //Obtengo el siguiente caracter clave de la tabla
+                    char key = encoded[0];
+
+                    //Leo la longitud en bits del codigo asociado al caracter 'key'
+                    int index = 1;
+                    char pointer = encoded[index];
+                    string codeLengthStr = "";
+
+                    while (pointer != ':')
+                    {
+                        codeLengthStr += pointer;
+                        index++;
+                        pointer = encoded[index];
+                    }
+
+                    //Elimino el caracter y la longitud del codigo, ya leidos previamente
+                    encoded = encoded.Remove(0, index + 1);
+
+                    int codeBitsLength = int.Parse(codeLengthStr);
+                    int codeBytesLength = CommonUtils.BitsLengthToBytesLength(codeBitsLength);
+                    List<byte> codeBytes = new List<byte>();
+                                        
+                    foreach (byte b in encoded)
+                    {
+                        if (codeBytes.Count < codeBytesLength)
+                        {
+                            codeBytes.Add(b);
+                        }
+                        else
+                        {
+                            string str = encoding.GetString(codeBytes.ToArray());
+                            var bts = encoding.GetBytes(str);
+                            //Agrego el nuevo codigo junto con su clave al diccionario
+                            scanner._codesTable.Add(key, new EncodedString(bts.ToList(), codeBitsLength));
+                            break;
+                        }
+                    }
+
+                    //Elimino los bytes correspondientes al codigo
+                    encoded = encoded.Remove(0, encoding.GetString(codeBytes.ToArray()).Length);
+                }                
+            });
+            return scanner;
+        }
+
+        #endregion
 
         private class HuffmanTreeNode
         {

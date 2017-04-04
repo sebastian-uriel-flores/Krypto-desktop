@@ -1,9 +1,11 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -27,8 +29,8 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class UncompressFilePage : Page
     {
-        private StorageFile compTextFile;
-        private string compTextStr;
+        private StorageFile _compTextFile;
+        private string _compTextStr;
 
         public UncompressFilePage()
         {
@@ -55,9 +57,6 @@ namespace FilesEncryptor.pages
 
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
-            compTextFile = null;
-            compTextStr = null;
-
             var picker = new FileOpenPicker()
             {
                 ViewMode = PickerViewMode.Thumbnail,
@@ -65,30 +64,94 @@ namespace FilesEncryptor.pages
             };
             picker.FileTypeFilter.Add(".huf");
 
-            compTextFile = await picker.PickSingleFileAsync();
+            var file = await picker.PickSingleFileAsync();
 
-            ShowProgressPanel();
-
-            origTextContainer.Visibility = Visibility.Collapsed;
-            origTextExtraData.Visibility = Visibility.Collapsed;
-            uncompressBt.Visibility = Visibility.Collapsed;
-            origTextPanel.Visibility = Visibility.Collapsed;
-
-            if (compTextFile != null)
+            if (file != null)
             {
-                HuffmanEncodeResult encodedText = await HuffmanCompressor.Uncompress(compTextFile);
-
-                if (encodedText != null)
+                try
                 {
+                    _compTextFile = file;
+                    _compTextStr = null;
+
+                    ShowProgressPanel();
+
+                    origTextContainer.Visibility = Visibility.Collapsed;
+                    origTextExtraData.Visibility = Visibility.Collapsed;
+                    uncompressBt.Visibility = Visibility.Collapsed;
+                    origTextPanel.Visibility = Visibility.Collapsed;
+
+                    var stream = await _compTextFile.OpenAsync(FileAccessMode.Read);
+                    ulong size = stream.Size;
+
+                    string probTableString = "";
+                    EncodedString encodedText = new EncodedString(new List<byte>(), 0);
+                    Encoding u8 = Encoding.UTF8;
+
+                    using (var inputStream = stream.GetInputStreamAt(0))
+                    {
+                        using (var dataReader = new DataReader(inputStream))
+                        {
+                            dataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+                            uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+                          
+                            string probTableLength = "";
+                            byte[] oneCharBuffer = new byte[u8.GetByteCount(":")];
+
+                            dataReader.ReadBytes(oneCharBuffer);
+                            string temp = u8.GetString(oneCharBuffer);
+
+                            while (temp != ":")
+                            {
+                                probTableLength += temp;
+                                dataReader.ReadBytes(oneCharBuffer);
+                                temp = u8.GetString(oneCharBuffer);
+                            }
+
+
+                            byte[] probTableBytes = new byte[uint.Parse(probTableLength)];
+                            dataReader.ReadBytes(probTableBytes);
+
+                            probTableString = u8.GetString(probTableBytes);
+
+                            string codeBitsLengthStr = "";
+                            dataReader.ReadBytes(oneCharBuffer);
+                            temp = u8.GetString(oneCharBuffer);
+
+                            while (temp != ":")
+                            {
+                                codeBitsLengthStr += temp;
+                                dataReader.ReadBytes(oneCharBuffer);
+                                temp = u8.GetString(oneCharBuffer);
+                            }
+
+                            int codeBitsLength = int.Parse(codeBitsLengthStr);
+                            uint codeBytesLength = (uint)Math.Ceiling((float)codeBitsLength / 8.0);
+
+                            var encodStringBytes = new byte[codeBytesLength];
+                            dataReader.ReadBytes(encodStringBytes);
+                            encodedText = new EncodedString(new List<byte>(encodStringBytes), codeBitsLength);
+                        }
+                    }
+
+                    stream.Dispose();
+
+                    ProbabilitiesScanner scanner = await ProbabilitiesScanner.FromEncodedTable(probTableString, u8);
+                    HuffmanEncoder decoder = new HuffmanEncoder();
+                    _compTextStr = decoder.Decode(scanner, encodedText);
+
                     origTextContainer.Visibility = Visibility.Visible;
                     uncompressBt.Visibility = Visibility.Visible;
                     origTextExtraData.Visibility = Visibility.Visible;
-                    origText.Text = compTextStr;
-                    origTextLength.Text = compTextStr.Length.ToString();
+                    origText.Text = _compTextStr;
+                    origTextLength.Text = _compTextStr.Length.ToString();
                 }
-            }
+                catch (Exception)
+                {
 
-            HideProgressPanel();
+                }
+
+                HideProgressPanel();
+            }
         }
 
         private void UncompressBt_Click(object sender, RoutedEventArgs e)

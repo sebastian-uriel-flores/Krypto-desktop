@@ -96,11 +96,10 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CommonUtils.cs" />
+    <Compile Include="utils\CommonUtils.cs" />
     <Compile Include="dto\EncodedString.cs" />
     <Compile Include="dto\HuffmanEncodeResult.cs" />
-    <Compile Include="HuffmanCompressor.cs" />
-    <Compile Include="HuffmanEncoder.cs" />
+    <Compile Include="helpers\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
     </Compile>
@@ -110,7 +109,7 @@
     <Compile Include="pages\UncompressFilePage.xaml.cs">
       <DependentUpon>UncompressFilePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ProbabilitiesScanner.cs" />
+    <Compile Include="helpers\ProbabilitiesScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

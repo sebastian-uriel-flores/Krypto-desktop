@@ -1,11 +1,12 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor
+namespace FilesEncryptor.helpers
 {
     public class HuffmanEncoder
     {
@@ -13,8 +14,8 @@ namespace FilesEncryptor
         
         public async Task<HuffmanEncodeResult> Encode(string text)
         {
-            _probScanner = new ProbabilitiesScanner(text);
-            await _probScanner.ScanProbabilities();
+            _probScanner = await ProbabilitiesScanner.FromText(text);// new ProbabilitiesScanner(text);
+            //await _probScanner.ScanProbabilities();
             
             EncodedString fullCode = null;
             if(text != null)
@@ -57,15 +58,15 @@ namespace FilesEncryptor
             int currentCodeLength = 0;
             int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
             bool analyzingTrashBits = false;
-
-            while (currentByteIndex < currentCodeBytes.Count && !analyzingTrashBits)
+            
+            do
             {
                 byte currentByte = leftEncodedText.Code[currentByteIndex];
 
                 //Hago desplazamientos a derecha, yendo desde 7 desplazamientos a 0
                 for (int i = 7; i >= 0; i--)
                 {
-                    byte possibleCode = (byte)(currentByte >> i);
+                    byte possibleCode = (byte)((currentByte >> i)<<i);
                     int diff = 8 - i;
 
                     currentCodeBytes.Add(currentByte);
@@ -113,8 +114,10 @@ namespace FilesEncryptor
                         analyzingTrashBits = true;
                         break;
                     }
-                }                
+                }
             }
+            while (currentByteIndex + currentCodeBytes.Count < encodedText.Code.Count && !analyzingTrashBits);
+
             return result;
         }
     }

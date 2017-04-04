@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor
+namespace FilesEncryptor.utils
 {
     public static class CommonUtils
     {
@@ -131,5 +131,7 @@ namespace FilesEncryptor
 
             return masked;
         }
+
+        public static int BitsLengthToBytesLength(int bitsLength) => (8 - (bitsLength % 9) + bitsLength) / 8;
     }
 }

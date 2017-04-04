@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,6 +12,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -33,7 +35,7 @@ namespace FilesEncryptor.pages
         private HuffmanEncodeResult _encodeResult;
 
         //{lProbTab}:{{key}{length}:{code}{key} ... {length}:{code}}{lText}:{text}
-        private const string COMPRESSED_FILE_FORMAT = "{1}:{2}{3}:{4}";
+        private const string COMPRESSED_FILE_FORMAT = "{0}:{1}{2}:{3}";
 
         public CompressFilePage()
         {
@@ -60,9 +62,6 @@ namespace FilesEncryptor.pages
 
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
-            origTextFile = null;
-            origTextStr = null;
-
             var picker = new FileOpenPicker()
             {
                 ViewMode = PickerViewMode.Thumbnail,
@@ -72,19 +71,22 @@ namespace FilesEncryptor.pages
             picker.FileTypeFilter.Add(".doc");
             picker.FileTypeFilter.Add(".docx");
 
-            origTextFile = await picker.PickSingleFileAsync();
+            var file = await picker.PickSingleFileAsync();
 
-            ShowProgressPanel();
-
-            origTextContainer.Visibility = Visibility.Collapsed;
-            origTextExtraData.Visibility = Visibility.Collapsed;
-            compressBt.Visibility = Visibility.Collapsed;
-            compTextPanel.Visibility = Visibility.Collapsed;
-
-            if (origTextFile != null)
+            if (file != null)
             {
                 try
                 {
+                    origTextFile = file;
+                    origTextStr = null;
+
+                    ShowProgressPanel();
+
+                    origTextContainer.Visibility = Visibility.Collapsed;
+                    origTextExtraData.Visibility = Visibility.Collapsed;
+                    compressBt.Visibility = Visibility.Collapsed;
+                    compTextPanel.Visibility = Visibility.Collapsed;
+
                     var stream = await origTextFile.OpenAsync(FileAccessMode.Read);
                     ulong size = stream.Size;
 
@@ -112,9 +114,9 @@ namespace FilesEncryptor.pages
                     origText.Text = origTextStr;
                     origTextLength.Text = origTextStr.Length.ToString();
                 }
-            }
 
-            HideProgressPanel();
+                HideProgressPanel();
+            }            
         }
 
         private async void CompressBt_Click(object sender, RoutedEventArgs e)
@@ -161,8 +163,8 @@ namespace FilesEncryptor.pages
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
 
-                var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite);
-
+                var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+                
                 using (var outputStream = stream.GetOutputStreamAt(0))
                 {
                     using (var dataWriter = new DataWriter(outputStream))
@@ -184,14 +186,16 @@ namespace FilesEncryptor.pages
                 // the other app can update the remote version of the file.
                 // Completing updates may require Windows to ask for user input.
                 Windows.Storage.Provider.FileUpdateStatus status =
-                    await Windows.Storage.CachedFileManager.CompleteUpdatesAsync(file);
+                    await CachedFileManager.CompleteUpdatesAsync(file);
                 if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
                 {
-                    //this.textBlock.Text = "File " + file.Name + " was saved.";
+                    MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
+                    await dialog.ShowAsync();
                 }
                 else
                 {
-                    //this.textBlock.Text = "File " + file.Name + " couldn't be saved.";
+                    MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
+                    await dialog.ShowAsync();
                 }
 
                 HideProgressPanel();

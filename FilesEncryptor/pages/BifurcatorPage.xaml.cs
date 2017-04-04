@@ -25,23 +25,14 @@ namespace FilesEncryptor.pages
     {
         public BifurcatorPage()
         {
-            this.InitializeComponent();
-            
+            this.InitializeComponent();            
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
+        protected override void OnNavigatedTo(NavigationEventArgs e) =>
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
-        }
 
-        private void CompressFileBt_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(CompressFilePage));
-        }
+        private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
 
-        private void UncompressFileBt_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.Navigate(typeof(UncompressFilePage));
-        }
+        private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
     }
 }

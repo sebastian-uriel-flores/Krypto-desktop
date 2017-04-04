@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FilesEncryptor.utils;
 
 namespace FilesEncryptor.dto
 {
@@ -118,6 +119,26 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        public string GetEncodedString() => new UTF8Encoding().GetString(Code.ToArray());            
+        public string GetEncodedString() => new UTF8Encoding().GetString(Code.ToArray());
+
+        // override object.Equals
+        public override bool Equals(object obj)
+        {
+            if (obj == null || GetType() != obj.GetType())
+            {
+                return false;
+            }
+
+            EncodedString enc = obj as EncodedString;
+
+            return CodeLength == enc.CodeLength && Code.SequenceEqual(enc.Code);
+        }
+
+        // override object.GetHashCode
+        public override int GetHashCode()
+        {
+            // TODO: write your implementation of GetHashCode() here
+            return base.GetHashCode();
+        }
     }
 }
