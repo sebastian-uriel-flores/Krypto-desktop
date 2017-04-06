@@ -35,7 +35,7 @@ namespace FilesEncryptor.helpers
                         }
                         else
                         {
-                            fullCode.Append2(code);                         
+                            fullCode.Append(code);                         
                         }
                     }
                     catch(Exception ex)
@@ -51,7 +51,7 @@ namespace FilesEncryptor.helpers
         public string Decode(ProbabilitiesScanner scanner, EncodedString encodedText)
         {
             string result = "";
-            EncodedString leftEncodedText = encodedText.Copy();
+            EncodedString remainingEncodedText = encodedText.Copy();
             _probScanner = scanner;
 
             List<byte> currentCodeBytes = new List<byte>();
@@ -61,18 +61,20 @@ namespace FilesEncryptor.helpers
             
             do
             {
-                byte currentByte = leftEncodedText.Code[currentByteIndex];
+                byte currentByte = remainingEncodedText.Code[currentByteIndex];
 
                 //Hago desplazamientos a derecha, yendo desde 7 desplazamientos a 0
                 for (int i = 7; i >= 0; i--)
                 {
-                    byte possibleCode = (byte)((currentByte >> i)<<i);
+                    //Me quedo con los primeros ´8 - i´ bits de la izquierda
+                    byte possibleCode = (byte)((currentByte >> i) << i);
                     int diff = 8 - i;
 
                     currentCodeBytes.Add(currentByte);
                     currentCodeLength += diff;
 
-                    if (leftEncodedText.CodeLength - currentCodeLength >= 0)
+                    //Si no estoy agregando bits basura que exceden la longitud del texto codificado
+                    if (remainingEncodedText.CodeLength - currentCodeLength >= 0)
                     {
                         EncodedString currentCode = new EncodedString(currentCodeBytes, currentCodeLength);
 
@@ -84,9 +86,9 @@ namespace FilesEncryptor.helpers
 
                             //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
                             //para eliminar el codigo que acabo de agregar y continuar con el siguiente
-                            leftEncodedText.ReplaceCode(
-                                CommonUtils.LeftShifting(leftEncodedText.Code, currentCodeLength),
-                                leftEncodedText.CodeLength - currentCodeLength);
+                            remainingEncodedText.ReplaceCode(
+                                CommonUtils.LeftShifting(remainingEncodedText.Code, currentCodeLength),
+                                remainingEncodedText.CodeLength - currentCodeLength);
 
                             currentCodeBytes = new List<byte>();
                             currentCodeLength = 0;

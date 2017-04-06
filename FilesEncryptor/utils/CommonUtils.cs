@@ -132,6 +132,7 @@ namespace FilesEncryptor.utils
             return masked;
         }
 
-        public static int BitsLengthToBytesLength(int bitsLength) => (8 - (bitsLength % 9) + bitsLength) / 8;
+        public static int BitsLengthToBytesLength(int bitsLength) => (int)Math.Ceiling((float)bitsLength / 8.0);
+        //(8 - (bitsLength % 9) + bitsLength) / 8;
     }
 }

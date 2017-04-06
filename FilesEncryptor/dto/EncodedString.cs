@@ -28,23 +28,7 @@ namespace FilesEncryptor.dto
 
         public EncodedString Copy() => new EncodedString(Code.ToList(), CodeLength);
 
-        public void Append(EncodedString code)
-        {
-            if (code != null)
-            {
-                if (Code == null)
-                {
-                    Code = code.Code;
-                }
-                else
-                {
-                    Code.AddRange(code.Code);
-                }
-                CodeLength += code.CodeLength;
-            }
-        }
-
-        public void Append2(EncodedString newCode)
+        public void Append(EncodedString newCode)
         {
             if (newCode != null)
             {
@@ -57,7 +41,7 @@ namespace FilesEncryptor.dto
                 {
                     if (CodeLength % 8 != 0)
                     {
-                        //Busco el multiplo de 8, mayor a la longitud el codigo, mas cercano
+                        //Busco el multiplo de 8, mayor a la longitud del codigo, mas cercano
                         int multip8 = Code.Count * 8;
 
                         //Calculo la cantidad de bits que siguen al final del codigo (excedente)
@@ -119,19 +103,41 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        public string GetEncodedString() => new UTF8Encoding().GetString(Code.ToArray());
+        public string GetEncodedString() => Encoding.UTF8.GetString(Code.ToArray());
+        // new UTF8Encoding().GetString(Code.ToArray());
 
-        // override object.Equals
         public override bool Equals(object obj)
         {
-            if (obj == null || GetType() != obj.GetType())
+            bool result = false;
+
+            if (obj != null && GetType() == obj.GetType())
             {
-                return false;
+                EncodedString enc = obj as EncodedString;
+
+                if (Code.Count == enc.Code.Count && CodeLength == enc.CodeLength)
+                {
+                    int codeLength = CodeLength;
+
+                    for (int i = 0; i < Code.Count; i++)
+                    {
+                        if (i == Code.Count - 1)
+                        {
+                            int diff = 8 - codeLength;
+                            result = Code[i] >> diff == enc.Code[i] >> diff;
+                        }
+                        else if(Code[i] != enc.Code[i])
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            codeLength -= 8;
+                        }
+                    }
+                }
             }
 
-            EncodedString enc = obj as EncodedString;
-
-            return CodeLength == enc.CodeLength && Code.SequenceEqual(enc.Code);
+            return result;
         }
 
         // override object.GetHashCode

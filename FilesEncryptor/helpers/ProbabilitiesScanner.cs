@@ -43,6 +43,26 @@ namespace FilesEncryptor.helpers
 
         public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Code.SequenceEqual(encoded.Code)).Key;
 
+        public bool AreAllDifferent()
+        {
+            bool result = false;
+
+            foreach(KeyValuePair<char, EncodedString> pair in _codesTable)
+            {
+                result = !_codesTable.ToList().Exists(pair2 => pair2.Key != pair.Key && pair2.Value.Equals(pair.Value));
+
+                if(!result)
+                {
+                    break;
+                }
+            }
+
+            var a =_codesTable['e'];
+            var b = _codesTable['s'];
+
+            return result;
+        }
+
         #region FROM_TEXT
 
         public static async Task<ProbabilitiesScanner> FromText(string text)
@@ -89,6 +109,8 @@ namespace FilesEncryptor.helpers
                         .Aggregate((a, b) => a + b);
                 }
             });
+
+            bool dif = scanner.AreAllDifferent();
 
             return scanner;
         }
@@ -186,10 +208,10 @@ namespace FilesEncryptor.helpers
                     var lastParentCode = code.Copy();
 
                     //Agrego al final del codigo un 0
-                    firstParentCode.Append2(EncodedString.ZERO);
+                    firstParentCode.Append(EncodedString.ZERO);
 
                     //Agrego al final del codigo un 1
-                    lastParentCode.Append2(EncodedString.ONE);
+                    lastParentCode.Append(EncodedString.ONE);
 
                     SetParentsCodesRecursively(node.ParentsPositions.First(), firstParentCode);
                     SetParentsCodesRecursively(node.ParentsPositions.Last(), lastParentCode);
@@ -241,6 +263,11 @@ namespace FilesEncryptor.helpers
                         {
                             string str = encoding.GetString(codeBytes.ToArray());
                             var bts = encoding.GetBytes(str);
+
+                        if (key == 'e')
+                            {
+
+                            }
                             //Agrego el nuevo codigo junto con su clave al diccionario
                             scanner._codesTable.Add(key, new EncodedString(bts.ToList(), codeBitsLength));
                             break;
@@ -251,6 +278,8 @@ namespace FilesEncryptor.helpers
                     encoded = encoded.Remove(0, encoding.GetString(codeBytes.ToArray()).Length);
                 }                
             });
+
+            bool dif = scanner.AreAllDifferent();
             return scanner;
         }
 
