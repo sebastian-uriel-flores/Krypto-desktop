@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Core;
@@ -25,7 +26,18 @@ namespace FilesEncryptor.pages
     {
         public BifurcatorPage()
         {
-            this.InitializeComponent();            
+            this.InitializeComponent();
+
+
+            List<byte> bts = new List<byte>()
+            {
+                7, 8, 9,253, 128, 0, 114
+            };
+
+            
+
+            string s2 = Convert.ToBase64String(bts.ToArray());
+            var btsRec2 = Convert.FromBase64String(s2);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e) =>

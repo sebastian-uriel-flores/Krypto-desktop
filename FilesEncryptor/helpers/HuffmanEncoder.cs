@@ -45,7 +45,7 @@ namespace FilesEncryptor.helpers
                 }
             }
 
-            return new HuffmanEncodeResult(fullCode, _probScanner.EncodedProbabilitiesTable);
+            return new HuffmanEncodeResult(fullCode, _probScanner.CodesTable);
         }        
 
         public string Decode(ProbabilitiesScanner scanner, EncodedString encodedText)

@@ -86,7 +86,7 @@ namespace FilesEncryptor.pages
                     var stream = await _compTextFile.OpenAsync(FileAccessMode.Read);
                     ulong size = stream.Size;
 
-                    string probTableString = "";
+                    Dictionary<char, EncodedString> probabilitiesTable = new Dictionary<char, EncodedString>();
                     EncodedString encodedText = new EncodedString(new List<byte>(), 0);
                     Encoding u8 = Encoding.UTF8;
 
@@ -94,77 +94,81 @@ namespace FilesEncryptor.pages
                     {
                         using (var dataReader = new DataReader(inputStream))
                         {
-                            //Indico que el archivo debe ser leido como UTF8
-                            dataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
-
                             //Cargo en el buffer todos los bytes del archivo
                             uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+                                                        
+                            //Leo los 2 primeros caracteres del texto
+                            string endOfTableReader = dataReader.ReadString(2);
 
-                            //Creo un buffer de bytes con el tamaño necesario para almacenar los bytes 
-                            //correspondientes a un caracter en la codificacion utilizada al almacenar el archivo
-                            byte[] oneCharBuffer = new byte[u8.GetByteCount(":")];
+                            string temp = "";
 
-                            //Obtengo el largo de la tabla de probabilidades
-                            string probTableLength = "";                            
+                            //Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
+                            while (endOfTableReader != "..")
+                            {
+                                char currentChar = endOfTableReader.First();
 
-                            dataReader.ReadBytes(oneCharBuffer);
-                            string temp = u8.GetString(oneCharBuffer);
+                                //Obtengo la longitud en bits del siguiente codigo de la tabla
+                                string currentCodeLength = endOfTableReader.Last().ToString();
+
+                                temp = dataReader.ReadString(1);
+
+                                while (temp != ":")
+                                {
+                                    currentCodeLength += temp;
+                                    temp = dataReader.ReadString(1);
+                                }
+
+                                uint currentCodeBitsLength = uint.Parse(currentCodeLength);
+
+                                //Creo un buffer y guardo en él la tabla de probabilidades
+                                byte[] currentCodeBytes = new byte[CommonUtils.BitsLengthToBytesLength(currentCodeBitsLength)];
+                                dataReader.ReadBytes(currentCodeBytes);
+
+                                probabilitiesTable.Add(currentChar, new EncodedString(currentCodeBytes.ToList(), (int)currentCodeBitsLength));
+
+                                //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
+                                endOfTableReader = dataReader.ReadString(2);
+                                
+                            }
+
+                            //Obtengo la longitud en bits del texto codificado
+                            string encodedTextLength = "";
+
+                            temp = dataReader.ReadString(1);
 
                             while (temp != ":")
                             {
-                                probTableLength += temp;
-                                dataReader.ReadBytes(oneCharBuffer);
-                                temp = u8.GetString(oneCharBuffer);
+                                encodedTextLength += temp;
+                                temp = dataReader.ReadString(1);
                             }
 
-                            //Creo un buffer y guardo en él la tabla de probabilidades
-                            byte[] probTableBytes = new byte[uint.Parse(probTableLength)];
-                            dataReader.ReadBytes(probTableBytes);
-
-                            //Convierto el buffer de la tabla de probabilidades a string
-                            probTableString = u8.GetString(probTableBytes);
-
-                            //Obtengo el largo del texto codificado, en bits
-                            string codeBitsLengthStr = "";
-
-                            dataReader.ReadBytes(oneCharBuffer);
-                            temp = u8.GetString(oneCharBuffer);
-
-                            while (temp != ":")
-                            {
-                                codeBitsLengthStr += temp;
-                                dataReader.ReadBytes(oneCharBuffer);
-                                temp = u8.GetString(oneCharBuffer);
-                            }
-
-                            //Convierto la longitud del texto en bits a entero y calculo su longitud en bytes
-                            int codeBitsLength = int.Parse(codeBitsLengthStr);
-                            uint codeBytesLength = (uint)CommonUtils.BitsLengthToBytesLength(codeBitsLength);
+                            uint encodedTextBitsLength = uint.Parse(encodedTextLength);
 
                             //Creo un buffer y guardo en él el texto codificado
-                            byte[] encodStringBytes = new byte[codeBytesLength];
-                            dataReader.ReadBytes(encodStringBytes);
+                            byte[] encodedTextBytes = new byte[CommonUtils.BitsLengthToBytesLength(encodedTextBitsLength)];
+                            dataReader.ReadBytes(encodedTextBytes);
 
                             //Creo un EncodedString con el texto codificado
-                            encodedText = new EncodedString(new List<byte>(encodStringBytes), codeBitsLength);
+                            encodedText = new EncodedString(new List<byte>(encodedTextBytes), (int)encodedTextBitsLength);
                         }
                     }
 
                     stream.Dispose();
 
                     //Decodifico la tabla de probabilidades
-                    ProbabilitiesScanner scanner = await ProbabilitiesScanner.FromEncodedTable(probTableString, u8);
+                    ProbabilitiesScanner scanner = ProbabilitiesScanner.FromDictionary(probabilitiesTable);
+                    var dif = scanner.AreAllDifferent();
 
                     //Decodifico el texto
                     HuffmanEncoder decoder = new HuffmanEncoder();
                     _compTextStr = decoder.Decode(scanner, encodedText);
 
                     //Muestro el texto decodificado
-                    origTextContainer.Visibility = Visibility.Visible;
-                    uncompressBt.Visibility = Visibility.Visible;
-                    origTextExtraData.Visibility = Visibility.Visible;
-                    origText.Text = _compTextStr;
-                    origTextLength.Text = _compTextStr.Length.ToString();
+                    compTextContainer.Visibility = Visibility.Visible;
+                    uncompressBt.Visibility = Visibility.Collapsed;
+                    compTextExtraData.Visibility = Visibility.Visible;
+                    compText.Text = _compTextStr;
+                    compTextLength.Text = _compTextStr.Length.ToString();
                 }
                 catch (Exception)
                 {

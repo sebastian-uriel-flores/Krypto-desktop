@@ -2,6 +2,7 @@
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,9 +12,13 @@ namespace FilesEncryptor.helpers
     public class ProbabilitiesScanner
     {
         private Dictionary<char, EncodedString> _codesTable;
+
         public string EncodedProbabilitiesTable { get; private set; }
 
+        public ReadOnlyDictionary<char, EncodedString> CodesTable => new ReadOnlyDictionary<char, EncodedString>(_codesTable);
+
         public string Text { get; set; }
+
 
         private ProbabilitiesScanner()
         {
@@ -41,7 +46,7 @@ namespace FilesEncryptor.helpers
             
             //=> _codesTable != null && _codesTable.Values.Count(enc => enc.Code.SequenceEqual(encoded.Code)) == 1;
 
-        public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Code.SequenceEqual(encoded.Code)).Key;
+        public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Equals(encoded)).Key;
 
         public bool AreAllDifferent()
         {
@@ -115,6 +120,11 @@ namespace FilesEncryptor.helpers
             return scanner;
         }
 
+        /// <summary>
+        /// Crea el arbol Huffman
+        /// </summary>
+        /// <param name="probabilities"></param>
+        /// <returns></returns>
         private static Dictionary<char, EncodedString> ApplyHuffman(List<KeyValuePair<char, float>> probabilities)
         {
             //Creo el arbol Huffman
@@ -250,7 +260,7 @@ namespace FilesEncryptor.helpers
                     encoded = encoded.Remove(0, index + 1);
 
                     int codeBitsLength = int.Parse(codeLengthStr);
-                    int codeBytesLength = CommonUtils.BitsLengthToBytesLength(codeBitsLength);
+                    int codeBytesLength = (int)CommonUtils.BitsLengthToBytesLength((uint)codeBitsLength);
                     List<byte> codeBytes = new List<byte>();
                                         
                     foreach (byte b in encoded)
@@ -282,6 +292,13 @@ namespace FilesEncryptor.helpers
             bool dif = scanner.AreAllDifferent();
             return scanner;
         }
+
+        #endregion
+
+        #region FROM_DICTIONARY
+
+        public static ProbabilitiesScanner FromDictionary(Dictionary<char, EncodedString> probabilitiesTable) 
+            => new ProbabilitiesScanner() { _codesTable = probabilitiesTable };
 
         #endregion
 

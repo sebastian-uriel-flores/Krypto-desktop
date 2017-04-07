@@ -168,13 +168,24 @@ namespace FilesEncryptor.pages
                 using (var outputStream = stream.GetOutputStreamAt(0))
                 {
                     using (var dataWriter = new DataWriter(outputStream))
-                    {
-                        uint probabilitiesTableLength = dataWriter.MeasureString(_encodeResult.EncodedProbabilitiesTable);
+                    {                        
+                        //Escribo en el archivo la tabla de probabilidades
+                        foreach(var element in _encodeResult.ProbabilitiesTable)
+                        {
+                            dataWriter.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
+                            dataWriter.WriteBytes(element.Value.Code.ToArray());
+                        }
+
+                        //Escribo el texto codificado
+                        dataWriter.WriteString(string.Format("..{0}:", _encodeResult.Encoded.CodeLength));
+                        dataWriter.WriteBytes(_encodeResult.Encoded.Code.ToArray());
+
+                        /*uint probabilitiesTableLength = dataWriter.MeasureString(_encodeResult.EncodedProbabilitiesTable);
                         dataWriter.WriteString(string.Format(COMPRESSED_FILE_FORMAT,
                             probabilitiesTableLength,
                             _encodeResult.EncodedProbabilitiesTable,
                             _encodeResult.Encoded.CodeLength,
-                            _encodeResult.Encoded.GetEncodedString()));
+                            _encodeResult.Encoded.GetEncodedString()));*/
 
                         await dataWriter.StoreAsync();
                         await outputStream.FlushAsync();

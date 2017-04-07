@@ -103,7 +103,7 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        public string GetEncodedString() => Encoding.UTF8.GetString(Code.ToArray());
+        public string GetEncodedString() => Convert.ToBase64String(Code.ToArray());
         // new UTF8Encoding().GetString(Code.ToArray());
 
         public override bool Equals(object obj)
