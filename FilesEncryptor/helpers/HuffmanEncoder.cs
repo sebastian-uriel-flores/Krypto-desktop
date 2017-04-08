@@ -12,37 +12,40 @@ namespace FilesEncryptor.helpers
     {
         private ProbabilitiesScanner _probScanner;
         
-        public async Task<HuffmanEncodeResult> Encode(string text)
+        public async Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {
-            _probScanner = await ProbabilitiesScanner.FromText(text);// new ProbabilitiesScanner(text);
-            //await _probScanner.ScanProbabilities();
-            
+            _probScanner = scanner;
+
             EncodedString fullCode = null;
+                        
             if(text != null)
             {
-                int counter = 0;
-                foreach(char c in text)
+                await Task.Factory.StartNew(() =>
                 {
-                    counter++;
-                    try
+                    int counter = 0;
+                    foreach (char c in text)
                     {
-                        //Obtengo el codigo Huffman para el caracter
-                        EncodedString code = _probScanner.GetCode(c);
+                        counter++;
+                        try
+                        {
+                            //Obtengo el codigo Huffman para el caracter
+                            EncodedString code = _probScanner.GetCode(c);
 
-                        if (fullCode == null)
-                        {
-                            fullCode = code;
+                            if (fullCode == null)
+                            {
+                                fullCode = code;
+                            }
+                            else
+                            {
+                                fullCode.Append(code);
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            fullCode.Append(code);                         
+
                         }
                     }
-                    catch(Exception ex)
-                    {
-
-                    }
-                }
+                });
             }
 
             return new HuffmanEncodeResult(fullCode, _probScanner.CodesTable);

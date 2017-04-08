@@ -13,6 +13,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -32,6 +33,8 @@ namespace FilesEncryptor.pages
     {
         private StorageFile _compTextFile;
         private string _compTextStr;
+        private string _compTextType;
+        private string _compTextDisplayType;
 
         public UncompressFilePage()
         {
@@ -77,18 +80,17 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
 
                     //Oculto los paneles que muestran informacion del archivo anterior
-                    origTextContainer.Visibility = Visibility.Collapsed;
-                    origTextExtraData.Visibility = Visibility.Collapsed;
+                    compTextExtraData.Visibility = Visibility.Collapsed;
                     uncompressBt.Visibility = Visibility.Collapsed;
-                    origTextPanel.Visibility = Visibility.Collapsed;
 
                     //Abro el archivo para lectura y obtengo su tamaño en bytes
                     var stream = await _compTextFile.OpenAsync(FileAccessMode.Read);
                     ulong size = stream.Size;
 
+                    string fileType = "";
+                    string fileDisplayType = "";
                     Dictionary<char, EncodedString> probabilitiesTable = new Dictionary<char, EncodedString>();
                     EncodedString encodedText = new EncodedString(new List<byte>(), 0);
-                    Encoding u8 = Encoding.UTF8;
 
                     using (var inputStream = stream.GetInputStreamAt(0))
                     {
@@ -96,11 +98,39 @@ namespace FilesEncryptor.pages
                         {
                             //Cargo en el buffer todos los bytes del archivo
                             uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
-                                                        
-                            //Leo los 2 primeros caracteres del texto
-                            string endOfTableReader = dataReader.ReadString(2);
 
                             string temp = "";
+
+                            //Obtengo el largo del tipo de archivo
+                            string fileTypeLength = "";
+
+                            temp = dataReader.ReadString(1);
+
+                            while (temp != ":")
+                            {
+                                fileTypeLength += temp;
+                                temp = dataReader.ReadString(1);
+                            }
+
+                            //Obtengo el tipo de archivo
+                            fileType = dataReader.ReadString(uint.Parse(fileTypeLength));
+
+                            //Obtengo el largo de la descripcion del tipo de archivo
+                            string fileDisplayTypeLength = "";
+
+                            temp = dataReader.ReadString(1);
+
+                            while (temp != ":")
+                            {
+                                fileDisplayTypeLength += temp;
+                                temp = dataReader.ReadString(1);
+                            }
+
+                            //Obtengo la descripcion del tipo de archivo
+                            fileDisplayType = dataReader.ReadString(uint.Parse(fileDisplayTypeLength));
+                            
+                            //Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
+                            string endOfTableReader = dataReader.ReadString(2);
 
                             //Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
                             while (endOfTableReader != "..")
@@ -155,6 +185,10 @@ namespace FilesEncryptor.pages
 
                     stream.Dispose();
 
+                    //Guardo el tipo de archivo original y su descripción
+                    _compTextType = fileType;
+                    _compTextDisplayType = fileDisplayType;
+
                     //Decodifico la tabla de probabilidades
                     ProbabilitiesScanner scanner = ProbabilitiesScanner.FromDictionary(probabilitiesTable);
                     var dif = scanner.AreAllDifferent();
@@ -165,7 +199,7 @@ namespace FilesEncryptor.pages
 
                     //Muestro el texto decodificado
                     compTextContainer.Visibility = Visibility.Visible;
-                    uncompressBt.Visibility = Visibility.Collapsed;
+                    uncompressBt.Visibility = Visibility.Visible;
                     compTextExtraData.Visibility = Visibility.Visible;
                     compText.Text = _compTextStr;
                     compTextLength.Text = _compTextStr.Length.ToString();
@@ -179,15 +213,59 @@ namespace FilesEncryptor.pages
             }
         }
 
-        private void UncompressBt_Click(object sender, RoutedEventArgs e)
+        private async void UncompressBt_Click(object sender, RoutedEventArgs e)
         {
+            var savePicker = new FileSavePicker()
+            {
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+                SuggestedFileName = _compTextFile.DisplayName
+            };
+            savePicker.FileTypeChoices.Add(_compTextDisplayType, new List<string>() { _compTextType });
 
+            StorageFile file = await savePicker.PickSaveFileAsync();
+
+            if (file != null)
+            {
+                ShowProgressPanel();
+
+                // Prevent updates to the remote version of the file until
+                // we finish making changes and call CompleteUpdatesAsync.
+                CachedFileManager.DeferUpdates(file);
+
+                var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+
+                using (var outputStream = stream.GetOutputStreamAt(0))
+                {
+                    using (var dataWriter = new DataWriter(outputStream))
+                    {
+                        dataWriter.WriteString(_compTextStr);
+
+                        await dataWriter.StoreAsync();
+                        await outputStream.FlushAsync();
+                    }
+                }
+                stream.Dispose(); // Or use the stream variable (see previous code snippet) with a using statement as well.
+
+                // Let Windows know that we're finished changing the file so
+                // the other app can update the remote version of the file.
+                // Completing updates may require Windows to ask for user input.
+                Windows.Storage.Provider.FileUpdateStatus status =
+                    await CachedFileManager.CompleteUpdatesAsync(file);
+                if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
+                {
+                    MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
+                    await dialog.ShowAsync();
+                }
+                else
+                {
+                    MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
+                    await dialog.ShowAsync();
+                }
+
+                HideProgressPanel();
+            }
         }
 
-        private void SaveBt_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
 

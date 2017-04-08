@@ -35,16 +35,12 @@
             </Style>
         </Grid.Resources>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-
-        <RelativePanel>
+        <RelativePanel
+            MaxWidth="1200">
 
             <TextBlock
                 x:Name="compTextHeader"                
-                Text="Texto comprimido"                
+                Text="Descomprimir texto"                
                 Style="{ThemeResource HeaderStyle}"
                 />
             <Rectangle
@@ -125,80 +121,7 @@
 
             <Button
                 x:Name="uncompressBt"
-                Content="Descromprimir"
-                RelativePanel.AlignBottomWithPanel="True"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                HorizontalAlignment="Stretch"
-                Padding="30,15"
-                Margin="40,20"
-                MinWidth="150"
-                Background="DodgerBlue"
-                Foreground="White"
-                Visibility="Collapsed"
-                Click="UncompressBt_Click"
-                />
-        </RelativePanel>
-
-        <RelativePanel
-            x:Name="origTextPanel"
-            Grid.Column="1"
-            Visibility="Collapsed"
-            >
-            <TextBlock
-                x:Name="origTextHeader"
-                Text="Texto original"
-                Style="{ThemeResource HeaderStyle}"
-                />
-            <Rectangle
-                x:Name="origTextHeaderDivider"
-                RelativePanel.Below="origTextHeader"
-                Style="{StaticResource LineDividerStyle}"
-                />
-
-            <ScrollViewer
-                x:Name="origTextContainer"
-                Background="#66D3D3D3" 
-                Height="Auto"                
-                Margin="40,30,40,0"
-                RelativePanel.Below="origTextHeaderDivider"
-                RelativePanel.Above="origTextExtraData"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
-                HorizontalScrollMode="Enabled"
-                HorizontalScrollBarVisibility="Visible"
-                >
-                <TextBlock
-                    x:Name="origText"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    TextWrapping="WrapWholeWords"                    
-                    Margin="10"
-                    />
-            </ScrollViewer>
-            <StackPanel 
-                x:Name="origTextExtraData"
-                Orientation="Horizontal"
-                RelativePanel.Above="saveBt"
-                RelativePanel.AlignRightWithPanel="True"                
-                Margin="40,0"
-                >
-                <TextBlock
-                    x:Name="origTextLength"                                    
-                    TextAlignment="Right"
-                    FontWeight="SemiLight"
-                    Padding="5,0"
-                    />
-                <TextBlock                
-                    TextAlignment="Right"
-                    FontWeight="SemiLight"
-                    Text="caracteres"
-                    />
-            </StackPanel>
-
-            <Button
-                x:Name="saveBt"
-                Content="Guardar"
+                Content="Descomprimir"
                 RelativePanel.AlignBottomWithPanel="True"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
@@ -208,9 +131,10 @@
                 MinWidth="150"
                 Background="MediumSpringGreen"
                 Foreground="White"
-                Click="SaveBt_Click"
+                Visibility="Collapsed"
+                Click="UncompressBt_Click"
                 />
-        </RelativePanel>
+        </RelativePanel>        
 
         <RelativePanel
             x:Name="progressPanel"

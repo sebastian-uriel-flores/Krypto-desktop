@@ -32,11 +32,7 @@ namespace FilesEncryptor.pages
     {
         private StorageFile origTextFile;
         private string origTextStr;
-        private HuffmanEncodeResult _encodeResult;
-
-        //{lProbTab}:{{key}{length}:{code}{key} ... {length}:{code}}{lText}:{text}
-        private const string COMPRESSED_FILE_FORMAT = "{0}:{1}{2}:{3}";
-
+        
         public CompressFilePage()
         {
             this.InitializeComponent();
@@ -85,7 +81,6 @@ namespace FilesEncryptor.pages
                     origTextContainer.Visibility = Visibility.Collapsed;
                     origTextExtraData.Visibility = Visibility.Collapsed;
                     compressBt.Visibility = Visibility.Collapsed;
-                    compTextPanel.Visibility = Visibility.Collapsed;
 
                     var stream = await origTextFile.OpenAsync(FileAccessMode.Read);
                     ulong size = stream.Size;
@@ -121,31 +116,6 @@ namespace FilesEncryptor.pages
 
         private async void CompressBt_Click(object sender, RoutedEventArgs e)
         {
-            ShowProgressPanel();
-
-            HuffmanEncoder encoder = new HuffmanEncoder();
-            _encodeResult = await encoder.Encode(origTextStr);
-
-            string encodedStr = _encodeResult.Encoded.GetEncodedString();
-
-            if (encodedStr != null)
-            {
-                compText.Text = encodedStr;
-                compTextLength.Text = encodedStr.Length.ToString();
-            }
-            else
-            {
-                compText.Text = "";
-                compTextLength.Text = "0";
-            }
-
-            compTextPanel.Visibility = Visibility.Visible;
-
-            HideProgressPanel();
-        }
-
-        private async void SaveBt_Click(object sender, RoutedEventArgs e)
-        {
             var savePicker = new FileSavePicker()
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -155,44 +125,45 @@ namespace FilesEncryptor.pages
 
             StorageFile file = await savePicker.PickSaveFileAsync();
 
-            if(file != null)
+            if (file != null)
             {
                 ShowProgressPanel();
+
+                //Codifico el archivo
+                HuffmanEncoder encoder = new HuffmanEncoder();
+                ProbabilitiesScanner textScanner = await ProbabilitiesScanner.FromText(origTextStr);
+                HuffmanEncodeResult encodeResult = await encoder.Encode(textScanner, origTextStr);
 
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
                 CachedFileManager.DeferUpdates(file);
 
                 var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
-                
+
                 using (var outputStream = stream.GetOutputStreamAt(0))
                 {
                     using (var dataWriter = new DataWriter(outputStream))
-                    {                        
+                    {
+                        //Escribo el tipo de archivo y su descripcion
+                        dataWriter.WriteString(string.Format("{0}:{1}{2}:{3}", origTextFile.FileType.Length, origTextFile.FileType, origTextFile.DisplayType.Length, origTextFile.DisplayType));
+
                         //Escribo en el archivo la tabla de probabilidades
-                        foreach(var element in _encodeResult.ProbabilitiesTable)
+                        foreach (var element in encodeResult.ProbabilitiesTable)
                         {
                             dataWriter.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
                             dataWriter.WriteBytes(element.Value.Code.ToArray());
                         }
 
                         //Escribo el texto codificado
-                        dataWriter.WriteString(string.Format("..{0}:", _encodeResult.Encoded.CodeLength));
-                        dataWriter.WriteBytes(_encodeResult.Encoded.Code.ToArray());
-
-                        /*uint probabilitiesTableLength = dataWriter.MeasureString(_encodeResult.EncodedProbabilitiesTable);
-                        dataWriter.WriteString(string.Format(COMPRESSED_FILE_FORMAT,
-                            probabilitiesTableLength,
-                            _encodeResult.EncodedProbabilitiesTable,
-                            _encodeResult.Encoded.CodeLength,
-                            _encodeResult.Encoded.GetEncodedString()));*/
+                        dataWriter.WriteString(string.Format("..{0}:", encodeResult.Encoded.CodeLength));
+                        dataWriter.WriteBytes(encodeResult.Encoded.Code.ToArray());
 
                         await dataWriter.StoreAsync();
                         await outputStream.FlushAsync();
                     }
                 }
                 stream.Dispose(); // Or use the stream variable (see previous code snippet) with a using statement as well.
-                
+
                 // Let Windows know that we're finished changing the file so
                 // the other app can update the remote version of the file.
                 // Completing updates may require Windows to ask for user input.
