@@ -62,10 +62,12 @@ namespace FilesEncryptor.helpers
                 }
             }
 
-            var a =_codesTable['e'];
-            var b = _codesTable['s'];
-
             return result;
+        }
+
+        public void CountPref()
+        {
+
         }
 
         #region FROM_TEXT

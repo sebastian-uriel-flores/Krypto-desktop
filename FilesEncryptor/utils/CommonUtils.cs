@@ -18,10 +18,15 @@ namespace FilesEncryptor.utils
         {
             List<byte> copy = bytes.ToList();
 
-            if (copy != null)
+            if (copy != null && copy.Count * 8 >= shifts)
             {
-                shifts = shifts % 9;
-                for (int i = 0; i < bytes.Count; i++)
+                if (shifts >= 8)
+                {
+                    copy.RemoveRange(0, shifts / 8);
+                    shifts %= 8;
+                }
+
+                for (int i = 0; i < copy.Count; i++)
                 {
                     if (i == 0)
                     {
