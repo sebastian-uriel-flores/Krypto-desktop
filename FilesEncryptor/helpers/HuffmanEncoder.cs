@@ -8,14 +8,10 @@ using System.Threading.Tasks;
 
 namespace FilesEncryptor.helpers
 {
-    public class HuffmanEncoder
+    public static class HuffmanEncoder
     {
-        private ProbabilitiesScanner _probScanner;
-        
-        public async Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
+        public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {
-            _probScanner = scanner;
-
             EncodedString fullCode = null;
                         
             if(text != null)
@@ -29,7 +25,7 @@ namespace FilesEncryptor.helpers
                         try
                         {
                             //Obtengo el codigo Huffman para el caracter
-                            EncodedString code = _probScanner.GetCode(c);
+                            EncodedString code = scanner.GetCode(c);
 
                             if (fullCode == null)
                             {
@@ -48,14 +44,13 @@ namespace FilesEncryptor.helpers
                 });
             }
 
-            return new HuffmanEncodeResult(fullCode, _probScanner.CodesTable);
+            return new HuffmanEncodeResult(fullCode, scanner.CodesTable);
         }        
 
-        public string Decode(ProbabilitiesScanner scanner, EncodedString encodedText)
+        public static string Decode(ProbabilitiesScanner scanner, EncodedString encodedText)
         {
             string result = "";
             EncodedString remainingEncodedText = encodedText.Copy();
-            _probScanner = scanner;
 
             List<byte> currentCodeBytes = new List<byte>();
             int currentCodeLength = 0;
@@ -82,10 +77,10 @@ namespace FilesEncryptor.helpers
                         EncodedString currentCode = new EncodedString(currentCodeBytes, currentCodeLength);
 
                         //Si el codigo formado al realizar los 'i' desplazamientos es un codigo valido
-                        if (_probScanner.ContainsChar(currentCode))
+                        if (scanner.ContainsChar(currentCode))
                         {
                             //Lo decodifico y agrego al string decodificado
-                            result += _probScanner.GetChar(currentCode);
+                            result += scanner.GetChar(currentCode);
 
                             //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
                             //para eliminar el codigo que acabo de agregar y continuar con el siguiente

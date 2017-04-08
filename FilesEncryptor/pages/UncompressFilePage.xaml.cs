@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -78,6 +79,8 @@ namespace FilesEncryptor.pages
                     _compTextStr = null;
 
                     ShowProgressPanel();
+
+                    await Task.Delay(200);
 
                     //Oculto los paneles que muestran informacion del archivo anterior
                     compTextExtraData.Visibility = Visibility.Collapsed;
@@ -158,7 +161,6 @@ namespace FilesEncryptor.pages
 
                                 //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
                                 endOfTableReader = dataReader.ReadString(2);
-                                
                             }
 
                             //Obtengo la longitud en bits del texto codificado
@@ -194,8 +196,7 @@ namespace FilesEncryptor.pages
                     var dif = scanner.AreAllDifferent();
 
                     //Decodifico el texto
-                    HuffmanEncoder decoder = new HuffmanEncoder();
-                    _compTextStr = decoder.Decode(scanner, encodedText);
+                    _compTextStr = HuffmanEncoder.Decode(scanner, encodedText);
 
                     //Muestro el texto decodificado
                     compTextContainer.Visibility = Visibility.Visible;

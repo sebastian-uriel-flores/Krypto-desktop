@@ -130,9 +130,8 @@ namespace FilesEncryptor.pages
                 ShowProgressPanel();
 
                 //Codifico el archivo
-                HuffmanEncoder encoder = new HuffmanEncoder();
                 ProbabilitiesScanner textScanner = await ProbabilitiesScanner.FromText(origTextStr);
-                HuffmanEncodeResult encodeResult = await encoder.Encode(textScanner, origTextStr);
+                HuffmanEncodeResult encodeResult = await HuffmanEncoder.Encode(textScanner, origTextStr);
 
                 // Prevent updates to the remote version of the file until
                 // we finish making changes and call CompleteUpdatesAsync.
