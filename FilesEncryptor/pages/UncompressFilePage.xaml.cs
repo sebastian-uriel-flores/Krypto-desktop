@@ -3,6 +3,7 @@ using FilesEncryptor.helpers;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -205,9 +206,12 @@ namespace FilesEncryptor.pages
                     compText.Text = _compTextStr;
                     compTextLength.Text = _compTextStr.Length.ToString();
                 }
-                catch (Exception)
-                {
+                catch (Exception ex)
+                {                    
+                    MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo.", "Ha ocurrido un error");
+                    await errorDialog.ShowAsync();
 
+                    Debug.Fail("Excepcion al cargar archivo para descompresion", ex.Message);
                 }
 
                 HideProgressPanel();

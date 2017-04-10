@@ -2,10 +2,12 @@
 using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage;
@@ -17,6 +19,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
@@ -64,8 +67,8 @@ namespace FilesEncryptor.pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
             picker.FileTypeFilter.Add(".txt");
-            picker.FileTypeFilter.Add(".doc");
-            picker.FileTypeFilter.Add(".docx");
+            //picker.FileTypeFilter.Add(".doc");
+            //picker.FileTypeFilter.Add(".docx");
 
             var file = await picker.PickSingleFileAsync();
 
@@ -77,6 +80,7 @@ namespace FilesEncryptor.pages
                     origTextStr = null;
 
                     ShowProgressPanel();
+                    await Task.Delay(200);
 
                     origTextContainer.Visibility = Visibility.Collapsed;
                     origTextExtraData.Visibility = Visibility.Collapsed;
@@ -90,23 +94,35 @@ namespace FilesEncryptor.pages
                         using (var dataReader = new DataReader(inputStream))
                         {
                             uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
-                            origTextStr = dataReader.ReadString(numBytesLoaded);
+                            byte[] buffer = new byte[numBytesLoaded];
+                            dataReader.ReadBytes(buffer);
+
+                            origTextStr = Encoding.UTF8.GetString(buffer);
                         }
                     }
 
                     stream.Dispose();
                 }
-                catch (Exception)
-                {
+                catch (Exception ex)
+                {                    
+                    MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
+                    await errorDialog.ShowAsync();
 
+                    Debug.Fail("Excepcion al cargar archivo para compresion", ex.Message);
                 }
 
                 if (origTextStr != null)
                 {
+                    Run run = new Run();
+                    run.Text = origTextStr;
+                    Paragraph par = new Paragraph();
+                    par.Inlines.Add(run);
+                    origText.Blocks.Clear();
+                    origText.Blocks.Add(par);
+
                     origTextContainer.Visibility = Visibility.Visible;
                     compressBt.Visibility = Visibility.Visible;
-                    origTextExtraData.Visibility = Visibility.Visible;
-                    origText.Text = origTextStr;
+                    origTextExtraData.Visibility = Visibility.Visible;                                        
                     origTextLength.Text = origTextStr.Length.ToString();
                 }
 

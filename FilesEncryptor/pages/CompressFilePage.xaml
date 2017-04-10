@@ -75,7 +75,7 @@
                 RelativePanel.AlignRightWithPanel="True"                
                 Click="SelectFileBt_Click"
                 />
-
+            
             <ScrollViewer
                 x:Name="origTextContainer"
                 Background="#66D3D3D3" 
@@ -85,15 +85,12 @@
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 RelativePanel.Above="origTextExtraData"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"                    
                 Visibility="Collapsed"
-                HorizontalScrollMode="Enabled"
-                HorizontalScrollBarVisibility="Visible"
                 >
-                <TextBlock
+                <RichTextBlock 
                     x:Name="origText"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    TextWrapping="WrapWholeWords"                    
                     Margin="10"
                     />
             </ScrollViewer>
