@@ -35,16 +35,12 @@
             </Style>
         </Grid.Resources>
 
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-
-        <RelativePanel>
+        <RelativePanel
+            MaxWidth="1200">
             
             <TextBlock
                 x:Name="origTextHeader"                
-                Text="Texto original"                
+                Text="Comprimir texto"                
                 Style="{ThemeResource HeaderStyle}"
                 />
             <Rectangle
@@ -79,7 +75,7 @@
                 RelativePanel.AlignRightWithPanel="True"                
                 Click="SelectFileBt_Click"
                 />
-
+            
             <ScrollViewer
                 x:Name="origTextContainer"
                 Background="#66D3D3D3" 
@@ -89,15 +85,12 @@
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 RelativePanel.Above="origTextExtraData"
+                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.VerticalScrollBarVisibility="Auto"                    
                 Visibility="Collapsed"
-                HorizontalScrollMode="Enabled"
-                HorizontalScrollBarVisibility="Visible"
                 >
-                <TextBlock
+                <RichTextBlock 
                     x:Name="origText"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    TextWrapping="WrapWholeWords"                    
                     Margin="10"
                     />
             </ScrollViewer>
@@ -133,83 +126,10 @@
                 Padding="30,15"
                 Margin="40,20"
                 MinWidth="150"
-                Background="DodgerBlue"
+                Background="MediumSpringGreen"
                 Foreground="White"
                 Visibility="Collapsed"
                 Click="CompressBt_Click"
-                />
-        </RelativePanel>
-
-        <RelativePanel
-            x:Name="compTextPanel"
-            Grid.Column="1"
-            Visibility="Collapsed"
-            >
-            <TextBlock
-                x:Name="compTextHeader"
-                Text="Texto comprimido"
-                Style="{ThemeResource HeaderStyle}"
-                />
-            <Rectangle
-                x:Name="compTextHeaderDivider"
-                RelativePanel.Below="compTextHeader"
-                Style="{StaticResource LineDividerStyle}"
-                />
-            
-            <ScrollViewer
-                x:Name="compTextContainer"
-                Background="#66D3D3D3" 
-                Height="Auto"                
-                Margin="40,30,40,0"
-                RelativePanel.Below="compTextHeaderDivider"
-                RelativePanel.Above="compTextExtraData"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
-                HorizontalScrollMode="Enabled"
-                HorizontalScrollBarVisibility="Visible"
-                >
-                <TextBlock
-                    x:Name="compText"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    TextWrapping="WrapWholeWords"                    
-                    Margin="10"
-                    />
-            </ScrollViewer>
-            <StackPanel 
-                x:Name="compTextExtraData"
-                Orientation="Horizontal"
-                RelativePanel.Above="saveBt"
-                RelativePanel.AlignRightWithPanel="True"                
-                Margin="40,0"
-                >
-                <TextBlock
-                    x:Name="compTextLength"                                    
-                    TextAlignment="Right"
-                    FontWeight="SemiLight"
-                    Padding="5,0"
-                    />
-                <TextBlock                
-                    TextAlignment="Right"
-                    FontWeight="SemiLight"
-                    Text="caracteres"
-                    />
-            </StackPanel>
-            
-
-            <Button
-                x:Name="saveBt"
-                Content="Guardar"
-                RelativePanel.AlignBottomWithPanel="True"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                HorizontalAlignment="Stretch"
-                Padding="30,15"
-                Margin="40,20"
-                MinWidth="150"
-                Background="MediumSpringGreen"
-                Foreground="White"
-                Click="SaveBt_Click"
                 />
         </RelativePanel>
 
