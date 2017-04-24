@@ -137,28 +137,41 @@ namespace FilesEncryptor.dto
 
         #region HAMMING
 
-        public EncodedString GetRange(uint startBitPos, uint count)
+        public EncodedString GetRange(uint startBitPos, uint bitsCount)
         {
-            int startBytePos = (int)CommonUtils.BitsLengthToBytesLength(startBitPos);
-            int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(startBitPos + count);
+            int startBytePos = (int)CommonUtils.BitsLengthToToBytePosition(startBitPos);
+            int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
 
-            return new EncodedString(Code.GetRange(startBytePos, bytesCount), bytesCount);
+            return new EncodedString(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
         }
 
         public List<EncodedString> GetCodeBlocks(uint blockBitsSize)
         {
+            EncodedString copy = Copy();
+
             uint encodedStrBytesSize = CommonUtils.BitsLengthToBytesLength((uint)CodeLength);
-            uint blockBytesSize = CommonUtils.BitsLengthToBytesLength((uint)blockBitsSize);
+            uint blockBytesSize = CommonUtils.BitsLengthToBytesLength(blockBitsSize);
 
-            uint bytesExtra = (uint)(Math.Abs(encodedStrBytesSize - blockBytesSize) % blockBytesSize);
+            if(blockBytesSize > encodedStrBytesSize)
+            {
+                copy.Append(Zeros(blockBytesSize - encodedStrBytesSize));
+            }
+            else if(encodedStrBytesSize > blockBytesSize)
+            {
+                uint mod = (uint)copy.CodeLength % blockBitsSize;
 
-            Append(Zeros(bytesExtra));
+                if (mod != 0)
+                {
+                    uint cantZeros = (uint)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
+                    copy.Append(Zeros(cantZeros));
+                }
+            }
 
             List<EncodedString> blocks = new List<EncodedString>();
 
-            for (uint i = 0; i < CodeLength; i += blockBitsSize)
+            for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
-                blocks.Add(GetRange(i, blockBitsSize));
+                blocks.Add(copy.GetRange(i, blockBitsSize));
             }
 
             return blocks;
