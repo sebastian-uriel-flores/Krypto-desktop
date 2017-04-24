@@ -111,7 +111,6 @@
     </Compile>
     <Compile Include="helpers\ProbabilitiesScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="utils\Dialogs.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
