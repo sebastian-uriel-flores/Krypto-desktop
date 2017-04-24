@@ -16,9 +16,15 @@ namespace FilesEncryptor.dto
 
         #endregion
 
+        #region PROPERTIES
+
         public List<byte> Code { get; private set; }
 
         public int CodeLength { get; private set; }
+
+        #endregion
+
+        #region BUILDERS
 
         public EncodedString(List<byte> code, int length)
         {
@@ -26,11 +32,37 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        public EncodedString Copy() => new EncodedString(Code.ToList(), CodeLength);
+        public static EncodedString Zeros(uint zerosCount)
+        {
+            EncodedString zeros = new EncodedString(new List<byte>(), 0);
 
+            for(uint i = 0; i < zerosCount; i++)
+            {
+                zeros.Append(ZERO);
+            }
+
+            return zeros;
+        }
+
+        public static EncodedString Ones(uint onesCount)
+        {
+            EncodedString ones = new EncodedString(new List<byte>(), 0);
+
+            for (uint i = 0; i < onesCount; i++)
+            {
+                ones.Append(ONE);
+            }
+
+            return ones;
+        }
+
+        #endregion
+
+        public EncodedString Copy() => new EncodedString(Code.ToList(), CodeLength);
+        
         public void Append(EncodedString newCode)
         {
-            if (newCode != null)
+            if (newCode?.CodeLength > 0)
             {
                 if (Code == null || CodeLength == 0)
                 {
@@ -103,8 +135,38 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        public string GetEncodedString() => Convert.ToBase64String(Code.ToArray());
-        // new UTF8Encoding().GetString(Code.ToArray());
+        #region HAMMING
+
+        public EncodedString GetRange(uint startBitPos, uint count)
+        {
+            int startBytePos = (int)CommonUtils.BitsLengthToBytesLength(startBitPos);
+            int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(startBitPos + count);
+
+            return new EncodedString(Code.GetRange(startBytePos, bytesCount), bytesCount);
+        }
+
+        public List<EncodedString> GetCodeBlocks(uint blockBitsSize)
+        {
+            uint encodedStrBytesSize = CommonUtils.BitsLengthToBytesLength((uint)CodeLength);
+            uint blockBytesSize = CommonUtils.BitsLengthToBytesLength((uint)blockBitsSize);
+
+            uint bytesExtra = (uint)(Math.Abs(encodedStrBytesSize - blockBytesSize) % blockBytesSize);
+
+            Append(Zeros(bytesExtra));
+
+            List<EncodedString> blocks = new List<EncodedString>();
+
+            for (uint i = 0; i < CodeLength; i += blockBitsSize)
+            {
+                blocks.Add(GetRange(i, blockBitsSize));
+            }
+
+            return blocks;
+        }
+
+        #endregion
+
+        #region INHERITED
 
         public override bool Equals(object obj)
         {
@@ -146,5 +208,7 @@ namespace FilesEncryptor.dto
             // TODO: write your implementation of GetHashCode() here
             return base.GetHashCode();
         }
+
+        #endregion
     }
 }

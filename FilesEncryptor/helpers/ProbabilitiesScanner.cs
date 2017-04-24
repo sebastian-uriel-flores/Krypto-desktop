@@ -13,8 +13,6 @@ namespace FilesEncryptor.helpers
     {
         private Dictionary<char, EncodedString> _codesTable;
 
-        public string EncodedProbabilitiesTable { get; private set; }
-
         public ReadOnlyDictionary<char, EncodedString> CodesTable => new ReadOnlyDictionary<char, EncodedString>(_codesTable);
 
         public string Text { get; set; }
@@ -110,10 +108,7 @@ namespace FilesEncryptor.helpers
                             ? -1
                             : 0);
 
-                    scanner._codesTable = ApplyHuffman(probabilitiesList);
-                    scanner.EncodedProbabilitiesTable =
-                        scanner._codesTable.Select(pair => string.Format("{0}{1}:{2}", pair.Key, pair.Value.CodeLength, pair.Value.GetEncodedString()))
-                        .Aggregate((a, b) => a + b);
+                    scanner._codesTable = ApplyHuffman(probabilitiesList);                    
                 }
             });
 
