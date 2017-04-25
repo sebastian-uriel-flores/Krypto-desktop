@@ -96,6 +96,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="utils\CommonUtils.cs" />
     <Compile Include="dto\EncodedString.cs" />
     <Compile Include="dto\HuffmanEncodeResult.cs" />
