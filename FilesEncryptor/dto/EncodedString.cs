@@ -113,6 +113,14 @@ namespace FilesEncryptor.dto
             }
         }
 
+        public void Insert(uint bitPosition, EncodedString encoded)
+        {
+            EncodedString concatenated = GetRange(0, bitPosition);
+            concatenated.Append(encoded);
+            concatenated.Append(GetRange(bitPosition, (uint)CodeLength - bitPosition));
+            ReplaceCode(concatenated.Code, concatenated.CodeLength);
+        }
+                
         /// <summary>
         /// Realiza un Or entre el byte del Codigo cuyo indice es 'byteIndex' y 'b'
         /// </summary>
@@ -145,7 +153,7 @@ namespace FilesEncryptor.dto
             return new EncodedString(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
         }
 
-        public List<EncodedString> GetCodeBlocks(uint blockBitsSize)
+        public async Task<List<EncodedString>> GetCodeBlocks(uint blockBitsSize)
         {
             EncodedString copy = Copy();
 
@@ -169,10 +177,13 @@ namespace FilesEncryptor.dto
 
             List<EncodedString> blocks = new List<EncodedString>();
 
-            for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
+            await Task.Factory.StartNew(() =>
             {
-                blocks.Add(copy.GetRange(i, blockBitsSize));
-            }
+                for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
+                {
+                    blocks.Add(copy.GetRange(i, blockBitsSize));
+                }
+            });
 
             return blocks;
         }
