@@ -33,7 +33,7 @@ namespace FilesEncryptor.helpers
                             }
                             else
                             {
-                                fullCode = fullCode.Append(code);
+                                fullCode.Append(code);
                             }
                         }
                         catch (Exception ex)

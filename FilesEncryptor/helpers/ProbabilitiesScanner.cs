@@ -215,10 +215,10 @@ namespace FilesEncryptor.helpers
                     var lastParentCode = code.Copy();
 
                     //Agrego al final del codigo un 0
-                    firstParentCode = firstParentCode.Append(EncodedString.ZERO);
+                    firstParentCode.Append(EncodedString.ZERO);
 
                     //Agrego al final del codigo un 1
-                    lastParentCode = lastParentCode.Append(EncodedString.ONE);
+                    lastParentCode.Append(EncodedString.ONE);
 
                     SetParentsCodesRecursively(node.ParentsPositions.First(), firstParentCode);
                     SetParentsCodesRecursively(node.ParentsPositions.Last(), lastParentCode);

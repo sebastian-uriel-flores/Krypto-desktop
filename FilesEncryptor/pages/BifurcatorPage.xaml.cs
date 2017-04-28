@@ -46,5 +46,7 @@ namespace FilesEncryptor.pages
         private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
 
         private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
+
+        private void HammingEncodeBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HammingEncodePage));
     }
 }

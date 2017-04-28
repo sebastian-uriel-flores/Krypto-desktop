@@ -34,8 +34,22 @@ namespace FilesEncryptor.helpers
                 //La cantidad de columnas será la cantidad de bits de control
                 for (int i = 0; i < cantControlBits; i++)
                 {
+                    List<EncodedString> currentList = new List<EncodedString>();
+
+                    for (int j = 0; i < dataBlocks.Count; j++)
+                    {
+                        if (j == Math.Pow(2, i) - 1)
+                        {
+                            currentList.Add(EncodedString.ZERO);
+                        }
+                        else
+                        {
+                            currentList.Add(EncodedString.ONE);
+                        }
+                    }
+
                     //La cantidad de filas esta dada por la cantidad de bits de informacion (dataBlocks.Count)
-                    genMatrix.Add(new List<EncodedString>(dataBlocks.Count));
+                    genMatrix.Add(currentList);
                 }
 
                 //Creo la lista con los bloques de salida
@@ -44,12 +58,12 @@ namespace FilesEncryptor.helpers
                 int currentExp = 0;
                 int currentDataBit = 0;
 
-                //Inserto en los bloques de salida los bits de informacion, tal y como estan
                 for(int i = 0; i < outWordSize; i++)
                 {
-                    //Si es un bit de control, lo salteo
+                    //Si es un bit de control, calculo su valor, basandome en la matriz generadora
                     if(i + 1 == Math.Pow(2,currentExp))
                     {
+                        //Dejar de saltear y empezar a calcular los valores
                         currentExp++;
                     }
                     //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
@@ -59,9 +73,6 @@ namespace FilesEncryptor.helpers
                         currentDataBit++;
                     }                    
                 }                
-
-                //Ahora, calculo los bits de control de la salida
-                //TODO                 
             }
         }
     }
