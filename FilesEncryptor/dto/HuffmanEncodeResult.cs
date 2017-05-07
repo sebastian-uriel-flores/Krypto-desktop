@@ -9,13 +9,13 @@ namespace FilesEncryptor.dto
 {
     public class HuffmanEncodeResult
     {
-        public EncodedString Encoded { get; private set; }
+        public BitCode Encoded { get; private set; }
 
         public string EncodedProbabilitiesTable { get; private set; }
 
-        public ReadOnlyDictionary<char, EncodedString> ProbabilitiesTable { get; private set; }
+        public ReadOnlyDictionary<char, BitCode> ProbabilitiesTable { get; private set; }
 
-        public HuffmanEncodeResult(EncodedString encoded, ReadOnlyDictionary<char, EncodedString> probabilitiesTable)
+        public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable)
         {
             Encoded = encoded;
             ProbabilitiesTable = probabilitiesTable;

@@ -5,6 +5,7 @@
     xmlns:local="using:FilesEncryptor.pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:dto="using:FilesEncryptor.dto"
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
@@ -40,7 +41,7 @@
 
             <TextBlock
                 x:Name="origTextHeader"                
-                Text="Codigicar con Hamming"                
+                Text="Codificar con Hamming"                
                 Style="{ThemeResource HeaderStyle}"
                 />
             <Rectangle
@@ -50,7 +51,7 @@
                 />
             <TextBlock
                 x:Name="origTextSubheader"
-                Text="Seleccione un archivo comprimido con Huffman (.huf) para poder Codificarlo"                
+                Text="Seleccione un archivo para poder Codificarlo"                
                 RelativePanel.Below="origTextHeaderDivider"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
@@ -72,7 +73,8 @@
                 RelativePanel.Below="origTextSubheader"
                 HorizontalAlignment="Stretch"
                 RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
+                RelativePanel.AlignRightWithPanel="True"  
+                Click="SelectFileBt_Click"
                 />
 
             <RelativePanel
@@ -82,15 +84,26 @@
                 Margin="40,0"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                Visibility="Visible"
                 >
-                <ComboBox RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignRightWithPanel="True" Height="60" HorizontalAlignment="Stretch" SelectedIndex="0" Background="LightGray">
-                    <ComboBoxItem Content="16 bits .HA0"/>
-                    <ComboBoxItem Content="64 bits .HA1"/>
-                    <ComboBoxItem Content="256 bits .HA2"/>
-                    <ComboBoxItem Content="1024 bits .HA3"/>
-                    <ComboBoxItem Content="4096 bits .HA4"/>
+
+                <ComboBox 
+                    x:Name="hammingEncodeTypeSelector"
+                    RelativePanel.AlignLeftWithPanel="True" 
+                    RelativePanel.AlignRightWithPanel="True" 
+                    Height="60" 
+                    HorizontalAlignment="Stretch"                     
+                    Background="LightGray"
+                    ItemsSource="{x:Bind _encodeTypes}"                    
+                    SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
+                    >
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:HammingEncodeType">
+                            <ComboBoxItem Content="{x:Bind Name}" Height="50" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
+
+
             </RelativePanel>
 
             <Button
@@ -105,7 +118,7 @@
                 MinWidth="150"
                 Background="MediumSpringGreen"
                 Foreground="White"
-                Visibility="Visible"
+                Click="EncodeBt_Click"
                 />
         </RelativePanel>
 

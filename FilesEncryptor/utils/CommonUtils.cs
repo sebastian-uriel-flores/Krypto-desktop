@@ -78,6 +78,6 @@ namespace FilesEncryptor.utils
 
         public static uint BitsLengthToBytesLength(uint bitsLength) => (uint)Math.Ceiling((float)bitsLength / 8.0);
 
-        public static uint BitsLengthToToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
+        public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
     }
 }
