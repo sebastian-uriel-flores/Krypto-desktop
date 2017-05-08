@@ -82,18 +82,22 @@ namespace FilesEncryptor.dto
                         int excedent = multip8 - CodeLength;
                         int significantBits = 8 - excedent;
 
+                        //Elimino los bits del excedente del codigo actual, poniendolos en 0
+                        byte maskSignificant = CommonUtils.MaskLeft(Code.Last(), significantBits);
+                        And(Code.Count - 1, maskSignificant);
+
                         //Obtengo los bits del nuevo codigo que seran desplazados a izquierda,
                         //para ser insertados en el espacio restante del ultimo byte
                         //del codigo completo
-                        byte masked = CommonUtils.MaskLeft(newCode.Code.First(), excedent);
-                        masked >>= significantBits;
-
-                        Or(Code.Count - 1, masked);
+                        byte maskExcedent = CommonUtils.MaskLeft(newCode.Code.First(), excedent);
+                        maskExcedent >>= significantBits;                       
+                        
+                        Or(Code.Count - 1, maskExcedent);
 
                         //Ahora, desplazo los demas bytes del codigo hacia la izquierda 
                         //hasta cubrir los bits que se insertaron en el codigo completo
                         List<byte> shifted = CommonUtils.LeftShifting(newCode.Code, excedent);
-                        int newLength = newCode.CodeLength - excedent;
+                        int newLength = Math.Max(newCode.CodeLength - excedent, 0);
 
                         //Si al hacer los desplazamientos me quedo un byte de mas, con todos ceros
                         //debo removerlo
@@ -115,6 +119,12 @@ namespace FilesEncryptor.dto
             }
         }
 
+        public void Clean()
+        {
+            byte mask = CommonUtils.MaskLeft(Code.Last(), CodeLength);
+            And(CodeLength - 1, mask);
+        }
+
         public void Insert(uint bitPosition, BitCode encoded)
         {
             BitCode concatenated = GetRange(0, bitPosition);
@@ -128,7 +138,7 @@ namespace FilesEncryptor.dto
             uint bytePosition = CommonUtils.BitPositionToBytePosition(bitPosition);
             uint effectiveBitPosition = bitPosition % 8;
             return new BitCode(
-                new List<byte>() { (byte)((Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition)) << (byte)effectiveBitPosition) }, 
+                new List<byte>() { (byte)((Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition)) << 7) }, 
                 1);
         }
 
@@ -152,7 +162,23 @@ namespace FilesEncryptor.dto
 
             return result;
         }
-                
+
+        /// <summary>
+        /// Realiza un And entre el byte del Codigo cuyo indice es 'byteIndex' y 'b'
+        /// </summary>
+        /// <param name="byteIndex">Indice del byte del codigo sobre el que se realizara el And</param>
+        /// <param name="b">Byte con el que se realizara el And</param>
+        public void And(int byteIndex, byte b)
+        {
+            if ((Code.Count - 1) >= byteIndex)
+            {
+                //Reemplazo el byte en la posicion indicada
+                //por el resultado de realizar un OR entre
+                //dicho byte y el byte 'b'
+                Code[byteIndex] &= b;
+            }
+        }
+
         /// <summary>
         /// Realiza un Or entre el byte del Codigo cuyo indice es 'byteIndex' y 'b'
         /// </summary>
@@ -182,6 +208,7 @@ namespace FilesEncryptor.dto
             int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
             int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
 
+            //TODO: hacer shifts para dejar solamente marcados los bits de interes y el resto en 0
             return new BitCode(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
         }
 

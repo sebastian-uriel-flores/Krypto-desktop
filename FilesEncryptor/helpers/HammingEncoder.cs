@@ -3,6 +3,7 @@ using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +32,9 @@ namespace FilesEncryptor.helpers
                 {
                     //Obtengo todos los bloques de informacion o palabras
                     List<BitCode> dataBlocks = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
+
+                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row);
+                    Debug.WriteLine(" ");
 
                     //Determino el tamaño de los bloques de salida
                     uint outWordSize = 0;
@@ -63,6 +67,9 @@ namespace FilesEncryptor.helpers
                         genMatrix.Add(BitOps.Join(bits));
                     }
 
+                    BitCodePresenter.From(genMatrix).Print(BitCodePresenter.LinesDisposition.Column);
+                    Debug.WriteLine(" ");
+
                     //Creo la lista con los bloques de salida
                     List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
 
@@ -80,15 +87,8 @@ namespace FilesEncryptor.helpers
                                 //Al realizar un and, estoy haciendo la multiplicacion bit a bit
                                 //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
                                 //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                try
-                                {
-                                    currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1)));
-                                    currentExp++;
-                                }
-                                catch(Exception ex)
-                                {
-
-                                }
+                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1)));
+                                currentExp++;
                             }
                             //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
                             else
@@ -101,7 +101,9 @@ namespace FilesEncryptor.helpers
                         //Agrego la palabra recién creada a la lista de palabras de salida
                         outputBlocks.Add(currentOutputWord);
                     }
-                }
+
+                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row);
+                }                
             });
         }
     }
