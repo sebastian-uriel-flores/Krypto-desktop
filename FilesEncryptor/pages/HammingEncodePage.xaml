@@ -16,6 +16,7 @@
                 TargetType="TextBlock"           
                 BasedOn="{StaticResource BaseTextBlockStyle}"
                 >
+                <Setter Property="TextAlignment" Value="Center" />
                 <Setter Property="FontSize" Value="46" />
                 <Setter Property="FontWeight" Value="Light" />
                 <Setter Property="OpticalMarginAlignment" Value="TrimSideBearings" />
@@ -36,20 +37,25 @@
             </Style>
         </Grid.Resources>
 
-        <RelativePanel
-            MaxWidth="1200">
-
-            <TextBlock
+        <RelativePanel>
+            <RelativePanel
+                RelativePanel.Above="encodeBt"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                RelativePanel.AlignTopWithPanel="True"
+                MaxWidth="1200"                
+                >
+                <TextBlock
                 x:Name="origTextHeader"                
                 Text="Codificar con Hamming"                
                 Style="{ThemeResource HeaderStyle}"
                 />
-            <Rectangle
+                <Rectangle
                 x:Name="origTextHeaderDivider"
                 RelativePanel.Below="origTextHeader"
                 Style="{StaticResource LineDividerStyle}"
                 />
-            <TextBlock
+                <TextBlock
                 x:Name="origTextSubheader"
                 Text="Seleccione un archivo para poder Codificarlo"                
                 RelativePanel.Below="origTextHeaderDivider"
@@ -62,7 +68,7 @@
                 TextWrapping="WrapWholeWords"
                 TextAlignment="Center"
                 />
-            <Button 
+                <Button 
                 x:Name="selectFileBt"
                 Content="Examinar..." 
                 Padding="30,15"
@@ -77,17 +83,16 @@
                 Click="SelectFileBt_Click"
                 />
 
-            <RelativePanel
+                <RelativePanel
                 x:Name="settingsPanel"
-                RelativePanel.Below="selectFileBt"
-                RelativePanel.Above="encodeBt"
+                RelativePanel.Below="selectFileBt"                
                 Margin="40,0"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 Visibility="Collapsed"
                 >
 
-                <TextBlock
+                    <TextBlock
                     x:Name="hammingEncodeTypePickerHeader"
                     Text="Seleccione una codificación para el archivo"                    
                     RelativePanel.AlignLeftWithPanel="True"
@@ -100,7 +105,7 @@
                     TextAlignment="Center"
                     />
 
-                <ComboBox 
+                    <ComboBox 
                     x:Name="hammingEncodeTypeSelector"
                     RelativePanel.AlignLeftWithPanel="True" 
                     RelativePanel.AlignRightWithPanel="True" 
@@ -110,34 +115,36 @@
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     >
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="dto:HammingEncodeType">
-                            <Grid                                
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="dto:HammingEncodeType">
+                                <Grid                                
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 >
-                                <TextBlock 
+                                    <TextBlock 
                                     Text="{x:Bind ShortDescription}"                                 
                                     HorizontalAlignment="Stretch" 
                                     VerticalAlignment="Center"                                 
                                     />
-                            </Grid>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                                </Grid>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
 
+                </RelativePanel>
             </RelativePanel>
 
             <Button
                 x:Name="encodeBt"
                 Content="Codificar"
+                Height="60"
                 RelativePanel.AlignBottomWithPanel="True"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 HorizontalAlignment="Stretch"
                 Padding="30,15"
-                Margin="40,20"
+                Margin="0,20,0,0"
                 MinWidth="150"
                 Background="MediumSpringGreen"
                 Foreground="White"
