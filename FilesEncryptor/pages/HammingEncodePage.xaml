@@ -106,8 +106,7 @@
                     RelativePanel.AlignRightWithPanel="True" 
                     RelativePanel.Below="hammingEncodeTypePickerHeader"
                     Height="60" 
-                    HorizontalAlignment="Stretch"                     
-                    Background="LightGray"
+                    HorizontalAlignment="Stretch"                                         
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     >

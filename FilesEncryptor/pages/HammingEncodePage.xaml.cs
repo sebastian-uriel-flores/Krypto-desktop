@@ -160,6 +160,7 @@ namespace FilesEncryptor.pages
                 //Vuelco el código obtenido en disco
                 bool dumpRes = await DumpEncodedResult(result, file, originalFile.FileType, originalFile.DisplayType);
 
+                //Show congrats message
                 if(dumpRes)
                 {
                     MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");

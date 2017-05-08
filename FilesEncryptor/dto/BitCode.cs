@@ -215,18 +215,15 @@ namespace FilesEncryptor.dto
         public List<BitCode> Explode(uint blockBitsSize)
         {
             BitCode copy = Copy();
-
-            uint encodedStrBytesSize = CommonUtils.BitsLengthToBytesLength((uint)CodeLength);
-            uint blockBytesSize = CommonUtils.BitsLengthToBytesLength(blockBitsSize);
-
+            
             //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
-            if (blockBytesSize > encodedStrBytesSize)
+            if (blockBitsSize > (uint)copy.CodeLength)
             {
                 //Agrego Ceros al BitCode para rellenar
-                copy.Append(Zeros(blockBytesSize - encodedStrBytesSize));
+                copy.Append(Zeros(blockBitsSize - (uint)copy.CodeLength));
             }
             //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
-            else if(encodedStrBytesSize > blockBytesSize)
+            else if((uint)copy.CodeLength > blockBitsSize)
             {
                 uint mod = (uint)copy.CodeLength % blockBitsSize;
 
