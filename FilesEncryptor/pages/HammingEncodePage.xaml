@@ -84,6 +84,7 @@
                 Margin="40,0"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
+                Visibility="Collapsed"
                 >
 
                 <ComboBox 
@@ -93,12 +94,21 @@
                     Height="60" 
                     HorizontalAlignment="Stretch"                     
                     Background="LightGray"
-                    ItemsSource="{x:Bind _encodeTypes}"                    
+                    ItemsSource="{x:Bind _encodeTypes}"                                        
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     >
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:HammingEncodeType">
-                            <ComboBoxItem Content="{x:Bind Name}" Height="50" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Transparent"/>
+                            <Grid                                
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                >
+                                <TextBlock 
+                                    Text="{x:Bind Name}"                                 
+                                    HorizontalAlignment="Stretch" 
+                                    VerticalAlignment="Center"                                 
+                                    />
+                            </Grid>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
@@ -119,6 +129,7 @@
                 Background="MediumSpringGreen"
                 Foreground="White"
                 Click="EncodeBt_Click"
+                Visibility="Collapsed"
                 />
         </RelativePanel>
 

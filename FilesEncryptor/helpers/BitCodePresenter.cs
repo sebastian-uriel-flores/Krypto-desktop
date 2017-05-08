@@ -35,83 +35,94 @@ namespace FilesEncryptor.helpers
             _codes.AddRange(codes);
         }
 
-        public void Print(LinesDisposition disposition)
+        public void Print(LinesDisposition disposition, string codeName)
         {
             List<string> lines = new List<string>();
+            int rowsCount = 0;
+            int columnsCount = 0;
 
             if (disposition == LinesDisposition.Row)
             {
-                foreach (BitCode code in _codes)
+                if (_codes.Count > 0)
                 {
-                    string currentLine = "";
-                    List<int> bitsList = code.ToIntList();
+                    //Dado que cada BitCode corresponde a una fila
+                    //la cantidad de filas será la cantidad de BitCodes
+                    rowsCount = _codes.Count;
 
-                    for (int pos = 0; pos < bitsList.Count; pos++)
+                    //Dado que todas las filas tienen la misma longitud,
+                    //la cantidad de columnas será la cantidad de bits de una fila
+                    columnsCount = _codes[0].CodeLength;
+
+                    foreach (BitCode code in _codes)
                     {
-                        currentLine += bitsList[pos].ToString();
+                        string currentLine = "";
+                        List<int> bitsList = code.ToIntList();
 
-                        if ((pos + 1) % 4 == 0)
+                        for (int pos = 0; pos < bitsList.Count; pos++)
                         {
-                            currentLine += " ";
-                        }
-                    }
+                            currentLine += bitsList[pos].ToString();
 
-                    lines.Add(currentLine.TrimEnd(' '));
+                            if ((pos + 1) % 4 == 0)
+                            {
+                                currentLine += " ";
+                            }
+                        }
+
+                        lines.Add(currentLine.TrimEnd(' '));
+                    }
                 }
             }
             else if(disposition == LinesDisposition.Column)
             {
-                //Obtengo la cantidad de filas que hay en todas las columnas
-                //Dado que son todas iguales, consultare por la cantidad en la primera columna
-                int rowsCount = _codes[0].CodeLength;
-
-                //Convierto a cada columna en una lista de enteros
-                List<List<int>> bitsColumns = new List<List<int>>();
-                foreach(BitCode column in _codes)
+                if (_codes.Count > 0)
                 {
-                    bitsColumns.Add(column.ToIntList());
-                }
+                    //Dado que cada BitCode corresponde a una columna
+                    //la cantidad de columnas será la cantidad de BitCodes
+                    columnsCount = _codes.Count;
 
-                //Por cada fila
-                for (int rowIndex = 0; rowIndex < rowsCount; rowIndex++)
-                {
-                    string currentLine = "";
+                    //Obtengo la cantidad de filas que hay en todas las columnas
+                    //Dado que son todas iguales, consultare por la cantidad en la primera columna
+                    rowsCount = _codes[0].CodeLength;
 
-                    //Por cada columna, agrego a la línea de texto actual el bit en la fila actual
-                    for(int columnIndex = 0; columnIndex < bitsColumns.Count; columnIndex++)
+                    //Convierto a cada columna en una lista de enteros
+                    List<List<int>> bitsColumns = new List<List<int>>();
+                    foreach (BitCode column in _codes)
                     {
-                        currentLine += bitsColumns[columnIndex][rowIndex].ToString();
-
-                        if((columnIndex + 1) % 4 == 0)
-                        {
-                            currentLine += " ";
-                        }
+                        bitsColumns.Add(column.ToIntList());
                     }
 
-                    lines.Add(currentLine.TrimEnd(' '));
+                    //Por cada fila
+                    for (int rowIndex = 0; rowIndex < rowsCount; rowIndex++)
+                    {
+                        string currentLine = "";
+
+                        //Por cada columna, agrego a la línea de texto actual el bit en la fila actual
+                        for (int columnIndex = 0; columnIndex < bitsColumns.Count; columnIndex++)
+                        {
+                            currentLine += bitsColumns[columnIndex][rowIndex].ToString();
+
+                            if ((columnIndex + 1) % 4 == 0)
+                            {
+                                currentLine += " ";
+                            }
+                        }
+
+                        lines.Add(currentLine.TrimEnd(' '));
+                    }
                 }
             }
-            
-            Debug.Write(string.Join("\n", lines));
+
+            Debug.WriteLine(codeName, "[NAME]");
+            Debug.WriteLine(string.Format("{0} rows", rowsCount), "[INFO]");
+            Debug.WriteLine(string.Format("{0} columns", columnsCount), "[INFO]");
+            Debug.WriteLine(string.Join("\n", lines));
+            Debug.WriteLine(" ");
         }
 
-        public void Dump()
+        public async void Dump()
         {
-            List<string> lines = new List<string>();
-
-            foreach (BitCode code in _codes)
-            {
-                string currentLine = "";
-
-                foreach (BitCode bit in code.Explode(1))
-                {
-                    currentLine += bit.Code[0].ToString() + " ";
-                }
-
-                lines.Add(currentLine.TrimEnd(' '));
-            }
-
-            Debug.Write(string.Join(" ", lines));
+            StorageFolder storageFolder = ApplicationData.Current.LocalFolder;
+            StorageFile sampleFile = await storageFolder.CreateFileAsync("sample.txt", CreationCollisionOption.ReplaceExisting);
         }
     }
 }

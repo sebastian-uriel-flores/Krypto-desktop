@@ -30,11 +30,14 @@ namespace FilesEncryptor.helpers
             {
                 if (encodeType?.WordBitsSize > 0)
                 {
+                    Debug.WriteLine("Extracting input words", "[INFO]");
+
                     //Obtengo todos los bloques de informacion o palabras
                     List<BitCode> dataBlocks = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
 
-                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row);
-                    Debug.WriteLine(" ");
+                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
+
+                    Debug.WriteLine("Creating generator matrix", "[INFO]");
 
                     //Determino el tamaño de los bloques de salida
                     uint outWordSize = 0;
@@ -46,6 +49,8 @@ namespace FilesEncryptor.helpers
                     }
 
                     outWordSize = encodeType.WordBitsSize + cantControlBits;
+
+                    
 
                     //Creo la matriz Generadora, reducida, sin los bits de información
                     //Será representada por una lista de BitCode, donde cada uno de ellos 
@@ -67,8 +72,9 @@ namespace FilesEncryptor.helpers
                         genMatrix.Add(BitOps.Join(bits));
                     }
 
-                    BitCodePresenter.From(genMatrix).Print(BitCodePresenter.LinesDisposition.Column);
-                    Debug.WriteLine(" ");
+                    BitCodePresenter.From(genMatrix).Print(BitCodePresenter.LinesDisposition.Column, "Generator Matrix");
+
+                    Debug.WriteLine("Codifying words", "[INFO]");
 
                     //Creo la lista con los bloques de salida
                     List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
@@ -102,7 +108,7 @@ namespace FilesEncryptor.helpers
                         outputBlocks.Add(currentOutputWord);
                     }
 
-                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row);
+                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
                 }                
             });
         }

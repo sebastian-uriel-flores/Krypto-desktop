@@ -125,7 +125,10 @@ namespace FilesEncryptor.pages
 
         private async void EncodeBt_Click(object sender, RoutedEventArgs e)
         {
+            ShowProgressPanel();
+            await Task.Delay(200);
             await HammingEncoder.Encode(_rawFileBytes, _encodeTypes[_selectedEncoding]);
+            HideProgressPanel();
         }
 
         private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
