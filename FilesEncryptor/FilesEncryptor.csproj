@@ -96,7 +96,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="dto\HammingEncodeResult.cs" />
     <Compile Include="dto\HammingEncodeType.cs" />
+    <Compile Include="dto\IEncodeResult.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="pages\HammingEncodePage.xaml.cs">

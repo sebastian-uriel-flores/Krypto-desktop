@@ -8,7 +8,9 @@ namespace FilesEncryptor.dto
 {
     public class HammingEncodeType
     {
-        public string Name { get; set; }
+        public string ShortDescription { get; set; }
+
+        public string LongDescription { get; set; }
 
         public string Extension { get; set; }
 
@@ -19,9 +21,10 @@ namespace FilesEncryptor.dto
 
         }
 
-        public HammingEncodeType(string name, string extension, uint wordBitsSize)
+        public HammingEncodeType(string shortDescription, string longDescription, string extension, uint wordBitsSize)
         {
-            Name = name;
+            ShortDescription = shortDescription;
+            LongDescription = longDescription;
             Extension = extension;
             WordBitsSize = wordBitsSize;
         }

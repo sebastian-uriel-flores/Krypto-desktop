@@ -87,14 +87,28 @@
                 Visibility="Collapsed"
                 >
 
+                <TextBlock
+                    x:Name="hammingEncodeTypePickerHeader"
+                    Text="Seleccione una codificación para el archivo"                    
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Padding="20,0,20,10"
+                    FontSize="25"    
+                    Foreground="#99000000"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Center"
+                    />
+
                 <ComboBox 
                     x:Name="hammingEncodeTypeSelector"
                     RelativePanel.AlignLeftWithPanel="True" 
                     RelativePanel.AlignRightWithPanel="True" 
+                    RelativePanel.Below="hammingEncodeTypePickerHeader"
                     Height="60" 
                     HorizontalAlignment="Stretch"                     
                     Background="LightGray"
-                    ItemsSource="{x:Bind _encodeTypes}"                                        
+                    ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     >
                     <ComboBox.ItemTemplate>
@@ -104,7 +118,7 @@
                                 VerticalAlignment="Stretch"
                                 >
                                 <TextBlock 
-                                    Text="{x:Bind Name}"                                 
+                                    Text="{x:Bind ShortDescription}"                                 
                                     HorizontalAlignment="Stretch" 
                                     VerticalAlignment="Center"                                 
                                     />

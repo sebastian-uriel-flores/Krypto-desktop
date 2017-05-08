@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace FilesEncryptor.dto
 {
-    public class HuffmanEncodeResult
+    public class HuffmanEncodeResult : IEncodeResult
     {
-        public BitCode Encoded { get; private set; }
+        public BitCode Encoded { get; set; }
 
-        public string EncodedProbabilitiesTable { get; private set; }
+        public string EncodedProbabilitiesTable { get; set; }
 
-        public ReadOnlyDictionary<char, BitCode> ProbabilitiesTable { get; private set; }
+        public ReadOnlyDictionary<char, BitCode> ProbabilitiesTable { get; set; }
 
         public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable)
         {

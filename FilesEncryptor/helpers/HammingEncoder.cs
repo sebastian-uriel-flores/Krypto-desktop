@@ -15,17 +15,19 @@ namespace FilesEncryptor.helpers
     {
         private static List<HammingEncodeType> _encodeTypes => new List<HammingEncodeType>
         {
-            new HammingEncodeType("16 bits", ".HA0", 16),
-            new HammingEncodeType("64 bits", ".HA1", 64),
-            new HammingEncodeType("256 bits", ".HA2", 256),
-            new HammingEncodeType("1024 bits", ".HA3", 1024),
-            new HammingEncodeType("4096 bits", ".HA4", 4096)
+            new HammingEncodeType("16 bits .HA0", "Archivo codificado en Hamming de 16 bits", ".ha0", 16),
+            new HammingEncodeType("64 bits .HA1", "Archivo codificado en Hamming de 64 bits", ".ha1", 64),
+            new HammingEncodeType("256 bits .HA2", "Archivo codificado en Hamming de 256 bits", ".ha2", 256),
+            new HammingEncodeType("1024 bits .HA3", "Archivo codificado en Hamming de 1024 bits", ".ha3", 1024),
+            new HammingEncodeType("4096 bits .HA4", "Archivo codificado en Hamming de 4096 bits", ".ha4", 4096)
         };
 
         public static ReadOnlyCollection<HammingEncodeType> EncodeTypes => _encodeTypes.AsReadOnly();
 
-        public static async Task Encode(List<byte> rawBytes, HammingEncodeType encodeType)
+        public static async Task<HammingEncodeResult> Encode(List<byte> rawBytes, HammingEncodeType encodeType)
         {
+            HammingEncodeResult result = null;
+
             await Task.Factory.StartNew(() =>
             {
                 if (encodeType?.WordBitsSize > 0)
@@ -35,6 +37,7 @@ namespace FilesEncryptor.helpers
                     //Obtengo todos los bloques de informacion o palabras
                     List<BitCode> dataBlocks = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
 
+                    //Imprimo todas las palabras de entrada
                     BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
 
                     Debug.WriteLine("Creating generator matrix", "[INFO]");
@@ -49,8 +52,6 @@ namespace FilesEncryptor.helpers
                     }
 
                     outWordSize = encodeType.WordBitsSize + cantControlBits;
-
-                    
 
                     //Creo la matriz Generadora, reducida, sin los bits de información
                     //Será representada por una lista de BitCode, donde cada uno de ellos 
@@ -72,6 +73,7 @@ namespace FilesEncryptor.helpers
                         genMatrix.Add(BitOps.Join(bits));
                     }
 
+                    //Imprimo la matriz generadora
                     BitCodePresenter.From(genMatrix).Print(BitCodePresenter.LinesDisposition.Column, "Generator Matrix");
 
                     Debug.WriteLine("Codifying words", "[INFO]");
@@ -108,9 +110,14 @@ namespace FilesEncryptor.helpers
                         outputBlocks.Add(currentOutputWord);
                     }
 
+                    //Imprimo todas las palabras de salida
                     BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
+
+                    result = new HammingEncodeResult(BitOps.Join(outputBlocks), encodeType);                                        
                 }                
             });
+
+            return result;
         }
     }
 }
