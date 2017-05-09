@@ -8,7 +8,7 @@
     xmlns:dto="using:FilesEncryptor.dto"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="WhiteSmoke">
 
         <Grid.Resources>
             <Style 
@@ -17,7 +17,7 @@
                 BasedOn="{StaticResource BaseTextBlockStyle}"
                 >
                 <Setter Property="TextAlignment" Value="Center" />
-                <Setter Property="FontSize" Value="46" />
+                <Setter Property="FontSize" Value="24" />
                 <Setter Property="FontWeight" Value="Light" />
                 <Setter Property="OpticalMarginAlignment" Value="TrimSideBearings" />
                 <Setter Property="Foreground" Value="#99000000"/>
@@ -37,102 +37,106 @@
             </Style>
         </Grid.Resources>
 
-        <RelativePanel>
+
+        <RelativePanel                
+                MaxWidth="500"
+                MaxHeight="700"
+            Background="White"
+                >
+            <Grid
+                x:Name="titleBar"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                Background="DodgerBlue"                
+                Height="80"
+                >
+                <TextBlock Text="Codificar con Hamming" Margin="16,15" TextAlignment="Center" FontSize="16" FontFamily="Segoe UI SemiLight" VerticalAlignment="Bottom" Foreground="White"/>
+            </Grid>
+
             <RelativePanel
+                x:Name="contentPanel"
+                RelativePanel.Below="titleBar"
                 RelativePanel.Above="encodeBt"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                RelativePanel.AlignTopWithPanel="True"
-                MaxWidth="1200"                
                 >
                 <TextBlock
-                x:Name="origTextHeader"                
-                Text="Codificar con Hamming"                
-                Style="{ThemeResource HeaderStyle}"
-                />
-                <Rectangle
-                x:Name="origTextHeaderDivider"
-                RelativePanel.Below="origTextHeader"
-                Style="{StaticResource LineDividerStyle}"
-                />
-                <TextBlock
-                x:Name="origTextSubheader"
-                Text="Seleccione un archivo para poder Codificarlo"                
-                RelativePanel.Below="origTextHeaderDivider"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                Padding="20,20,20,10"
-                FontSize="25"    
-                Foreground="#99000000"
-                FontWeight="Light"
-                TextWrapping="WrapWholeWords"
-                TextAlignment="Center"
-                />
-                <Button 
-                x:Name="selectFileBt"
-                Content="Examinar..." 
-                Padding="30,15"
-                Background="DodgerBlue"
-                Margin="40,0,40,30"
-                Foreground="White"
-                MinWidth="150"
-                RelativePanel.Below="origTextSubheader"
-                HorizontalAlignment="Stretch"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"  
-                Click="SelectFileBt_Click"
-                />
-
-                <RelativePanel
-                x:Name="settingsPanel"
-                RelativePanel.Below="selectFileBt"                
-                Margin="40,0"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                Visibility="Collapsed"
-                >
-
-                    <TextBlock
-                    x:Name="hammingEncodeTypePickerHeader"
-                    Text="Seleccione una codificación para el archivo"                    
+                    x:Name="origTextSubheader"
+                    Text="Seleccione un archivo para poder Codificarlo"                
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Padding="20,0,20,10"
-                    FontSize="25"    
+                    FontFamily="Segoe UI Light"
+                    FontSize="18"    
                     Foreground="#99000000"
                     FontWeight="Light"
                     TextWrapping="WrapWholeWords"
                     TextAlignment="Center"
+                    Margin="0,40,0,10"
+                    />
+                <Button 
+                    x:Name="selectFileBt"
+                    Content="Examinar..." 
+                    Height="50"
+                    Margin="50,0"
+                    Background="DodgerBlue"
+                    BorderBrush="DodgerBlue"
+                    BorderThickness="2"
+                    Foreground="White"                    
+                    FontFamily="Segoe UI"
+                    RelativePanel.Below="origTextSubheader"
+                    HorizontalAlignment="Stretch"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"  
+                    Click="SelectFileBt_Click"
                     />
 
-                    <ComboBox 
+                <TextBlock
+                    x:Name="hammingEncodeTypePickerHeader"
+                    Text="Seleccione una codificación para el archivo"                    
+                    RelativePanel.Below="selectFileBt"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontSize="18"    
+                    Margin="0,60,0,10"
+                    Foreground="#99000000"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Center"
+                    Visibility="Collapsed"
+                    />
+
+                <ComboBox 
                     x:Name="hammingEncodeTypeSelector"
                     RelativePanel.AlignLeftWithPanel="True" 
                     RelativePanel.AlignRightWithPanel="True" 
                     RelativePanel.Below="hammingEncodeTypePickerHeader"
-                    Height="60" 
+                    Height="50" 
+                    Margin="50,0"
+                    BorderThickness="2"
+                    Background="WhiteSmoke"
+                    BorderBrush="WhiteSmoke"
                     HorizontalAlignment="Stretch"                                         
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
+                    Visibility="Collapsed"
                     >
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="dto:HammingEncodeType">
-                                <Grid                                
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="dto:HammingEncodeType">
+                            <Grid                                
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 >
-                                    <TextBlock 
+                                <TextBlock 
                                     Text="{x:Bind ShortDescription}"                                 
+                                    FontFamily="Segoe UI"
+                                    Foreground="#99000000"
                                     HorizontalAlignment="Stretch" 
                                     VerticalAlignment="Center"                                 
                                     />
-                                </Grid>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-
-
-                </RelativePanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
             </RelativePanel>
 
             <Button
@@ -144,29 +148,31 @@
                 RelativePanel.AlignRightWithPanel="True"
                 HorizontalAlignment="Stretch"
                 Padding="30,15"
-                Margin="0,20,0,0"
                 MinWidth="150"
                 Background="MediumSpringGreen"
                 Foreground="White"
                 Click="EncodeBt_Click"
                 Visibility="Collapsed"
                 />
-        </RelativePanel>
 
-        <RelativePanel
-            x:Name="progressPanel"
-            Grid.ColumnSpan="2"
-            Background="#7F000000"
-            Visibility="Collapsed"
-            >
-            <ProgressRing
-                RelativePanel.AlignHorizontalCenterWithPanel="True"
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                Height="100"
-                Width="100"
-                Foreground="DodgerBlue"
-                IsActive="True"
-                />
+            <RelativePanel
+                x:Name="progressPanel"
+                RelativePanel.Below="titleBar"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"                
+                RelativePanel.AlignBottomWithPanel="True"
+                Background="#66000000"
+                Visibility="Collapsed"
+                >
+                <ProgressRing
+                    RelativePanel.AlignHorizontalCenterWithPanel="True"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    Height="60"
+                    Width="60"
+                    Foreground="DodgerBlue"
+                    IsActive="True"
+                    />
+            </RelativePanel>
         </RelativePanel>
     </Grid>
 </Page>

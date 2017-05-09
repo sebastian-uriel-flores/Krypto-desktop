@@ -94,7 +94,8 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
-                    settingsPanel.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypePickerHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     encodeBt.Visibility = Visibility.Collapsed;
 
                     using (var stream = await file.OpenAsync(FileAccessMode.Read))
@@ -126,7 +127,8 @@ namespace FilesEncryptor.pages
 
                 if (_rawFileBytes != null)
                 {
-                    settingsPanel.Visibility = Visibility.Visible;
+                    hammingEncodeTypePickerHeader.Visibility = Visibility.Visible;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;
                     encodeBt.Visibility = Visibility.Visible;                    
                 }
 
