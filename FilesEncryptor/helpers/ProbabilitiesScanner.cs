@@ -11,9 +11,9 @@ namespace FilesEncryptor.helpers
 {
     public class ProbabilitiesScanner
     {
-        private Dictionary<char, EncodedString> _codesTable;
+        private Dictionary<char, BitCode> _codesTable;
 
-        public ReadOnlyDictionary<char, EncodedString> CodesTable => new ReadOnlyDictionary<char, EncodedString>(_codesTable);
+        public ReadOnlyDictionary<char, BitCode> CodesTable => new ReadOnlyDictionary<char, BitCode>(_codesTable);
 
         public string Text { get; set; }
 
@@ -21,16 +21,16 @@ namespace FilesEncryptor.helpers
         private ProbabilitiesScanner()
         {
             Text = "";
-            _codesTable = new Dictionary<char, EncodedString>();
+            _codesTable = new Dictionary<char, BitCode>();
         }
 
-        public EncodedString GetCode(char c) => _codesTable != null && _codesTable.ContainsKey(c) ? _codesTable[c].Copy() : null;
+        public BitCode GetCode(char c) => _codesTable != null && _codesTable.ContainsKey(c) ? _codesTable[c].Copy() : null;
 
-        public bool ContainsChar(EncodedString encoded)
+        public bool ContainsChar(BitCode encoded)
         {
             if(_codesTable != null)
             {
-                foreach(EncodedString enc in _codesTable.Values)
+                foreach(BitCode enc in _codesTable.Values)
                 {
                     if(enc.Equals(encoded))
                     {
@@ -44,13 +44,13 @@ namespace FilesEncryptor.helpers
             
             //=> _codesTable != null && _codesTable.Values.Count(enc => enc.Code.SequenceEqual(encoded.Code)) == 1;
 
-        public char GetChar(EncodedString encoded) => _codesTable.First(pair => pair.Value.Equals(encoded)).Key;
+        public char GetChar(BitCode encoded) => _codesTable.First(pair => pair.Value.Equals(encoded)).Key;
 
         public bool AreAllDifferent()
         {
             bool result = false;
 
-            foreach(KeyValuePair<char, EncodedString> pair in _codesTable)
+            foreach(KeyValuePair<char, BitCode> pair in _codesTable)
             {
                 result = !_codesTable.ToList().Exists(pair2 => pair2.Key != pair.Key && pair2.Value.Equals(pair.Value));
 
@@ -122,7 +122,7 @@ namespace FilesEncryptor.helpers
         /// </summary>
         /// <param name="probabilities"></param>
         /// <returns></returns>
-        private static Dictionary<char, EncodedString> ApplyHuffman(List<KeyValuePair<char, float>> probabilities)
+        private static Dictionary<char, BitCode> ApplyHuffman(List<KeyValuePair<char, float>> probabilities)
         {
             //Creo el arbol Huffman
             List<List<HuffmanTreeNode>> huffmanTree = new List<List<HuffmanTreeNode>>();
@@ -183,11 +183,11 @@ namespace FilesEncryptor.helpers
             }
 
             //Una vez que llego a la raiz del arbol, empiezo a generar los codigos            
-            SetParentsCodesRecursively(huffmanTree.First().First(), EncodedString.ZERO); //Primer nodo posee un 0
-            SetParentsCodesRecursively(huffmanTree.First().Last(), EncodedString.ONE); //Segundo nodo posee un 1
+            SetParentsCodesRecursively(huffmanTree.First().First(), BitCode.ZERO); //Primer nodo posee un 0
+            SetParentsCodesRecursively(huffmanTree.First().Last(), BitCode.ONE); //Segundo nodo posee un 1
 
             //Ahora que todas las hojas tienen un código asignado, creo la tabla de códigos
-            Dictionary<char, EncodedString> codesTable = new Dictionary<char, EncodedString>();
+            Dictionary<char, BitCode> codesTable = new Dictionary<char, BitCode>();
 
             for(int node = 0; node < huffmanTree.Last().Count; node++)
             {
@@ -197,7 +197,7 @@ namespace FilesEncryptor.helpers
             return codesTable;
         }
 
-        private static void SetParentsCodesRecursively(HuffmanTreeNode node, EncodedString code)
+        private static void SetParentsCodesRecursively(HuffmanTreeNode node, BitCode code)
         {
             node.Code = code;
             
@@ -215,10 +215,10 @@ namespace FilesEncryptor.helpers
                     var lastParentCode = code.Copy();
 
                     //Agrego al final del codigo un 0
-                    firstParentCode.Append(EncodedString.ZERO);
+                    firstParentCode.Append(BitCode.ZERO);
 
                     //Agrego al final del codigo un 1
-                    lastParentCode.Append(EncodedString.ONE);
+                    lastParentCode.Append(BitCode.ONE);
 
                     SetParentsCodesRecursively(node.ParentsPositions.First(), firstParentCode);
                     SetParentsCodesRecursively(node.ParentsPositions.Last(), lastParentCode);
@@ -276,7 +276,7 @@ namespace FilesEncryptor.helpers
 
                             }
                             //Agrego el nuevo codigo junto con su clave al diccionario
-                            scanner._codesTable.Add(key, new EncodedString(bts.ToList(), codeBitsLength));
+                            scanner._codesTable.Add(key, new BitCode(bts.ToList(), codeBitsLength));
                             break;
                         }
                     }
@@ -294,7 +294,7 @@ namespace FilesEncryptor.helpers
 
         #region FROM_DICTIONARY
 
-        public static ProbabilitiesScanner FromDictionary(Dictionary<char, EncodedString> probabilitiesTable) 
+        public static ProbabilitiesScanner FromDictionary(Dictionary<char, BitCode> probabilitiesTable) 
             => new ProbabilitiesScanner() { _codesTable = probabilitiesTable };
 
         #endregion
@@ -305,7 +305,7 @@ namespace FilesEncryptor.helpers
 
             public List<HuffmanTreeNode> ParentsPositions { get; set; }
 
-            public EncodedString Code { get; set; }
+            public BitCode Code { get; set; }
 
             public HuffmanTreeNode(float prob, List<HuffmanTreeNode> parentsPositions)
             {

@@ -7,12 +7,14 @@ using FilesEncryptor.utils;
 
 namespace FilesEncryptor.dto
 {
-    public class EncodedString
+    public class BitCode
     {
         #region CONSTS
 
-        public static EncodedString ZERO => new EncodedString(new List<byte> { 0 }, 1).Copy(); 
-        public static EncodedString ONE => new EncodedString(new List<byte> { 128 }, 1).Copy();
+        public static BitCode EMPTY => new BitCode(new List<byte> (), 0).Copy();
+
+        public static BitCode ZERO => new BitCode(new List<byte> { 0 }, 1).Copy(); 
+        public static BitCode ONE => new BitCode(new List<byte> { 128 }, 1).Copy();
 
         #endregion
 
@@ -26,15 +28,15 @@ namespace FilesEncryptor.dto
 
         #region BUILDERS
 
-        public EncodedString(List<byte> code, int length)
+        public BitCode(List<byte> code, int length)
         {
             Code = code;
             CodeLength = length;
         }
 
-        public static EncodedString Zeros(uint zerosCount)
+        public static BitCode Zeros(uint zerosCount)
         {
-            EncodedString zeros = new EncodedString(new List<byte>(), 0);
+            BitCode zeros = new BitCode(new List<byte>(), 0);
 
             for(uint i = 0; i < zerosCount; i++)
             {
@@ -44,9 +46,9 @@ namespace FilesEncryptor.dto
             return zeros;
         }
 
-        public static EncodedString Ones(uint onesCount)
+        public static BitCode Ones(uint onesCount)
         {
-            EncodedString ones = new EncodedString(new List<byte>(), 0);
+            BitCode ones = new BitCode(new List<byte>(), 0);
 
             for (uint i = 0; i < onesCount; i++)
             {
@@ -58,9 +60,9 @@ namespace FilesEncryptor.dto
 
         #endregion
 
-        public EncodedString Copy() => new EncodedString(Code.ToList(), CodeLength);
+        public BitCode Copy() => new BitCode(Code.ToList(), CodeLength);
         
-        public void Append(EncodedString newCode)
+        public void Append(BitCode newCode)
         {
             if (newCode?.CodeLength > 0)
             {
@@ -80,18 +82,22 @@ namespace FilesEncryptor.dto
                         int excedent = multip8 - CodeLength;
                         int significantBits = 8 - excedent;
 
+                        //Elimino los bits del excedente del codigo actual, poniendolos en 0
+                        byte maskSignificant = CommonUtils.MaskLeft(Code.Last(), significantBits);
+                        And(Code.Count - 1, maskSignificant);
+
                         //Obtengo los bits del nuevo codigo que seran desplazados a izquierda,
                         //para ser insertados en el espacio restante del ultimo byte
                         //del codigo completo
-                        byte masked = CommonUtils.MaskLeft(newCode.Code.First(), excedent);
-                        masked >>= significantBits;
-
-                        Or(Code.Count - 1, masked);
+                        byte maskExcedent = CommonUtils.MaskLeft(newCode.Code.First(), excedent);
+                        maskExcedent >>= significantBits;                       
+                        
+                        Or(Code.Count - 1, maskExcedent);
 
                         //Ahora, desplazo los demas bytes del codigo hacia la izquierda 
                         //hasta cubrir los bits que se insertaron en el codigo completo
                         List<byte> shifted = CommonUtils.LeftShifting(newCode.Code, excedent);
-                        int newLength = newCode.CodeLength - excedent;
+                        int newLength = Math.Max(newCode.CodeLength - excedent, 0);
 
                         //Si al hacer los desplazamientos me quedo un byte de mas, con todos ceros
                         //debo removerlo
@@ -110,6 +116,66 @@ namespace FilesEncryptor.dto
                 }
 
                 CodeLength += newCode.CodeLength;
+            }
+        }
+
+        public void Clean()
+        {
+            byte mask = CommonUtils.MaskLeft(Code.Last(), CodeLength);
+            And(CodeLength - 1, mask);
+        }
+
+        public void Insert(uint bitPosition, BitCode encoded)
+        {
+            BitCode concatenated = GetRange(0, bitPosition);
+            concatenated.Append(encoded);
+            concatenated.Append(GetRange(bitPosition, (uint)CodeLength - bitPosition));
+            ReplaceCode(concatenated.Code, concatenated.CodeLength);
+        }
+
+        public BitCode ElementAt(uint bitPosition)
+        {
+            uint bytePosition = CommonUtils.BitPositionToBytePosition(bitPosition);
+            uint effectiveBitPosition = bitPosition % 8;
+            return new BitCode(
+                new List<byte>() { (byte)((Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition)) << 7) }, 
+                1);
+        }
+
+        public List<int> ToIntList()
+        {
+            List<int> result = new List<int>(CodeLength);
+
+            for(uint i = 0; i < CodeLength; i++)
+            {
+                BitCode currentBit = ElementAt(i);
+
+                if (currentBit.Equals(ZERO))
+                {
+                    result.Add(0);
+                }
+                else
+                {
+                    result.Add(1);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Realiza un And entre el byte del Codigo cuyo indice es 'byteIndex' y 'b'
+        /// </summary>
+        /// <param name="byteIndex">Indice del byte del codigo sobre el que se realizara el And</param>
+        /// <param name="b">Byte con el que se realizara el And</param>
+        public void And(int byteIndex, byte b)
+        {
+            if ((Code.Count - 1) >= byteIndex)
+            {
+                //Reemplazo el byte en la posicion indicada
+                //por el resultado de realizar un OR entre
+                //dicho byte y el byte 'b'
+                Code[byteIndex] &= b;
             }
         }
 
@@ -137,37 +203,42 @@ namespace FilesEncryptor.dto
 
         #region HAMMING
 
-        public EncodedString GetRange(uint startBitPos, uint bitsCount)
+        public BitCode GetRange(uint startBitPos, uint bitsCount)
         {
-            int startBytePos = (int)CommonUtils.BitsLengthToToBytePosition(startBitPos);
+            int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
             int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
 
-            return new EncodedString(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
+            //TODO: hacer shifts para dejar solamente marcados los bits de interes y el resto en 0
+            return new BitCode(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
         }
 
-        public List<EncodedString> GetCodeBlocks(uint blockBitsSize)
+        public List<BitCode> Explode(uint blockBitsSize)
         {
-            EncodedString copy = Copy();
-
-            uint encodedStrBytesSize = CommonUtils.BitsLengthToBytesLength((uint)CodeLength);
-            uint blockBytesSize = CommonUtils.BitsLengthToBytesLength(blockBitsSize);
-
-            if(blockBytesSize > encodedStrBytesSize)
+            BitCode copy = Copy();
+            
+            //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
+            if (blockBitsSize > (uint)copy.CodeLength)
             {
-                copy.Append(Zeros(blockBytesSize - encodedStrBytesSize));
+                //Agrego Ceros al BitCode para rellenar
+                copy.Append(Zeros(blockBitsSize - (uint)copy.CodeLength));
             }
-            else if(encodedStrBytesSize > blockBytesSize)
+            //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
+            else if((uint)copy.CodeLength > blockBitsSize)
             {
                 uint mod = (uint)copy.CodeLength % blockBitsSize;
 
+                //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
                 if (mod != 0)
                 {
+                    //Agrego tantos ceros cómo sea necesario, 
+                    //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
                     uint cantZeros = (uint)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
                     copy.Append(Zeros(cantZeros));
                 }
             }
 
-            List<EncodedString> blocks = new List<EncodedString>();
+            //Construyo la lista de bloques
+            List<BitCode> blocks = new List<BitCode>();
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
@@ -187,7 +258,7 @@ namespace FilesEncryptor.dto
 
             if (obj != null && GetType() == obj.GetType())
             {
-                EncodedString enc = obj as EncodedString;
+                BitCode enc = obj as BitCode;
 
                 if (Code.Count == enc.Code.Count && CodeLength == enc.CodeLength)
                 {

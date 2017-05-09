@@ -35,6 +35,16 @@
                 Margin="20,10"
                 Click="CompressFileBt_Click"
             />
+
+            <Button
+                x:Name="hammingEncodeBt"
+                Content="Codificar un archivo .huf con Hamming"
+                HorizontalAlignment="Stretch"                
+                Padding="0,15"
+                Margin="20,10"
+                Click="HammingEncodeBt_Click"
+            />
+
             <Button
                 x:Name="uncompressFileBt"            
                 Content="Descomprimir un archivo"

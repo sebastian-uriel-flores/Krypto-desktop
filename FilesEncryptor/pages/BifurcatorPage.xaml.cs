@@ -6,7 +6,10 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Foundation.Metadata;
+using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -27,24 +30,36 @@ namespace FilesEncryptor.pages
         public BifurcatorPage()
         {
             this.InitializeComponent();
-
-
-            List<byte> bts = new List<byte>()
-            {
-                7, 8, 9,253, 128, 0, 114
-            };
-
-            
-
-            string s2 = Convert.ToBase64String(bts.ToArray());
-            var btsRec2 = Convert.FromBase64String(s2);
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e) =>
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
+
+            //PC customization
+            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+            {
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                if (titleBar != null)
+                {
+                    titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
+                    titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
+                    titleBar.ButtonBackgroundColor = Colors.DodgerBlue;
+                    titleBar.ButtonPressedBackgroundColor = Colors.DodgerBlue;
+                    titleBar.BackgroundColor = Colors.DodgerBlue;
+                    titleBar.ForegroundColor = Colors.WhiteSmoke;
+                    titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
+                    titleBar.InactiveBackgroundColor = Colors.DodgerBlue;
+                    titleBar.ButtonInactiveBackgroundColor = Colors.DodgerBlue;
+                    titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
+                }
+            }
+        }
 
         private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
 
         private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
+
+        private void HammingEncodeBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HammingEncodePage));
     }
 }

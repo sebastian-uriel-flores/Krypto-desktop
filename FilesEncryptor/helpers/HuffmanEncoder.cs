@@ -12,7 +12,7 @@ namespace FilesEncryptor.helpers
     {
         public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {
-            EncodedString fullCode = null;
+            BitCode fullCode = null;
                         
             if(text != null)
             {
@@ -25,7 +25,7 @@ namespace FilesEncryptor.helpers
                         try
                         {
                             //Obtengo el codigo Huffman para el caracter
-                            EncodedString code = scanner.GetCode(c);
+                            BitCode code = scanner.GetCode(c);
 
                             if (fullCode == null)
                             {
@@ -47,10 +47,10 @@ namespace FilesEncryptor.helpers
             return new HuffmanEncodeResult(fullCode, scanner.CodesTable);
         }        
 
-        public static string Decode(ProbabilitiesScanner scanner, EncodedString encodedText)
+        public static string Decode(ProbabilitiesScanner scanner, BitCode encodedText)
         {
             string result = "";
-            EncodedString remainingEncodedText = encodedText.Copy();
+            BitCode remainingEncodedText = encodedText.Copy();
 
             List<byte> currentCodeBytes = new List<byte>();
             int currentCodeLength = 0;
@@ -74,7 +74,7 @@ namespace FilesEncryptor.helpers
                     //Si no estoy agregando bits basura que exceden la longitud del texto codificado
                     if (remainingEncodedText.CodeLength - currentCodeLength >= 0)
                     {
-                        EncodedString currentCode = new EncodedString(currentCodeBytes, currentCodeLength);
+                        BitCode currentCode = new BitCode(currentCodeBytes, currentCodeLength);
 
                         //Si el codigo formado al realizar los 'i' desplazamientos es un codigo valido
                         if (scanner.ContainsChar(currentCode))
