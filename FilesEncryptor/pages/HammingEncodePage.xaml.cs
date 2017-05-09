@@ -205,7 +205,7 @@ namespace FilesEncryptor.pages
                             dataWriter.WriteString(string.Format("{0}:{1}{2}:{3}", originalFileType.Length, originalFileType, originalFileDisplayType.Length, originalFileDisplayType));
 
                             //Escribo el archivo codificado                       
-                            dataWriter.WriteString(string.Format("..{0}:", result.Encoded.CodeLength));
+                            dataWriter.WriteString(string.Format("{0}:", result.Encoded.CodeLength));
                             dataWriter.WriteBytes(result.Encoded.Code.ToArray());
 
                             await dataWriter.StoreAsync();

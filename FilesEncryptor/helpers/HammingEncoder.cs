@@ -7,6 +7,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media;
 
 namespace FilesEncryptor.helpers
@@ -118,6 +120,87 @@ namespace FilesEncryptor.helpers
             });
 
             return result;
+        }
+
+        public static async Task Decode(StorageFile file)
+        {
+            //Determino el tipo de codificacion que posee
+            HammingEncodeType encodeType = EncodeTypes.FirstOrDefault(encType => encType.Extension == file.FileType);
+
+            if(encodeType == default(HammingEncodeType))
+            {
+                //No posee una extension valida
+            }
+            else
+            {
+                //Extraigo la información del archivo codificado
+                string originalFileExtension = "";
+                string originalFileDisplayType = "";
+                string originalFileName = "";
+                BitCode code = BitCode.EMPTY;
+
+                //Abro el archivo para lectura
+                using (var stream = await file.OpenAsync(FileAccessMode.Read))
+                {
+                    using (var inputStream = stream.GetInputStreamAt(0))
+                    {
+                        using (var dataReader = new DataReader(inputStream))
+                        {
+                            var size = stream.Size;
+                            //Cargo en el buffer todos los bytes del archivo
+                            uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+
+                            string temp = "";
+
+                            //Obtengo el largo del tipo de archivo
+                            string fileExtLength = "";
+
+                            temp = dataReader.ReadString(1);
+
+                            while (temp != ":")
+                            {
+                                fileExtLength += temp;
+                                temp = dataReader.ReadString(1);
+                            }
+
+                            //Obtengo el tipo de archivo
+                            originalFileExtension = dataReader.ReadString(uint.Parse(fileExtLength));
+
+                            //Obtengo el largo de la descripcion del tipo de archivo
+                            string fileDisplayTypeLength = "";
+
+                            temp = dataReader.ReadString(1);
+
+                            while (temp != ":")
+                            {
+                                fileDisplayTypeLength += temp;
+                                temp = dataReader.ReadString(1);
+                            }
+
+                            //Obtengo la descripcion del tipo de archivo
+                            originalFileDisplayType = dataReader.ReadString(uint.Parse(fileDisplayTypeLength));
+
+                            //Obtengo el largo del código
+                            string rawCodeLength = "";
+
+                            temp = dataReader.ReadString(1);
+
+                            while (temp != ":")
+                            {
+                                rawCodeLength += temp;
+                                temp = dataReader.ReadString(1);
+                            }
+
+                            //Obtengo los bytes del código
+                            byte[] rawCode = new byte[CommonUtils.BitsLengthToBytesLength(uint.Parse(rawCodeLength))];
+                            dataReader.ReadBytes(rawCode);
+                            code = new BitCode(rawCode.ToList(), int.Parse(rawCodeLength));
+                        }
+                    }
+                }
+
+                //WTF do here?
+            }
         }
     }
 }
