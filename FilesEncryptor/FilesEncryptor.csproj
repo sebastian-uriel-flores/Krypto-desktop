@@ -96,8 +96,17 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="dto\HammingEncodeResult.cs" />
+    <Compile Include="dto\HammingEncodeType.cs" />
+    <Compile Include="dto\IEncodeResult.cs" />
+    <Compile Include="helpers\BitCodePresenter.cs" />
+    <Compile Include="helpers\HammingEncoder.cs" />
+    <Compile Include="pages\HammingEncodePage.xaml.cs">
+      <DependentUpon>HammingEncodePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="utils\BitOps.cs" />
     <Compile Include="utils\CommonUtils.cs" />
-    <Compile Include="dto\EncodedString.cs" />
+    <Compile Include="dto\BitCode.cs" />
     <Compile Include="dto\HuffmanEncodeResult.cs" />
     <Compile Include="helpers\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
@@ -140,6 +149,10 @@
     <Page Include="pages\CompressFilePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="pages\HammingEncodePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="pages\UncompressFilePage.xaml">
       <Generator>MSBuild:Compile</Generator>

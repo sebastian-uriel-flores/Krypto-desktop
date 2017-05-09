@@ -93,8 +93,8 @@ namespace FilesEncryptor.pages
 
                     string fileType = "";
                     string fileDisplayType = "";
-                    Dictionary<char, EncodedString> probabilitiesTable = new Dictionary<char, EncodedString>();
-                    EncodedString encodedText = new EncodedString(new List<byte>(), 0);
+                    Dictionary<char, BitCode> probabilitiesTable = new Dictionary<char, BitCode>();
+                    BitCode encodedText = new BitCode(new List<byte>(), 0);
 
                     using (var inputStream = stream.GetInputStreamAt(0))
                     {
@@ -158,7 +158,7 @@ namespace FilesEncryptor.pages
                                 byte[] currentCodeBytes = new byte[CommonUtils.BitsLengthToBytesLength(currentCodeBitsLength)];
                                 dataReader.ReadBytes(currentCodeBytes);
 
-                                probabilitiesTable.Add(currentChar, new EncodedString(currentCodeBytes.ToList(), (int)currentCodeBitsLength));
+                                probabilitiesTable.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeBitsLength));
 
                                 //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
                                 endOfTableReader = dataReader.ReadString(2);
@@ -182,7 +182,7 @@ namespace FilesEncryptor.pages
                             dataReader.ReadBytes(encodedTextBytes);
 
                             //Creo un EncodedString con el texto codificado
-                            encodedText = new EncodedString(new List<byte>(encodedTextBytes), (int)encodedTextBitsLength);
+                            encodedText = new BitCode(new List<byte>(encodedTextBytes), (int)encodedTextBitsLength);
                         }
                     }
 
