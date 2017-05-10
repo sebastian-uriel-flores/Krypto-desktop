@@ -53,6 +53,16 @@
                 Margin="20,10"
                 Click="UncompressFileBt_Click"
             />
+
+            <Button
+                x:Name="hammingDecodeBt"            
+                Content="Decodificar con Hamming"
+                HorizontalAlignment="Stretch"
+                Padding="0,15"
+                Margin="20,10"
+                Click="HammingDecodeBt_Click"
+            />
+
         </StackPanel>
     </RelativePanel>
 </Page>

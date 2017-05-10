@@ -96,11 +96,15 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="dto\HammingDecodeResult.cs" />
     <Compile Include="dto\HammingEncodeResult.cs" />
     <Compile Include="dto\HammingEncodeType.cs" />
     <Compile Include="dto\IEncodeResult.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
+    <Compile Include="pages\HammingDecodePage.xaml.cs">
+      <DependentUpon>HammingDecodePage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="pages\HammingEncodePage.xaml.cs">
       <DependentUpon>HammingEncodePage.xaml</DependentUpon>
     </Compile>
@@ -149,6 +153,10 @@
     <Page Include="pages\CompressFilePage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="pages\HammingDecodePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="pages\HammingEncodePage.xaml">
       <SubType>Designer</SubType>

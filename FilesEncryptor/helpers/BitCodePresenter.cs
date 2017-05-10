@@ -35,7 +35,7 @@ namespace FilesEncryptor.helpers
             _codes.AddRange(codes);
         }
 
-        public void Print(LinesDisposition disposition, string codeName)
+        public void Print(LinesDisposition disposition, string codeName, int interSpacing = 4)
         {
             List<string> lines = new List<string>();
             int rowsCount = 0;
@@ -62,7 +62,7 @@ namespace FilesEncryptor.helpers
                         {
                             currentLine += bitsList[pos].ToString();
 
-                            if ((pos + 1) % 4 == 0)
+                            if ((pos + 1) % interSpacing == 0)
                             {
                                 currentLine += " ";
                             }
@@ -101,7 +101,7 @@ namespace FilesEncryptor.helpers
                         {
                             currentLine += bitsColumns[columnIndex][rowIndex].ToString();
 
-                            if ((columnIndex + 1) % 4 == 0)
+                            if ((columnIndex + 1) % interSpacing == 0)
                             {
                                 currentLine += " ";
                             }

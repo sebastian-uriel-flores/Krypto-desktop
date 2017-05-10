@@ -111,6 +111,8 @@ namespace FilesEncryptor.helpers
                 parContMatrix.Add(currentColumn);
             }
 
+            BitCodePresenter.From(parContMatrix).Print(BitCodePresenter.LinesDisposition.Column, "Parity control matrix");
+
             return parContMatrix;
         }
 
@@ -184,85 +186,68 @@ namespace FilesEncryptor.helpers
             return result;
         }
 
-        public static async Task Decode(StorageFile file)
+        public static async Task<BitCode> Decode(HammingEncodeResult encodedResult)
         {
-            //Determino el tipo de codificacion que posee
-            HammingEncodeType encodeType = EncodeTypes.FirstOrDefault(encType => encType.Extension == file.FileType);
+            Debug.WriteLine(string.Format("Checking words parity - {0}", DateTime.Now), "[INFO]");
 
-            if(encodeType == default(HammingEncodeType))
-            {
-                //No posee una extension valida
-            }
-            else
-            {
-                //Extraigo la información del archivo codificado
-                string originalFileExtension = "";
-                string originalFileDisplayType = "";
-                string originalFileName = "";
-                BitCode code = BitCode.EMPTY;
+            //Separo el codigo completo en bloques representando a cada palabra del mismo
+            List<BitCode> parityControlMatrix = CreateParityControlMatrix(encodedResult.EncodeType);
+            uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
-                //Abro el archivo para lectura
-                using (var stream = await file.OpenAsync(FileAccessMode.Read))
+            List<BitCode> encodedWords = encodedResult.Encoded.Explode(encodedWordSize, false);
+
+            //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
+
+            //Decodifico cada una de las palabras
+            Debug.WriteLine(string.Format("Decodifying words - {0}", DateTime.Now), "[INFO]");
+
+            List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
+            List<uint> controlBitsIndexes = GetControlBitsIndexes(encodedResult.EncodeType);
+
+            foreach (BitCode encoded in encodedWords)
+            {
+                BitCode decoded = BitCode.EMPTY;
+                BitCodePresenter.From(new List<BitCode>() { encoded }).Print(BitCodePresenter.LinesDisposition.Row, "Encoded", 1);
+
+                foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
                 {
-                    using (var inputStream = stream.GetInputStreamAt(0))
-                    {
-                        using (var dataReader = new DataReader(inputStream))
-                        {
-                            var size = stream.Size;
-                            //Cargo en el buffer todos los bytes del archivo
-                            uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
-
-                            string temp = "";
-
-                            //Obtengo el largo del tipo de archivo
-                            string fileExtLength = "";
-
-                            temp = dataReader.ReadString(1);
-
-                            while (temp != ":")
-                            {
-                                fileExtLength += temp;
-                                temp = dataReader.ReadString(1);
-                            }
-
-                            //Obtengo el tipo de archivo
-                            originalFileExtension = dataReader.ReadString(uint.Parse(fileExtLength));
-
-                            //Obtengo el largo de la descripcion del tipo de archivo
-                            string fileDisplayTypeLength = "";
-
-                            temp = dataReader.ReadString(1);
-
-                            while (temp != ":")
-                            {
-                                fileDisplayTypeLength += temp;
-                                temp = dataReader.ReadString(1);
-                            }
-
-                            //Obtengo la descripcion del tipo de archivo
-                            originalFileDisplayType = dataReader.ReadString(uint.Parse(fileDisplayTypeLength));
-
-                            //Obtengo el largo del código
-                            string rawCodeLength = "";
-
-                            temp = dataReader.ReadString(1);
-
-                            while (temp != ":")
-                            {
-                                rawCodeLength += temp;
-                                temp = dataReader.ReadString(1);
-                            }
-
-                            //Obtengo los bytes del código
-                            byte[] rawCode = new byte[CommonUtils.BitsLengthToBytesLength(uint.Parse(rawCodeLength))];
-                            dataReader.ReadBytes(rawCode);
-                            code = new BitCode(rawCode.ToList(), int.Parse(rawCodeLength));
-                        }
-                    }
+                    decoded.Append(encoded.ElementAt(index));
                 }
 
-                //WTF do here?
+                BitCodePresenter.From(new List<BitCode>() { decoded }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded", 1);
+                decodedWords.Add(decoded);
             }
+
+            //Junto todas las palabras decodificadas en un solo codigo
+            return BitOps.Join(decodedWords);
+        }
+
+        private static List<uint> GetControlBitsIndexes(HammingEncodeType encodeType)
+        {            
+            uint ctrlBits = CalculateControlBits(encodeType);
+            List<uint> result = new List<uint>((int)ctrlBits);
+
+            for (uint i = 0; i < ctrlBits; i++)
+            {
+                result.Add((uint)Math.Pow(2, i) - 1);
+            }
+
+            return result;
+        }
+
+        private static List<uint> GetDataBitsIndexes(uint wordSize, List<uint> controlBits)
+        {
+            List<uint> dataBits = new List<uint>();
+            for(uint i = 0; i < wordSize; i++)
+            {
+                dataBits.Add(i);
+            }
+
+            dataBits = dataBits.Except(controlBits).ToList();
+
+            return dataBits;
         }
     }
+
+    
 }

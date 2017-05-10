@@ -78,11 +78,14 @@ namespace FilesEncryptor.pages
             var picker = new FileOpenPicker()
             {
                 ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
+                SuggestedStartLocation = PickerLocationId.DocumentsLibrary                
             };
             picker.FileTypeFilter.Add(".txt");
             picker.FileTypeFilter.Add(".huf");
-            
+            picker.FileTypeFilter.Add(".docx");
+            picker.FileTypeFilter.Add(".doc");
+            picker.FileTypeFilter.Add(".jpg");
+
             var file = await picker.PickSingleFileAsync();
 
             if (file != null)
@@ -139,8 +142,6 @@ namespace FilesEncryptor.pages
         private void HammingEncodeTypeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedEncoding = hammingEncodeTypeSelector.SelectedIndex;
-            var parityContMat = HammingEncoder.CreateParityControlMatrix(_encodeTypes[_selectedEncoding]);
-            BitCodePresenter.From(parityContMat).Print(BitCodePresenter.LinesDisposition.Column, "Parity Control Matrix");
         }
 
         private async void EncodeBt_Click(object sender, RoutedEventArgs e)
