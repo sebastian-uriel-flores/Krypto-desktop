@@ -139,6 +139,8 @@ namespace FilesEncryptor.pages
         private void HammingEncodeTypeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _selectedEncoding = hammingEncodeTypeSelector.SelectedIndex;
+            var parityContMat = HammingEncoder.CreateParityControlMatrix(_encodeTypes[_selectedEncoding]);
+            BitCodePresenter.From(parityContMat).Print(BitCodePresenter.LinesDisposition.Column, "Parity Control Matrix");
         }
 
         private async void EncodeBt_Click(object sender, RoutedEventArgs e)
