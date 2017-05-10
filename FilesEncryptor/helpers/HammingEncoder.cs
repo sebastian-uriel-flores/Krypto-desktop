@@ -196,6 +196,8 @@ namespace FilesEncryptor.helpers
 
             List<BitCode> encodedWords = encodedResult.Encoded.Explode(encodedWordSize, false);
 
+            BitCodePresenter.From(encodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Encoded matrix");
+
             //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
 
             //Decodifico cada una de las palabras
@@ -207,17 +209,16 @@ namespace FilesEncryptor.helpers
             foreach (BitCode encoded in encodedWords)
             {
                 BitCode decoded = BitCode.EMPTY;
-                BitCodePresenter.From(new List<BitCode>() { encoded }).Print(BitCodePresenter.LinesDisposition.Row, "Encoded", 1);
 
                 foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
                 {
                     decoded.Append(encoded.ElementAt(index));
                 }
 
-                BitCodePresenter.From(new List<BitCode>() { decoded }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded", 1);
                 decodedWords.Add(decoded);
             }
 
+            BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
             //Junto todas las palabras decodificadas en un solo codigo
             return BitOps.Join(decodedWords);
         }

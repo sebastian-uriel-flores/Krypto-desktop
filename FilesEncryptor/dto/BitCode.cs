@@ -137,9 +137,11 @@ namespace FilesEncryptor.dto
         {
             uint bytePosition = CommonUtils.BitPositionToBytePosition(bitPosition);
             uint effectiveBitPosition = bitPosition % 8;
+
+            byte disp1 = (byte)(Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition));
+            byte disp2 = (byte)(disp1 << 7);
             return new BitCode(
-                new List<byte>() { (byte)((Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition)) << 7) }, 
-                1);
+                new List<byte>() { disp2 }, 1);
         }
 
         public List<int> ToIntList()
@@ -208,8 +210,11 @@ namespace FilesEncryptor.dto
             int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
             int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
 
-            //TODO: hacer shifts para dejar solamente marcados los bits de interes y el resto en 0
-            return new BitCode(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
+            //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
+            List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
+            bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
+            
+            return new BitCode(bytesRange, (int)bitsCount);
         }
 
         public List<BitCode> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true)
