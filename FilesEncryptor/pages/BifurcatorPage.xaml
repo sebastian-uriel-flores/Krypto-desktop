@@ -7,25 +7,149 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock
-            Text="Seleccione una opción"
-            RelativePanel.Above="buttonsPanel"
+    <RelativePanel Background="WhiteSmoke">
+        <Grid
+            x:Name="titleBar"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
-            Padding="40,20,40,10"
-            FontSize="25"    
+            Background="DodgerBlue"                
+            Height="80"
+            >
+            <TextBlock 
+                Text="Menú principal" 
+                Margin="16,15" 
+                TextAlignment="Center" 
+                FontSize="16" 
+                FontFamily="Segoe UI SemiLight" 
+                VerticalAlignment="Bottom" 
+                Foreground="White"
+                />
+        </Grid>
+        
+        <TextBlock
+            x:Name="header"
+            Text="Seleccione una opción"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.Below="titleBar"
+            Padding="0,40,0,20"
+            FontFamily="Segoe UI Light"
+            FontSize="22"    
             Foreground="#99000000"
             FontWeight="Light"
             TextWrapping="WrapWholeWords"
             TextAlignment="Center"
             />
+        <GridView x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" MaxWidth="500" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True">
+            <RelativePanel x:Name="encodeFileItem" Height="150" Width="150" Background="White" Margin="15">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f6;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="40"
+                    Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="35"
+                    Background="DodgerBlue">
+                    <TextBlock 
+                        Text="Proteger archivo"
+                        FontSize="14"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+                
+            </RelativePanel>
+            <RelativePanel x:Name="decodeFileItem" Height="150" Width="150" Background="White" Margin="15">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f7;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="40"
+                    Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="35"
+                    Background="DodgerBlue">
+                    <TextBlock 
+                        Text="Desproteger archivo"
+                        FontSize="14"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+            <RelativePanel x:Name="compressFileItem" Height="150" Width="150" Margin="15" Background="White">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xed41;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="40"
+                    Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="35"
+                    Background="DodgerBlue">
+                    <TextBlock 
+                        Text="Comprimir archivo"
+                        FontSize="14"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+            <RelativePanel x:Name="uncompressFileItem" Height="150" Width="150" Margin="15" Background="White">
+                    <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xed43;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="40"
+                        Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="35"
+                    Background="DodgerBlue">
+                    <TextBlock 
+                        Text="Descomprimir archivo"
+                        FontSize="14"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+        </GridView>
         <StackPanel
             x:Name="buttonsPanel"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignVerticalCenterWithPanel="True"
             MaxWidth="500"
+            Visibility="Collapsed"
             >
             <Button
                 x:Name="compressFileBt"

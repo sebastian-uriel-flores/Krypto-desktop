@@ -84,6 +84,7 @@ namespace FilesEncryptor.pages
             picker.FileTypeFilter.Add(".huf");
             picker.FileTypeFilter.Add(".docx");
             picker.FileTypeFilter.Add(".doc");
+            picker.FileTypeFilter.Add(".pdf");
             picker.FileTypeFilter.Add(".jpg");
 
             var file = await picker.PickSingleFileAsync();
@@ -125,7 +126,7 @@ namespace FilesEncryptor.pages
                     MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
                     await errorDialog.ShowAsync();
 
-                    Debug.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
+                    DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
                 }
 
                 if (_rawFileBytes != null)
@@ -164,11 +165,16 @@ namespace FilesEncryptor.pages
                 ShowProgressPanel();
                 await Task.Delay(200);
 
+                HammingEncodeType selectedEncodingType = _encodeTypes[_selectedEncoding];
+
+                DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", file.Path));
+                DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
+
                 //Codifico el archivo original
                 HammingEncodeResult result = await HammingEncoder.Encode(_rawFileBytes, _encodeTypes[_selectedEncoding]);
 
                 //Vuelco el código obtenido en disco
-                bool dumpRes = await DumpEncodedResult(result, file, originalFile.FileType, originalFile.DisplayType);
+                bool dumpRes = await DumpEncodedResult(result, file, originalFile.FileType, originalFile.DisplayType, originalFile.DisplayName);
 
                 //Show congrats message
                 if(dumpRes)
@@ -184,11 +190,15 @@ namespace FilesEncryptor.pages
 
                 HideProgressPanel();
             }
+            else
+            {
+                DebugUtils.WriteLine("File encoded canceled because user cancel output file selection");
+            }
         }
 
-        private async Task<bool> DumpEncodedResult(HammingEncodeResult result, StorageFile file, string originalFileType, string originalFileDisplayType)
+        private async Task<bool> DumpEncodedResult(HammingEncodeResult result, StorageFile file, string originalFileType, string originalFileDisplayType, string originalFileName)
         {
-            Debug.WriteLine(string.Format("Dumping hamming encoded result to file {0}", file.Name), "[INFO]");
+            DebugUtils.WriteLine(string.Format("Dumping hamming encoded result to file \"{0}\"", file.Path));
 
             bool dumpResult = false;
 
@@ -203,12 +213,28 @@ namespace FilesEncryptor.pages
                     using (var outputStream = stream.GetOutputStreamAt(0))
                     {
                         using (var dataWriter = new DataWriter(outputStream))
-                        {
+                        {                            
+                            string fileHeader = string.Format("{0}:{1}{2}:{3}{4}:{5}",
+                                originalFileType.Length,
+                                originalFileType,
+                                originalFileDisplayType.Length,
+                                originalFileDisplayType,
+                                originalFileName.Length,
+                                originalFileName);
+
+                            string codeLength = string.Format("{0},{1}:", result.Encoded.CodeLength, result.RedundanceBitsCount);
+
+                            DebugUtils.WriteLine(string.Format("File Header: \"{0}\"", fileHeader));
+                            DebugUtils.WriteLine(string.Format("Code Length: \"{0}\"", result.Encoded.CodeLength));
+                            DebugUtils.WriteLine(string.Format("Redundance bits count: \"{0}\"", result.RedundanceBitsCount));
+
                             //Escribo el tipo de archivo original y su descripción
-                            dataWriter.WriteString(string.Format("{0}:{1}{2}:{3}", originalFileType.Length, originalFileType, originalFileDisplayType.Length, originalFileDisplayType));
+                            dataWriter.WriteString(fileHeader);
+                            
+                            //Escribo la longitud del archivo codificado
+                            dataWriter.WriteString(codeLength);
 
                             //Escribo el archivo codificado                       
-                            dataWriter.WriteString(string.Format("{0}:", result.Encoded.CodeLength));
                             dataWriter.WriteBytes(result.Encoded.Code.ToArray());
 
                             await dataWriter.StoreAsync();
@@ -224,9 +250,20 @@ namespace FilesEncryptor.pages
                     await CachedFileManager.CompleteUpdatesAsync(file);
 
                 dumpResult = status == Windows.Storage.Provider.FileUpdateStatus.Complete;
-            }
 
-            Debug.WriteLine(string.Format("Dump Completed: {0}", dumpResult), "[INFO]");
+                if (dumpResult)
+                {
+                    DebugUtils.WriteLine(string.Format("Dump Completed properly"));
+                }
+                else
+                {
+                    DebugUtils.Fail("Dump incompleted", "CachedFileManager could not complete updates async");
+                }
+            }
+            else
+            {
+                DebugUtils.Fail("Dump incompleted", "File is not available");
+            }
 
             return dumpResult;
         }

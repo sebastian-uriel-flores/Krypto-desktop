@@ -57,7 +57,7 @@ namespace FilesEncryptor.helpers
 
                 //Reemplazo con un 0 el valor de la fila correspondiente a la
                 //potencia 'i' de 2
-                List<BitCode> bits = currentBitCode.Explode(1);
+                List<BitCode> bits = currentBitCode.Explode(1, false).Item1;
                 bits[(int)Math.Pow(2, i) - 1] = BitCode.ZERO;
                 genMatrix.Add(BitOps.Join(bits));
             }
@@ -124,16 +124,17 @@ namespace FilesEncryptor.helpers
             {
                 if (encodeType?.WordBitsSize > 0)
                 {
-                    Debug.WriteLine("Extracting input words", "[INFO]");
+                    DebugUtils.WriteLine("Extracting input words");
 
                     //Obtengo todos los bloques de informacion o palabras
-                    List<BitCode> dataBlocks = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
-
+                    Tuple<List<BitCode>, int> exploded = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
+                    List<BitCode> dataBlocks = exploded.Item1;
+                    
                     //Imprimo todas las palabras de entrada
                     BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
 
                     //Creo la matriz generadora
-                    Debug.WriteLine("Creating generator matrix", "[INFO]");
+                    DebugUtils.WriteLine("Creating generator matrix");
 
                     List<BitCode> genMatrix = CreateGeneratorMatrix(encodeType);
 
@@ -142,7 +143,7 @@ namespace FilesEncryptor.helpers
                     //de la matriz generadora
                     uint outWordSize = encodeType.WordBitsSize + (uint)genMatrix.Count;
 
-                    Debug.WriteLine("Codifying words", "[INFO]");
+                    DebugUtils.WriteLine("Codifying words");
 
                     //Creo la lista con los bloques de salida
                     List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
@@ -161,7 +162,7 @@ namespace FilesEncryptor.helpers
                                 //Al realizar un and, estoy haciendo la multiplicacion bit a bit
                                 //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
                                 //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1)));
+                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
                                 currentExp++;
                             }
                             //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
@@ -179,7 +180,7 @@ namespace FilesEncryptor.helpers
                     //Imprimo todas las palabras de salida
                     BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
 
-                    result = new HammingEncodeResult(BitOps.Join(outputBlocks), encodeType);                                        
+                    result = new HammingEncodeResult(BitOps.Join(outputBlocks), encodeType, exploded.Item2);
                 }                
             });
 
@@ -188,39 +189,50 @@ namespace FilesEncryptor.helpers
 
         public static async Task<BitCode> Decode(HammingEncodeResult encodedResult)
         {
-            Debug.WriteLine(string.Format("Checking words parity - {0}", DateTime.Now), "[INFO]");
+            BitCode result = BitCode.EMPTY;
 
-            //Separo el codigo completo en bloques representando a cada palabra del mismo
-            List<BitCode> parityControlMatrix = CreateParityControlMatrix(encodedResult.EncodeType);
-            uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
-
-            List<BitCode> encodedWords = encodedResult.Encoded.Explode(encodedWordSize, false);
-
-            BitCodePresenter.From(encodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Encoded matrix");
-
-            //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
-
-            //Decodifico cada una de las palabras
-            Debug.WriteLine(string.Format("Decodifying words - {0}", DateTime.Now), "[INFO]");
-
-            List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
-            List<uint> controlBitsIndexes = GetControlBitsIndexes(encodedResult.EncodeType);
-
-            foreach (BitCode encoded in encodedWords)
+            await Task.Factory.StartNew(() =>
             {
-                BitCode decoded = BitCode.EMPTY;
+                DebugUtils.WriteLine("Checking words parity");
 
-                foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
+                //Separo el codigo completo en bloques representando a cada palabra del mismo
+                List<BitCode> parityControlMatrix = CreateParityControlMatrix(encodedResult.EncodeType);
+                uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
+
+                List<BitCode> encodedWords = encodedResult.Encoded.Explode(encodedWordSize, false).Item1;
+
+                BitCodePresenter.From(encodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Encoded matrix");
+
+                //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
+
+                //Decodifico cada una de las palabras
+                DebugUtils.WriteLine("Decodifying words");
+
+                List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
+                List<uint> controlBitsIndexes = GetControlBitsIndexes(encodedResult.EncodeType);
+
+                foreach (BitCode encoded in encodedWords)
                 {
-                    decoded.Append(encoded.ElementAt(index));
+                    BitCode decoded = BitCode.EMPTY;
+
+                    foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
+                    {
+                        decoded.Append(encoded.ElementAt(index));
+                    }
+
+                    decodedWords.Add(decoded);
                 }
 
-                decodedWords.Add(decoded);
-            }
+                BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
 
-            BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
-            //Junto todas las palabras decodificadas en un solo codigo
-            return BitOps.Join(decodedWords);
+                //Junto todas las palabras decodificadas en un solo codigo
+                result = BitOps.Join(decodedWords);
+
+                //Remuevo los bits de redundancia
+                result = result.GetRange(0, (uint) (result.CodeLength - encodedResult.RedundanceBitsCount));
+            });
+            
+            return result;
         }
 
         private static List<uint> GetControlBitsIndexes(HammingEncodeType encodeType)

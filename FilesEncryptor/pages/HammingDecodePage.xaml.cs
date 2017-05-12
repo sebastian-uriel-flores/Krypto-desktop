@@ -140,21 +140,46 @@ namespace FilesEncryptor.pages
                                     //Obtengo la descripcion del tipo de archivo
                                     decodedFileResult.FileDescription = dataReader.ReadString(uint.Parse(fileDisplayTypeLength));
 
-                                    //Obtengo el largo del código
-                                    string rawCodeLength = "";
+                                    //Obtengo el largo del nombre original del archivo
+                                    string fileNameLength = "";
 
                                     temp = dataReader.ReadString(1);
 
                                     while (temp != ":")
                                     {
+                                        fileNameLength += temp;
+                                        temp = dataReader.ReadString(1);
+                                    }
+
+                                    //Obtengo la descripcion del tipo de archivo
+                                    decodedFileResult.FileName = dataReader.ReadString(uint.Parse(fileNameLength));
+
+                                    //Obtengo el largo del código
+                                    string rawCodeLength = "";
+
+                                    temp = dataReader.ReadString(1);
+
+                                    while (temp != ",")
+                                    {
                                         rawCodeLength += temp;
+                                        temp = dataReader.ReadString(1);
+                                    }
+
+                                    //Obtengo la cantidad de bits de redundancia ubicados al final del código
+                                    string redundanceBitsCount = "";
+
+                                    temp = dataReader.ReadString(1);
+
+                                    while (temp != ":")
+                                    {
+                                        redundanceBitsCount += temp;
                                         temp = dataReader.ReadString(1);
                                     }
 
                                     //Obtengo los bytes del código
                                     byte[] rawCodeBytes = new byte[CommonUtils.BitsLengthToBytesLength(uint.Parse(rawCodeLength))];
                                     dataReader.ReadBytes(rawCodeBytes);
-                                    encodedFileResult = new HammingEncodeResult(new BitCode(rawCodeBytes.ToList(), int.Parse(rawCodeLength)), encodeType);
+                                    encodedFileResult = new HammingEncodeResult(new BitCode(rawCodeBytes.ToList(), int.Parse(rawCodeLength)), encodeType, int.Parse(redundanceBitsCount));
                                 }
                             }
                         }
@@ -166,7 +191,7 @@ namespace FilesEncryptor.pages
                         MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
                         await errorDialog.ShowAsync();
 
-                        Debug.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
+                        DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
                     }
                 }
 
@@ -219,7 +244,7 @@ namespace FilesEncryptor.pages
 
         private async Task<bool> DumpDecodedResult(BitCode result, StorageFile file)
         {
-            Debug.WriteLine(string.Format("Dumping hamming decoded file to \"{0}\"", file.Name), "[INFO]");
+            DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"s{0}\"", file.Name));
 
             bool dumpResult = false;
 
@@ -252,7 +277,7 @@ namespace FilesEncryptor.pages
                 dumpResult = status == Windows.Storage.Provider.FileUpdateStatus.Complete;
             }
 
-            Debug.WriteLine(string.Format("Dump Completed: {0}", dumpResult), "[INFO]");
+            DebugUtils.WriteLine(string.Format("Dump Completed: {0}", dumpResult));
 
             return dumpResult;
         }
