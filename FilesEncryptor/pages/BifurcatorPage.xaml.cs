@@ -70,15 +70,16 @@ namespace FilesEncryptor.pages
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
                 if (titleBar != null)
                 {
+                    Color orange = new Color() { R = 251, G = 131, B = 0 };
                     titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
                     titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonBackgroundColor = Colors.DodgerBlue;
-                    titleBar.ButtonPressedBackgroundColor = Colors.DodgerBlue;
-                    titleBar.BackgroundColor = Colors.DodgerBlue;
+                    titleBar.ButtonBackgroundColor = orange;
+                    titleBar.ButtonPressedBackgroundColor = orange;
+                    titleBar.BackgroundColor = orange;
                     titleBar.ForegroundColor = Colors.WhiteSmoke;
                     titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.InactiveBackgroundColor = Colors.DodgerBlue;
-                    titleBar.ButtonInactiveBackgroundColor = Colors.DodgerBlue;
+                    titleBar.InactiveBackgroundColor = orange;
+                    titleBar.ButtonInactiveBackgroundColor = orange;
                     titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
                 }
             }

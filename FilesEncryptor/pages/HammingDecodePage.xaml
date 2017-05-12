@@ -5,9 +5,10 @@
     xmlns:local="using:FilesEncryptor.pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    >
 
-    <Grid Background="WhiteSmoke">
+    <Grid Background="#FFF9CD9F">
 
         <Grid.Resources>
             <Style 
@@ -36,20 +37,34 @@
             </Style>
         </Grid.Resources>
 
+        <Grid
+            x:Name="titleBar2"
+            VerticalAlignment="Top"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            Background="#FF8300"                
+            Height="300"
+            >
+        </Grid>
 
-        <RelativePanel                
-                MaxWidth="500"
-                MaxHeight="700"
-            Background="White"
-                >
+
+        <RelativePanel MaxWidth="600">
             <Grid
                 x:Name="titleBar"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                Background="DodgerBlue"                
-                Height="80"
+                Background="White"                
+                Height="80"       
+                Margin="0,120,0,0"
                 >
-                <TextBlock Text="Decodificar con Hamming" Margin="16,15" TextAlignment="Center" FontSize="16" FontFamily="Segoe UI SemiLight" VerticalAlignment="Bottom" Foreground="White"/>
+                <TextBlock
+                    Text="Decodificar con Hamming" 
+                    Margin="16,15" 
+                    TextAlignment="Center" 
+                    FontSize="35" 
+                    FontFamily="Segoe UI SemiLight" 
+                    VerticalAlignment="Bottom" 
+                    Foreground="Black"/>
             </Grid>
 
             <RelativePanel
@@ -58,6 +73,8 @@
                 RelativePanel.Above="decodeBt"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
+                RelativePanel.AlignBottomWithPanel="True"
+                Background="White"
                 >
                 <TextBlock
                     x:Name="origTextSubheader"
@@ -76,11 +93,12 @@
                     x:Name="selectFileBt"
                     Content="Examinar..." 
                     Height="50"
+                    Width="300"                    
                     Margin="50,0"
-                    Background="DodgerBlue"
-                    BorderBrush="DodgerBlue"
+                    Background="White"
+                    BorderBrush="#FF8300"
                     BorderThickness="2"
-                    Foreground="White"                    
+                    Foreground="#FF8300"                    
                     FontFamily="Segoe UI"
                     RelativePanel.Below="origTextSubheader"
                     HorizontalAlignment="Stretch"
@@ -88,20 +106,133 @@
                     RelativePanel.AlignRightWithPanel="True"  
                     Click="SelectFileBt_Click"
                     />
+
+                <Grid
+                    x:Name="fileInfoPanel"
+                    RelativePanel.Below="selectFileBt"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    RelativePanel.AlignBottomWithPanel="True">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>                        
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <RelativePanel
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2">
+                        <TextBlock
+                        x:Name="fileNameSubheader"
+                    Text="Nombre del archivo"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="16"    
+                    Foreground="#99000000"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="40,40,0,10"
+                    />
+                        <TextBlock
+                        RelativePanel.Below="fileNameSubheader"
+                    Text="Programa del sábado.txt"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="20"    
+                    Foreground="Black"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="40,0,0,10"
+                    />
+                    </RelativePanel>
+                    <RelativePanel
+                        Grid.Row="1"
+                        Grid.Column="0">
+                        <TextBlock
+                        x:Name="fileSizeSubheader"
+                    Text="Nombre del archivo"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="16"    
+                    Foreground="#99000000"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="40,40,0,10"
+                    />
+                        <TextBlock
+                        RelativePanel.Below="fileSizeSubheader"
+                    Text="21,7 Kb"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="20"    
+                    Foreground="Black"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="40,0,0,10"
+                    />
+                    </RelativePanel>
+                    <RelativePanel
+                        Grid.Row="1"
+                        Grid.Column="1">
+                        <TextBlock
+                        x:Name="fileWordsCountSubheader"
+                    Text="Nombre del archivo"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="16"    
+                    Foreground="#99000000"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="20,40,0,10"
+                    />
+                        <TextBlock
+                        RelativePanel.Below="fileWordsCountSubheader"
+                    Text="21578 caracterers"                
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    FontFamily="Segoe UI Light"
+                    FontSize="20"    
+                    Foreground="Black"
+                    FontWeight="Light"
+                    TextWrapping="WrapWholeWords"
+                    TextAlignment="Left"
+                    Margin="20,0,0,10"
+                    />
+                    </RelativePanel>
+                </Grid>
             </RelativePanel>
 
             <Button
                 x:Name="decodeBt"
-                Content="Decodificar"
-                Height="60"
+                FontFamily="Segoe MDL2 Assets"
+                Content="&#xe001;"
+                Height="100"
+                Width="100"
+                FontSize="40"
+                FontWeight="Bold"
                 RelativePanel.AlignBottomWithPanel="True"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
+                RelativePanel.AlignHorizontalCenterWithPanel="True"
+                
                 HorizontalAlignment="Stretch"
-                Padding="30,15"
-                MinWidth="150"
-                Background="MediumSpringGreen"
-                Foreground="White"
+                Padding="30,15"                
+                Background="Transparent"
+                BorderThickness="0"
+                Foreground="MediumSpringGreen"
                 Click="DecodeBt_Click"
                 Visibility="Collapsed"
                 />

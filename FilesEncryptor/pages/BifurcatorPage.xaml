@@ -12,14 +12,14 @@
             x:Name="titleBar"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
-            Background="DodgerBlue"                
-            Height="80"
+            Background="#FF8300"                
+            Height="250"
             >
             <TextBlock 
-                Text="Menú principal" 
-                Margin="16,15" 
-                TextAlignment="Center" 
-                FontSize="16" 
+                Text="Files Encryptor" 
+                Margin="80,0,0,30" 
+                TextAlignment="Left" 
+                FontSize="60" 
                 FontFamily="Segoe UI SemiLight" 
                 VerticalAlignment="Bottom" 
                 Foreground="White"
@@ -34,29 +34,80 @@
             RelativePanel.Below="titleBar"
             Padding="0,40,0,20"
             FontFamily="Segoe UI Light"
-            FontSize="22"    
+            FontSize="26"    
             Foreground="#99000000"
-            FontWeight="Light"
+            
             TextWrapping="WrapWholeWords"
             TextAlignment="Center"
             />
-        <GridView x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" MaxWidth="500" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True">
-            <RelativePanel x:Name="encodeFileItem" Height="150" Width="150" Background="White" Margin="15">
+        <Grid RelativePanel.Below="titleBar" Visibility="Collapsed" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <RelativePanel
+                Grid.Column="0"
+                Background="white">
+            <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f6;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="80"
+                    Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                    <TextBlock 
+                        RelativePanel.AlignVerticalCenterWithPanel="True"
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        Margin="0,150,0,0"
+                        Text="Proteger archivo"
+                        FontSize="30"
+                        Foreground="DodgerBlue"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </RelativePanel>
+            <RelativePanel
+                Grid.Column="1"
+                Background="Yellow"
+                />
+            <RelativePanel
+                Grid.Column="2"
+                Background="DodgerBlue"
+                />
+            <RelativePanel
+                Grid.Column="3"
+                Background="MediumSpringGreen"
+                />
+        </Grid>
+        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True">
+            <GridView.Resources>
+                <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
+                    <Setter  Property="Height" Value="300"/>
+                    <Setter  Property="Width" Value="300"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Margin" Value="15"/>
+                </Style>
+            </GridView.Resources>
+            <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
                         Glyph="&#xe1f6;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="40"
-                    Foreground="DodgerBlue"
+                        FontSize="60"
+                    Foreground="#FF8300"
                         Margin="0,0,0,25"
                         />
                 <Grid
                     RelativePanel.AlignBottomWithPanel="True" 
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Height="35"
-                    Background="DodgerBlue">
+                    Height="45"
+                    Background="#FF8300">
                     <TextBlock 
                         Text="Proteger archivo"
                         FontSize="14"
@@ -67,22 +118,22 @@
                 </Grid>
                 
             </RelativePanel>
-            <RelativePanel x:Name="decodeFileItem" Height="150" Width="150" Background="White" Margin="15">
+            <RelativePanel x:Name="decodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
                         Glyph="&#xe1f7;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="40"
-                    Foreground="DodgerBlue"
+                        FontSize="60"
+                    Foreground="#FF8300"
                         Margin="0,0,0,25"
                         />
                 <Grid
                     RelativePanel.AlignBottomWithPanel="True" 
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Height="35"
-                    Background="DodgerBlue">
+                    Height="45"
+                    Background="#FF8300">
                     <TextBlock 
                         Text="Desproteger archivo"
                         FontSize="14"
@@ -92,22 +143,22 @@
                         />
                 </Grid>
             </RelativePanel>
-            <RelativePanel x:Name="compressFileItem" Height="150" Width="150" Margin="15" Background="White">
+            <RelativePanel x:Name="compressFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
                         Glyph="&#xed41;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="40"
-                    Foreground="DodgerBlue"
+                        FontSize="60"
+                    Foreground="#FF8300"
                         Margin="0,0,0,25"
                         />
                 <Grid
                     RelativePanel.AlignBottomWithPanel="True" 
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Height="35"
-                    Background="DodgerBlue">
+                    Height="45"
+                    Background="#FF8300">
                     <TextBlock 
                         Text="Comprimir archivo"
                         FontSize="14"
@@ -117,22 +168,22 @@
                         />
                 </Grid>
             </RelativePanel>
-            <RelativePanel x:Name="uncompressFileItem" Height="150" Width="150" Margin="15" Background="White">
+            <RelativePanel x:Name="uncompressFileItem" Style="{StaticResource ItemPanelStyle}">
                     <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
                         Glyph="&#xed43;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="40"
-                        Foreground="DodgerBlue"
+                        FontSize="60"
+                        Foreground="#FF8300"
                         Margin="0,0,0,25"
                         />
                 <Grid
                     RelativePanel.AlignBottomWithPanel="True" 
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Height="35"
-                    Background="DodgerBlue">
+                    Height="45"
+                    Background="#FF8300">
                     <TextBlock 
                         Text="Descomprimir archivo"
                         FontSize="14"
