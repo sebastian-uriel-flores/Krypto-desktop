@@ -83,7 +83,7 @@
                 Background="MediumSpringGreen"
                 />
         </Grid>
-        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True">
+        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
             <GridView.Resources>
                 <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
                     <Setter  Property="Height" Value="300"/>
@@ -110,7 +110,7 @@
                     Background="#FF8300">
                     <TextBlock 
                         Text="Proteger archivo"
-                        FontSize="14"
+                        FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -136,7 +136,7 @@
                     Background="#FF8300">
                     <TextBlock 
                         Text="Desproteger archivo"
-                        FontSize="14"
+                        FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -161,7 +161,7 @@
                     Background="#FF8300">
                     <TextBlock 
                         Text="Comprimir archivo"
-                        FontSize="14"
+                        FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -186,7 +186,7 @@
                     Background="#FF8300">
                     <TextBlock 
                         Text="Descomprimir archivo"
-                        FontSize="14"
+                        FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"

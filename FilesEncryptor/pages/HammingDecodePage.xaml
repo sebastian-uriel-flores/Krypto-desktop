@@ -47,20 +47,38 @@
             >
         </Grid>
 
-
-        <RelativePanel MaxWidth="600">
+        <Grid MaxWidth="600" Margin="0,108,0,0" Height="12" VerticalAlignment="Top">
+            <Grid.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0" Opacity="0.7">
+                    <GradientStop Color="#00140404" Offset="0"/>
+                    <GradientStop Color="#3F000000" Offset="1"/>
+                </LinearGradientBrush>
+            </Grid.Background>
+        </Grid>
+        <RelativePanel MaxWidth="600"  Margin="0,120,0,0" Background="White" >
             <Grid
                 x:Name="titleBar"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                Background="White"                
                 Height="80"       
-                Margin="0,120,0,0"
                 >
+                <Button
+                    Background="Transparent"
+                    BorderThickness="0"
+                    FontFamily="Segoe MDL2 Assets"
+                    Content="&#xe0a6;"
+                    Foreground="Black"
+                    FontSize="35"
+                    FontWeight="Bold"
+                    Height="80"
+                    Width="80"
+                    Margin="10,15,0,15"
+                    Padding="20,20,20,15"
+                    />
                 <TextBlock
                     Text="Decodificar con Hamming" 
                     Margin="16,15" 
-                    TextAlignment="Center" 
+                    HorizontalAlignment="Center" 
                     FontSize="35" 
                     FontFamily="Segoe UI SemiLight" 
                     VerticalAlignment="Bottom" 
@@ -74,7 +92,6 @@
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 RelativePanel.AlignBottomWithPanel="True"
-                Background="White"
                 >
                 <TextBlock
                     x:Name="origTextSubheader"
@@ -112,21 +129,17 @@
                     RelativePanel.Below="selectFileBt"
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    RelativePanel.AlignBottomWithPanel="True">
+                    RelativePanel.AlignBottomWithPanel="True"
+                    Visibility="Collapsed">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>                        
                     </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
                     <RelativePanel
                         Grid.Row="0"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2">
+                        >
                         <TextBlock
                         x:Name="fileNameSubheader"
                     Text="Nombre del archivo"                
@@ -141,6 +154,7 @@
                     Margin="40,40,0,10"
                     />
                         <TextBlock
+                            x:Name="fileNameTextBlock"
                         RelativePanel.Below="fileNameSubheader"
                     Text="Programa del sábado.txt"                
                     RelativePanel.AlignLeftWithPanel="True"
@@ -156,10 +170,10 @@
                     </RelativePanel>
                     <RelativePanel
                         Grid.Row="1"
-                        Grid.Column="0">
+                        >
                         <TextBlock
                         x:Name="fileSizeSubheader"
-                    Text="Nombre del archivo"                
+                    Text="Tamaño del archivo"                
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
                     FontFamily="Segoe UI Light"
@@ -171,6 +185,7 @@
                     Margin="40,40,0,10"
                     />
                         <TextBlock
+                            x:Name="fileSizeTextBlock"
                         RelativePanel.Below="fileSizeSubheader"
                     Text="21,7 Kb"                
                     RelativePanel.AlignLeftWithPanel="True"
@@ -185,11 +200,11 @@
                     />
                     </RelativePanel>
                     <RelativePanel
-                        Grid.Row="1"
-                        Grid.Column="1">
+                        Grid.Row="2"
+                        Grid.Column="0">
                         <TextBlock
                         x:Name="fileWordsCountSubheader"
-                    Text="Nombre del archivo"                
+                    Text="Codificación del archivo"                
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
                     FontFamily="Segoe UI Light"
@@ -198,11 +213,12 @@
                     FontWeight="Light"
                     TextWrapping="WrapWholeWords"
                     TextAlignment="Left"
-                    Margin="20,40,0,10"
+                    Margin="40,40,0,10"
                     />
                         <TextBlock
+                            x:Name="fileEncodingTextBlock"
                         RelativePanel.Below="fileWordsCountSubheader"
-                    Text="21578 caracterers"                
+                    Text=""                
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
                     FontFamily="Segoe UI Light"
@@ -211,7 +227,7 @@
                     FontWeight="Light"
                     TextWrapping="WrapWholeWords"
                     TextAlignment="Left"
-                    Margin="20,0,0,10"
+                    Margin="40,0,0,10"
                     />
                     </RelativePanel>
                 </Grid>
@@ -239,7 +255,7 @@
 
             <RelativePanel
                 x:Name="progressPanel"
-                RelativePanel.Below="titleBar"
+                RelativePanel.AlignTopWithPanel="True"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"                
                 RelativePanel.AlignBottomWithPanel="True"
@@ -251,7 +267,7 @@
                     RelativePanel.AlignVerticalCenterWithPanel="True"
                     Height="60"
                     Width="60"
-                    Foreground="DodgerBlue"
+                    Foreground="#FF8300"
                     IsActive="True"
                     />
             </RelativePanel>

@@ -33,6 +33,7 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class HammingDecodePage : Page
     {
+        private string _originalFileSize;
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
         private StorageFile originalFile;
@@ -97,6 +98,7 @@ namespace FilesEncryptor.pages
                         ShowProgressPanel();
                         await Task.Delay(200);
 
+                        fileInfoPanel.Visibility = Visibility.Collapsed;
                         decodeBt.Visibility = Visibility.Collapsed;
 
                         //Abro el archivo para lectura
@@ -107,8 +109,11 @@ namespace FilesEncryptor.pages
                                 using (var dataReader = new DataReader(inputStream))
                                 {
                                     var size = stream.Size;
+
                                     //Cargo en el buffer todos los bytes del archivo
                                     uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+
+                                    _originalFileSize = numBytesLoaded.ToString();
 
                                     string temp = "";
 
@@ -185,6 +190,9 @@ namespace FilesEncryptor.pages
                         }
 
                         originalFile = file;
+                        fileNameTextBlock.Text = originalFile.Name;
+                        fileSizeTextBlock.Text = string.Format("{0} bytes",_originalFileSize);
+                        fileEncodingTextBlock.Text = string.Format("{0} ({1})", encodedFileResult.EncodeType.LongDescription, encodedFileResult.EncodeType.Extension);
                     }
                     catch (Exception ex)
                     {
@@ -197,6 +205,7 @@ namespace FilesEncryptor.pages
 
                 if (decodedFileResult != null && encodedFileResult != null)
                 {
+                    fileInfoPanel.Visibility = Visibility.Visible;
                     decodeBt.Visibility = Visibility.Visible;
                 }
 
