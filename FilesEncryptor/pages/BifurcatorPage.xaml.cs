@@ -67,10 +67,12 @@ namespace FilesEncryptor.pages
             //PC customization
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
             {
+                ApplicationView.GetForCurrentView().Title = "Teoría de la información";
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
                 if (titleBar != null)
                 {
                     Color orange = new Color() { R = 251, G = 131, B = 0 };
+                    
                     titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
                     titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
                     titleBar.ButtonBackgroundColor = orange;

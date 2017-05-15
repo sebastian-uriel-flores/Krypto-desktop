@@ -62,19 +62,6 @@
                 RelativePanel.AlignRightWithPanel="True"
                 Height="80"       
                 >
-                <Button
-                    Background="Transparent"
-                    BorderThickness="0"
-                    FontFamily="Segoe MDL2 Assets"
-                    Content="&#xe0a6;"
-                    Foreground="Black"
-                    FontSize="35"
-                    FontWeight="Bold"
-                    Height="80"
-                    Width="80"
-                    Margin="10,15,0,15"
-                    Padding="20,20,20,15"
-                    />
                 <TextBlock
                     Text="Decodificar con Hamming" 
                     Margin="16,15" 
@@ -91,7 +78,7 @@
                 RelativePanel.Above="decodeBt"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                RelativePanel.AlignBottomWithPanel="True"
+                
                 >
                 <TextBlock
                     x:Name="origTextSubheader"
@@ -133,9 +120,9 @@
                     Visibility="Collapsed">
 
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>                        
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
                     <RelativePanel
                         Grid.Row="0"

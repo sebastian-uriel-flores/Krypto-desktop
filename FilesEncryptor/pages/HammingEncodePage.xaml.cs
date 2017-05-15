@@ -81,12 +81,7 @@ namespace FilesEncryptor.pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary                
             };
             picker.FileTypeFilter.Add(".txt");
-            picker.FileTypeFilter.Add(".huf");
-            picker.FileTypeFilter.Add(".docx");
-            picker.FileTypeFilter.Add(".doc");
-            picker.FileTypeFilter.Add(".pdf");
-            picker.FileTypeFilter.Add(".jpg");
-
+            
             var file = await picker.PickSingleFileAsync();
 
             if (file != null)
@@ -98,10 +93,13 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
-                    hammingEncodeTypePickerHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
-                    encodeBt.Visibility = Visibility.Collapsed;
+                    settingsPanel.Visibility = Visibility.Collapsed;
+                    pageCommandsDivider.Visibility = Visibility.Collapsed;
+                    pageCommands.Visibility = Visibility.Collapsed;
 
+                    uint numBytesLoaded = 0;
+
+                    //Abro el archivo para lectura
                     using (var stream = await file.OpenAsync(FileAccessMode.Read))
                     {
                         ulong size = stream.Size;
@@ -110,7 +108,8 @@ namespace FilesEncryptor.pages
                         {
                             using (var dataReader = new DataReader(inputStream))
                             {
-                                uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+                                //Cargo el archivo en memoria
+                                numBytesLoaded = await dataReader.LoadAsync((uint)size);
                                 byte[] buffer = new byte[numBytesLoaded];
                                 dataReader.ReadBytes(buffer);
 
@@ -120,6 +119,15 @@ namespace FilesEncryptor.pages
                     }
 
                     originalFile = file;
+
+                    //Muestro los datos del archivo cargado
+                    fileNameBlock.Text = originalFile.Name;
+                    fileSizeBlock.Text = string.Format("{0} bytes", numBytesLoaded);
+                    fileDescriptionBlock.Text = originalFile.DisplayName;
+
+                    settingsPanel.Visibility = Visibility.Visible;
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
                 }
                 catch (Exception ex)
                 {
@@ -127,13 +135,6 @@ namespace FilesEncryptor.pages
                     await errorDialog.ShowAsync();
 
                     DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
-                }
-
-                if (_rawFileBytes != null)
-                {
-                    hammingEncodeTypePickerHeader.Visibility = Visibility.Visible;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;
-                    encodeBt.Visibility = Visibility.Visible;                    
                 }
 
                 HideProgressPanel();
