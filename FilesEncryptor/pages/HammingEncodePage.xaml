@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:dto="using:FilesEncryptor.dto"
     mc:Ignorable="d"
+    RequestedTheme="Dark"
     >
     <Page.Resources>
         <Style x:Key="EllipsisButton" TargetType="Button">
@@ -860,7 +861,7 @@
         </CommandBar>
     </Page.TopAppBar>
 
-    <Grid Background="#FFEEEEEE">
+    <Grid Background="#FFEEEEEE" RequestedTheme="Light">
 
         <RelativePanel
             MaxWidth="650"
@@ -998,7 +999,7 @@
 
             <Rectangle
                 x:Name="pageCommandsDivider"
-                RelativePanel.Below="settingsPanel"
+                RelativePanel.Above="pageCommands"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 Height="1"
@@ -1009,9 +1010,9 @@
                 />
             <Grid
                 x:Name="pageCommands"
-                RelativePanel.Below="pageCommandsDivider"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
+                Height="50"
                 RelativePanel.AlignBottomWithPanel="True"
                 Background="WhiteSmoke"
                 Visibility="Collapsed"

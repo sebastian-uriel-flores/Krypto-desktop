@@ -98,8 +98,9 @@ namespace FilesEncryptor.pages
                         ShowProgressPanel();
                         await Task.Delay(200);
 
-                        fileInfoPanel.Visibility = Visibility.Collapsed;
-                        decodeBt.Visibility = Visibility.Collapsed;
+                        settingsPanel.Visibility = Visibility.Collapsed;
+                        pageCommandsDivider.Visibility = Visibility.Collapsed;
+                        pageCommands.Visibility = Visibility.Collapsed;
 
                         //Abro el archivo para lectura
                         using (var stream = await file.OpenAsync(FileAccessMode.Read))
@@ -190,9 +191,13 @@ namespace FilesEncryptor.pages
                         }
 
                         originalFile = file;
-                        fileNameTextBlock.Text = originalFile.Name;
-                        fileSizeTextBlock.Text = string.Format("{0} bytes",_originalFileSize);
-                        fileEncodingTextBlock.Text = string.Format("{0} ({1})", encodedFileResult.EncodeType.LongDescription, encodedFileResult.EncodeType.Extension);
+                        fileNameBlock.Text = originalFile.Name;
+                        fileSizeBlock.Text = string.Format("{0} bytes", _originalFileSize);
+                        fileDescriptionBlock.Text = string.Format("{0} ({1})", encodedFileResult.EncodeType.LongDescription, encodedFileResult.EncodeType.Extension);
+                        
+                        settingsPanel.Visibility = Visibility.Visible;
+                        pageCommandsDivider.Visibility = Visibility.Visible;
+                        pageCommands.Visibility = Visibility.Visible;
                     }
                     catch (Exception ex)
                     {
@@ -201,12 +206,6 @@ namespace FilesEncryptor.pages
 
                         DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
                     }
-                }
-
-                if (decodedFileResult != null && encodedFileResult != null)
-                {
-                    fileInfoPanel.Visibility = Visibility.Visible;
-                    decodeBt.Visibility = Visibility.Visible;
                 }
 
                 HideProgressPanel();
