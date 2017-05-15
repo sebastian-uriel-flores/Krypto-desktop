@@ -109,7 +109,7 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Proteger archivo"
+                        Text="Codificar con Hamming"
                         FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
@@ -135,7 +135,7 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Desproteger archivo"
+                        Text="Decodificar con Hamming"
                         FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
@@ -160,7 +160,7 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Comprimir archivo"
+                        Text="Codificar con Huffman"
                         FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"
@@ -185,7 +185,7 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Descomprimir archivo"
+                        Text="Decodificar con Huffman"
                         FontSize="18"
                         Foreground="White"
                         HorizontalAlignment="Center"

@@ -29,7 +29,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     TextAlignment="Left"
-                    Text="Codificar con Huffman"
+                    Text="Decodificar con Huffman"
                     VerticalAlignment="Center"
                     Margin="20,0,0,0"
                     FontSize="20"
