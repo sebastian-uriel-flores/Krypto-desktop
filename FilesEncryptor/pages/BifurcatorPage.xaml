@@ -7,25 +7,200 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <RelativePanel Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock
-            Text="Seleccione una opción"
-            RelativePanel.Above="buttonsPanel"
+    <RelativePanel Background="#FFF9CD9F">
+        <Grid
+            x:Name="titleBar"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
-            Padding="40,20,40,10"
-            FontSize="25"    
+            Background="#FF9200"                
+            Height="250"
+            >
+            <TextBlock 
+                Text="Files Encryptor" 
+                Margin="80,0,0,30" 
+                TextAlignment="Left" 
+                FontSize="60" 
+                FontFamily="Segoe UI SemiLight" 
+                VerticalAlignment="Bottom" 
+                Foreground="White"
+                />
+        </Grid>
+        
+        <TextBlock
+            x:Name="header"
+            Text="Seleccione una opción"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.Below="titleBar"
+            Padding="0,40,0,20"
+            FontFamily="Segoe UI Light"
+            FontSize="26"    
             Foreground="#99000000"
-            FontWeight="Light"
+            
             TextWrapping="WrapWholeWords"
             TextAlignment="Center"
             />
+        <Grid RelativePanel.Below="titleBar" Visibility="Collapsed" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <RelativePanel
+                Grid.Column="0"
+                Background="white">
+            <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f6;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="80"
+                    Foreground="DodgerBlue"
+                        Margin="0,0,0,25"
+                        />
+                    <TextBlock 
+                        RelativePanel.AlignVerticalCenterWithPanel="True"
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        Margin="0,150,0,0"
+                        Text="Proteger archivo"
+                        FontSize="30"
+                        Foreground="DodgerBlue"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </RelativePanel>
+            <RelativePanel
+                Grid.Column="1"
+                Background="Yellow"
+                />
+            <RelativePanel
+                Grid.Column="2"
+                Background="DodgerBlue"
+                />
+            <RelativePanel
+                Grid.Column="3"
+                Background="MediumSpringGreen"
+                />
+        </Grid>
+        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+            <GridView.Resources>
+                <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
+                    <Setter  Property="Height" Value="300"/>
+                    <Setter  Property="Width" Value="300"/>
+                    <Setter Property="Background" Value="White"/>
+                    <Setter Property="Margin" Value="15"/>
+                </Style>
+            </GridView.Resources>
+            <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f6;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                    Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Codificar con Hamming"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+                
+            </RelativePanel>
+            <RelativePanel x:Name="decodeFileItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe1f7;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                    Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Decodificar con Hamming"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+            <RelativePanel x:Name="compressFileItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xed41;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                    Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Codificar con Huffman"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+            <RelativePanel x:Name="uncompressFileItem" Style="{StaticResource ItemPanelStyle}">
+                    <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xed43;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                        Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Decodificar con Huffman"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+        </GridView>
         <StackPanel
             x:Name="buttonsPanel"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignVerticalCenterWithPanel="True"
             MaxWidth="500"
+            Visibility="Collapsed"
             >
             <Button
                 x:Name="compressFileBt"
@@ -53,6 +228,16 @@
                 Margin="20,10"
                 Click="UncompressFileBt_Click"
             />
+
+            <Button
+                x:Name="hammingDecodeBt"            
+                Content="Decodificar con Hamming"
+                HorizontalAlignment="Stretch"
+                Padding="0,15"
+                Margin="20,10"
+                Click="HammingDecodeBt_Click"
+            />
+
         </StackPanel>
     </RelativePanel>
 </Page>

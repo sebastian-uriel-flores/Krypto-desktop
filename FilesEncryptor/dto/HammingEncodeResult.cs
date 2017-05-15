@@ -12,15 +12,18 @@ namespace FilesEncryptor.dto
 
         public HammingEncodeType EncodeType { get; set; }
 
+        public int RedundanceBitsCount { get; set; }
+
         private HammingEncodeResult()
         {
 
         }
 
-        public HammingEncodeResult(BitCode encoded, HammingEncodeType encodeType)
+        public HammingEncodeResult(BitCode encoded, HammingEncodeType encodeType, int redundanceBitsCount)
         {
             Encoded = encoded;
             EncodeType = encodeType;
+            RedundanceBitsCount = redundanceBitsCount;
         }
     }
 }

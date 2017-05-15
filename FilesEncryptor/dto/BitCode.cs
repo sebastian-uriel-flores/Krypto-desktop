@@ -119,12 +119,6 @@ namespace FilesEncryptor.dto
             }
         }
 
-        public void Clean()
-        {
-            byte mask = CommonUtils.MaskLeft(Code.Last(), CodeLength);
-            And(CodeLength - 1, mask);
-        }
-
         public void Insert(uint bitPosition, BitCode encoded)
         {
             BitCode concatenated = GetRange(0, bitPosition);
@@ -137,9 +131,11 @@ namespace FilesEncryptor.dto
         {
             uint bytePosition = CommonUtils.BitPositionToBytePosition(bitPosition);
             uint effectiveBitPosition = bitPosition % 8;
+
+            byte disp1 = (byte)(Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition));
+            byte disp2 = (byte)(disp1 << 7);
             return new BitCode(
-                new List<byte>() { (byte)((Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition)) << 7) }, 
-                1);
+                new List<byte>() { disp2 }, 1);
         }
 
         public List<int> ToIntList()
@@ -208,32 +204,41 @@ namespace FilesEncryptor.dto
             int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
             int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
 
-            //TODO: hacer shifts para dejar solamente marcados los bits de interes y el resto en 0
-            return new BitCode(Code.GetRange(startBytePos, bytesCount), (int)bitsCount);
+            //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
+            List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
+            bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
+            
+            return new BitCode(bytesRange, (int)bitsCount);
         }
 
-        public List<BitCode> Explode(uint blockBitsSize)
+        public Tuple<List<BitCode>,int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true)
         {
             BitCode copy = Copy();
+            int addedZeros = 0;
             
-            //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
-            if (blockBitsSize > (uint)copy.CodeLength)
+            if (fillRemainingWithZeros)
             {
-                //Agrego Ceros al BitCode para rellenar
-                copy.Append(Zeros(blockBitsSize - (uint)copy.CodeLength));
-            }
-            //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
-            else if((uint)copy.CodeLength > blockBitsSize)
-            {
-                uint mod = (uint)copy.CodeLength % blockBitsSize;
-
-                //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
-                if (mod != 0)
+                //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
+                if (blockBitsSize > (uint)copy.CodeLength)
                 {
-                    //Agrego tantos ceros cómo sea necesario, 
-                    //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
-                    uint cantZeros = (uint)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
-                    copy.Append(Zeros(cantZeros));
+                    addedZeros = (int)blockBitsSize - copy.CodeLength;
+
+                    //Agrego Ceros al BitCode para rellenar
+                    copy.Append(Zeros((uint)addedZeros));
+                }
+                //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
+                else if ((uint)copy.CodeLength > blockBitsSize)
+                {
+                    uint mod = (uint)copy.CodeLength % blockBitsSize;
+
+                    //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
+                    if (mod != 0)
+                    {
+                        //Agrego tantos ceros cómo sea necesario, 
+                        //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
+                        addedZeros = (int)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
+                        copy.Append(Zeros((uint)addedZeros));
+                    }
                 }
             }
 
@@ -242,10 +247,14 @@ namespace FilesEncryptor.dto
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
-                blocks.Add(copy.GetRange(i, blockBitsSize));
+                uint bitsToObtain = !fillRemainingWithZeros && i + blockBitsSize >= copy.CodeLength
+                    ? (uint)copy.CodeLength - i
+                    : blockBitsSize;
+
+                blocks.Add(copy.GetRange(i, bitsToObtain));
             }
 
-            return blocks;
+            return new Tuple<List<BitCode>, int>(blocks, addedZeros);
         }
 
         #endregion

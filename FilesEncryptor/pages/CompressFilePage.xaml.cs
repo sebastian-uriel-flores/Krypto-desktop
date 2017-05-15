@@ -67,9 +67,7 @@ namespace FilesEncryptor.pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary
             };
             picker.FileTypeFilter.Add(".txt");
-            //picker.FileTypeFilter.Add(".doc");
-            //picker.FileTypeFilter.Add(".docx");
-
+            
             var file = await picker.PickSingleFileAsync();
 
             if (file != null)
@@ -82,9 +80,11 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
-                    origTextContainer.Visibility = Visibility.Collapsed;
-                    origTextExtraData.Visibility = Visibility.Collapsed;
-                    compressBt.Visibility = Visibility.Collapsed;
+                    settingsPanel.Visibility = Visibility.Collapsed;
+                    pageCommandsDivider.Visibility = Visibility.Collapsed;
+                    pageCommands.Visibility = Visibility.Collapsed;
+
+                    uint numBytesLoaded = 0;
 
                     var stream = await origTextFile.OpenAsync(FileAccessMode.Read);
                     ulong size = stream.Size;
@@ -93,7 +93,7 @@ namespace FilesEncryptor.pages
                     {
                         using (var dataReader = new DataReader(inputStream))
                         {
-                            uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+                            numBytesLoaded = await dataReader.LoadAsync((uint)size);
                             byte[] buffer = new byte[numBytesLoaded];
                             dataReader.ReadBytes(buffer);
 
@@ -102,30 +102,24 @@ namespace FilesEncryptor.pages
                     }
 
                     stream.Dispose();
+
+                    fileNameBlock.Text = file.Name;
+                    fileSizeBlock.Text = string.Format("{0} bytes", numBytesLoaded);
+                    fileDescriptionBlock.Text = file.DisplayName;
+                    fileContentBlock.Text = origTextStr;
+
+                    settingsPanel.Visibility = Visibility.Visible;
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
                 }
                 catch (Exception ex)
                 {                    
                     MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
                     await errorDialog.ShowAsync();
 
-                    Debug.Fail("Excepcion al cargar archivo para compresion", ex.Message);
+                    DebugUtils.Fail("Excepcion al cargar archivo para compresion", ex.Message);
                 }
-
-                if (origTextStr != null)
-                {
-                    Run run = new Run();
-                    run.Text = origTextStr;
-                    Paragraph par = new Paragraph();
-                    par.Inlines.Add(run);
-                    origText.Blocks.Clear();
-                    origText.Blocks.Add(par);
-
-                    origTextContainer.Visibility = Visibility.Visible;
-                    compressBt.Visibility = Visibility.Visible;
-                    origTextExtraData.Visibility = Visibility.Visible;                                        
-                    origTextLength.Text = origTextStr.Length.ToString();
-                }
-
+                
                 HideProgressPanel();
             }            
         }

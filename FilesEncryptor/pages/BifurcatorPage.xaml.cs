@@ -30,30 +30,66 @@ namespace FilesEncryptor.pages
         public BifurcatorPage()
         {
             this.InitializeComponent();
+
+            commandsPanel.Loaded += new RoutedEventHandler((sender,args) =>
+            {
+                foreach (object item in commandsPanel.Items)
+                {
+                    (item as FrameworkElement).PointerEntered += BifurcatorPage_PointerEntered;
+                    (item as FrameworkElement).PointerExited += BifurcatorPage_PointerExited;
+                }
+            });
+
+            Loaded += BifurcatorPage_Loaded;
+        }
+
+        private void BifurcatorPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            //PC customization
+            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+            {
+                ApplicationView.GetForCurrentView().Title = "Teoría de la información";
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                if (titleBar != null)
+                {
+                    Color orange = new Color() { R = 251, G = 131, B = 0 };
+
+                    titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
+                    titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
+                    titleBar.ButtonBackgroundColor = orange;
+                    titleBar.ButtonPressedBackgroundColor = orange;                    
+                    titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
+                    titleBar.InactiveBackgroundColor = orange;
+                    titleBar.ButtonInactiveBackgroundColor = orange;
+                    titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
+                    titleBar.BackgroundColor = orange;
+                    titleBar.ForegroundColor = Colors.WhiteSmoke;
+                }
+            }
+        }
+
+        private void BifurcatorPage_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
+            {
+                FrameworkElement panel = sender as FrameworkElement;
+                panel.Projection = new PlaneProjection();
+                ((PlaneProjection)panel.Projection).GlobalOffsetZ = 70;
+            }
+        }
+        private void BifurcatorPage_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)
+            {
+                FrameworkElement panel = sender as FrameworkElement;
+                panel.Projection = new PlaneProjection();
+                ((PlaneProjection)panel.Projection).GlobalOffsetZ = 0;
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
-
-            //PC customization
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
-            {
-                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
-                if (titleBar != null)
-                {
-                    titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonBackgroundColor = Colors.DodgerBlue;
-                    titleBar.ButtonPressedBackgroundColor = Colors.DodgerBlue;
-                    titleBar.BackgroundColor = Colors.DodgerBlue;
-                    titleBar.ForegroundColor = Colors.WhiteSmoke;
-                    titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.InactiveBackgroundColor = Colors.DodgerBlue;
-                    titleBar.ButtonInactiveBackgroundColor = Colors.DodgerBlue;
-                    titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
-                }
-            }
         }
 
         private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
@@ -61,5 +97,26 @@ namespace FilesEncryptor.pages
         private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
 
         private void HammingEncodeBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HammingEncodePage));
+
+        private void HammingDecodeBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HammingDecodePage));
+
+        private void commandsPanel_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            switch ((e.ClickedItem as FrameworkElement).Name)
+            {
+                case "compressFileItem":
+                    Frame.Navigate(typeof(CompressFilePage));
+                    break;
+                case "uncompressFileItem":
+                    Frame.Navigate(typeof(UncompressFilePage));
+                    break;
+                case "encodeFileItem":
+                    Frame.Navigate(typeof(HammingEncodePage));
+                    break;
+                case "decodeFileItem":
+                    Frame.Navigate(typeof(HammingDecodePage));
+                    break;
+            }            
+        }
     }
 }
