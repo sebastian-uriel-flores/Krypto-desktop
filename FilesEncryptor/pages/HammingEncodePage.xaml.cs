@@ -81,7 +81,8 @@ namespace FilesEncryptor.pages
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary                
             };
             picker.FileTypeFilter.Add(".txt");
-            
+            picker.FileTypeFilter.Add(".huf");
+
             var file = await picker.PickSingleFileAsync();
 
             if (file != null)

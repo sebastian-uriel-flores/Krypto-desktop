@@ -861,7 +861,7 @@
         </CommandBar>
     </Page.TopAppBar>
 
-    <Grid Background="#FFEEEEEE" RequestedTheme="Light">
+    <Grid Background="#FFF9CD9F" RequestedTheme="Light">
 
         <RelativePanel
             MaxWidth="650"

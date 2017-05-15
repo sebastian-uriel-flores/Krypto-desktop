@@ -7,147 +7,193 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
-        <Grid.Resources>
-            <Style 
-                x:Key="HeaderStyle"
-                TargetType="TextBlock"           
-                BasedOn="{StaticResource BaseTextBlockStyle}"
-                >
-                <Setter Property="FontSize" Value="46" />
-                <Setter Property="FontWeight" Value="Light" />
-                <Setter Property="OpticalMarginAlignment" Value="TrimSideBearings" />
-                <Setter Property="Foreground" Value="#99000000"/>
-                <Setter Property="Padding" Value="30,15"/>                
-                <Setter Property="RelativePanel.AlignHorizontalCenterWithPanel" Value="True"/>
-            </Style>
-            <Style
-                x:Key="LineDividerStyle"
-                TargetType="Rectangle"
-                >
-                <Setter Property="RelativePanel.AlignLeftWithPanel" Value="True"/>
-                <Setter Property="RelativePanel.AlignRightWithPanel" Value="True"/>
-                <Setter Property="Margin" Value="20,0"/>
-                <Setter Property="StrokeThickness" Value="0"/>
-                <Setter Property="Fill" Value="#99DAD8D8"/>
-                <Setter Property="Height" Value="0.8"/>
-            </Style>
-        </Grid.Resources>
-
+    <Grid Background="#FFF9CD9F" RequestedTheme="Light">
         <RelativePanel
-            MaxWidth="1200">
-            
-            <TextBlock
-                x:Name="origTextHeader"                
-                Text="Comprimir texto"                
-                Style="{ThemeResource HeaderStyle}"
-                />
-            <Rectangle
-                x:Name="origTextHeaderDivider"
-                RelativePanel.Below="origTextHeader"
-                Style="{StaticResource LineDividerStyle}"
-                />
-            <TextBlock
-                x:Name="origTextSubheader"
-                Text="Seleccione un archivo de texto para comprimirlo"                
-                RelativePanel.Below="origTextHeaderDivider"
+            Width="650"
+            Height="540"
+            Background="White"            
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            >
+            <Grid 
+                x:Name="pageHeader"
+                Height="48"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                Padding="20,20,20,10"
-                FontSize="25"    
-                Foreground="#99000000"
-                FontWeight="Light"
-                TextWrapping="WrapWholeWords"
-                TextAlignment="Center"
-                />
-            <Button 
-                x:Name="selectFileBt"
-                Content="Examinar..." 
-                Padding="30,15"
-                Background="DodgerBlue"
-                Margin="40,0,40,30"
-                Foreground="White"
-                MinWidth="150"
-                RelativePanel.Below="origTextSubheader"
-                HorizontalAlignment="Stretch"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
-                Click="SelectFileBt_Click"
-                />
-            
-            <ScrollViewer
-                x:Name="origTextContainer"
-                Background="#66D3D3D3" 
-                Height="Auto"                
-                Margin="40,0"
-                RelativePanel.Below="selectFileBt"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                RelativePanel.Above="origTextExtraData"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                ScrollViewer.VerticalScrollBarVisibility="Auto"                    
-                Visibility="Collapsed"
                 >
-                <RichTextBlock 
-                    x:Name="origText"
-                    Margin="10"
-                    />
-            </ScrollViewer>
-
-            <StackPanel 
-                x:Name="origTextExtraData"
-                Orientation="Horizontal"
-                RelativePanel.Above="compressBt"
-                RelativePanel.AlignRightWithPanel="True"                
-                Margin="40,0"
-                Visibility="Collapsed"
-                >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="48"/>
+                </Grid.ColumnDefinitions>
                 <TextBlock
-                    x:Name="origTextLength"                                    
-                    TextAlignment="Right"
+                    TextAlignment="Left"
+                    Text="Codificar con Huffman"
+                    VerticalAlignment="Center"
+                    Margin="20,0,0,0"
+                    FontSize="20"
+                    FontFamily="Segoe UI Light"
                     FontWeight="SemiLight"
-                    Padding="5,0"
+                    Foreground="#FF525151"/>
+
+                <Button
+                    x:Name="selectFileButton"
+                    Grid.Column="1"                                                       
+                    Height="35"
+                    Content="&#xe1a5;"
+                    BorderBrush="#ff9200"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Foreground="#ff9200"
+                    FontFamily="Segoe MDL2 Assets"                    
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    FontSize="20"
+                    Click="SelectFileBt_Click"
                     />
-                <TextBlock                
-                    TextAlignment="Right"
-                    FontWeight="SemiLight"
-                    Text="caracteres"
+            </Grid>
+            <Rectangle
+                x:Name="pageHeaderDivider"
+                RelativePanel.Below="pageHeader"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                Height="1"
+                StrokeThickness="0"
+                Fill="#FFEEEEEE"
+                />
+
+            <StackPanel
+                x:Name="settingsPanel"
+                RelativePanel.Below="pageHeaderDivider"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"                
+                Margin="20,10,20,0"
+                Visibility="Collapsed"
+                >
+                <StackPanel.Resources>
+                    <Style x:Key="SettingsHeaderStyle" TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="#FF8C8C8C"/>
+                        <Setter Property="FontWeight" Value="Light"/>
+                    </Style>
+                </StackPanel.Resources>
+                <TextBlock
+                    Text="Nombre del archivo"
+                    Style="{StaticResource SettingsHeaderStyle}"
                     />
+                <TextBlock
+                    x:Name="fileNameBlock"
+                    Text="Mi archivo.txt"
+                    FontSize="20"
+                    Margin="0,5,0,0"/>
+
+                <TextBlock
+                    Text="Tamaño del archivo"
+                    Margin="0,30,0,0"
+                    Style="{StaticResource SettingsHeaderStyle}"
+                    />
+                <TextBlock
+                    x:Name="fileSizeBlock"
+                    Text="2500 bytes"
+                    FontSize="20"
+                    Margin="0,5,0,0"/>
+
+                <TextBlock
+                    Text="Descripción del archivo"
+                    Margin="0,30,0,0"
+                    Style="{StaticResource SettingsHeaderStyle}"
+                    />
+                <TextBlock
+                    x:Name="fileDescriptionBlock"
+                    Text="Documento de texto plano (.txt)"
+                    FontSize="20"
+                    Margin="0,5,0,0"/>
+
+                <TextBlock
+                    Text="Contenido del archivo"
+                    Margin="0,30,0,0"
+                    Style="{StaticResource SettingsHeaderStyle}"
+                    />
+                <ScrollViewer 
+                    Width="610"
+                    Height="140"
+                    Background="WhiteSmoke"
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Left"
+                    HorizontalScrollMode="Auto"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollMode="Enabled"
+                    VerticalScrollBarVisibility="Auto"
+                    >
+                    <TextBlock
+                        x:Name="fileContentBlock"
+                        Text=""                    
+                        FontSize="14"
+                        TextWrapping="WrapWholeWords"
+                        
+                        Width="610"
+                        Margin="5,5,5,5"
+                        />
+                </ScrollViewer>
+                
             </StackPanel>
 
-            <Button
-                x:Name="compressBt"
-                Content="Comprimir"
-                RelativePanel.AlignBottomWithPanel="True"
+            <Rectangle
+                x:Name="pageCommandsDivider"
+                RelativePanel.Below="settingsPanel"
+                RelativePanel.Above="pageCommands"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                HorizontalAlignment="Stretch"
-                Padding="30,15"
-                Margin="40,20"
-                MinWidth="150"
-                Background="MediumSpringGreen"
-                Foreground="White"
+                Height="1"
+                StrokeThickness="0"
+                Fill="#FFEEEEEE"
+                Margin="0,20,0,0"
                 Visibility="Collapsed"
-                Click="CompressBt_Click"
                 />
+            <Grid
+                x:Name="pageCommands"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"
+                Height="50"
+                RelativePanel.AlignBottomWithPanel="True"
+                Background="WhiteSmoke"
+                Visibility="Collapsed"
+                >
+                <Button
+                    x:Name="confirmBt"
+                    FontFamily="Segoe MDL2 Assets"
+                    Content="&#xe001;"                    
+                    FontSize="25"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Foreground="#ff9200"
+                    VerticalAlignment="Stretch"
+                    HorizontalAlignment="Center"
+                    Padding="30,0"
+                    Click="CompressBt_Click"
+                    Visibility="Visible"
+                    />
+            </Grid>
+
+            <RelativePanel
+                x:Name="progressPanel"
+                RelativePanel.AlignLeftWithPanel="True"
+                RelativePanel.AlignRightWithPanel="True"                
+                RelativePanel.AlignTopWithPanel="True"
+                RelativePanel.AlignBottomWithPanel="True"
+                Background="#66000000"
+                Visibility="Collapsed"
+                >
+                <ProgressRing
+                    RelativePanel.AlignHorizontalCenterWithPanel="True"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    Height="60"
+                    Width="60"
+                    Foreground="#ff9200"
+                    IsActive="True"
+                    />
+            </RelativePanel>
         </RelativePanel>
 
-        <RelativePanel
-            x:Name="progressPanel"
-            Grid.ColumnSpan="2"
-            Background="#7F000000"
-            Visibility="Collapsed"
-            >
-            <ProgressRing
-                RelativePanel.AlignHorizontalCenterWithPanel="True"
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                Height="100"
-                Width="100"
-                Foreground="DodgerBlue"
-                IsActive="True"
-                />
-        </RelativePanel>
+
     </Grid>
 </Page>
 
