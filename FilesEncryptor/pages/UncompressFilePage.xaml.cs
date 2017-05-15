@@ -84,8 +84,12 @@ namespace FilesEncryptor.pages
                     await Task.Delay(200);
 
                     //Oculto los paneles que muestran informacion del archivo anterior
-                    compTextExtraData.Visibility = Visibility.Collapsed;
-                    uncompressBt.Visibility = Visibility.Collapsed;
+
+                    settingsPanel.Visibility = Visibility.Collapsed;
+                    pageCommandsDivider.Visibility = Visibility.Collapsed;
+                    pageCommands.Visibility = Visibility.Collapsed;
+
+                    uint numBytesLoaded = 0;
 
                     //Abro el archivo para lectura y obtengo su tamaño en bytes
                     var stream = await _compTextFile.OpenAsync(FileAccessMode.Read);
@@ -101,7 +105,7 @@ namespace FilesEncryptor.pages
                         using (var dataReader = new DataReader(inputStream))
                         {
                             //Cargo en el buffer todos los bytes del archivo
-                            uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
+                            numBytesLoaded = await dataReader.LoadAsync((uint)size);
 
                             string temp = "";
 
@@ -200,18 +204,21 @@ namespace FilesEncryptor.pages
                     _compTextStr = HuffmanEncoder.Decode(scanner, encodedText);
 
                     //Muestro el texto decodificado
-                    compTextContainer.Visibility = Visibility.Visible;
-                    uncompressBt.Visibility = Visibility.Visible;
-                    compTextExtraData.Visibility = Visibility.Visible;
-                    compText.Text = _compTextStr;
-                    compTextLength.Text = _compTextStr.Length.ToString();
+                    fileNameBlock.Text = file.Name;
+                    fileSizeBlock.Text = string.Format("{0} bytes", numBytesLoaded);
+                    fileDescriptionBlock.Text = file.DisplayName;
+                    fileContentBlock.Text = _compTextStr;
+
+                    settingsPanel.Visibility = Visibility.Visible;
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
                 }
                 catch (Exception ex)
                 {                    
                     MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo.", "Ha ocurrido un error");
                     await errorDialog.ShowAsync();
 
-                    Debug.Fail("Excepcion al cargar archivo para descompresion", ex.Message);
+                    DebugUtils.Fail("Excepcion al cargar archivo para descompresion", ex.Message);
                 }
 
                 HideProgressPanel();
