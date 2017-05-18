@@ -80,7 +80,7 @@ namespace FilesEncryptor.pages
                 pageCommandsDivider.Visibility = Visibility.Collapsed;
                 pageCommands.Visibility = Visibility.Collapsed;
 
-                bool openResult = await _filesHelper.OpenFile();
+                bool openResult = await _filesHelper.OpenFile(FileAccessMode.Read);
 
                 if(openResult)
                 {
@@ -93,6 +93,7 @@ namespace FilesEncryptor.pages
                     pageCommands.Visibility = Visibility.Visible;
 
                     bool extractResult = await ExtractFileProperties();
+                    _filesHelper.Finish();
                     DebugUtils.Write("File extracted properly");
                 }
             }
@@ -110,7 +111,6 @@ namespace FilesEncryptor.pages
                 extractResult = await _decoder.ReadFileContent(_filesHelper);
             }
 
-            _filesHelper.Finish();
             return extractResult;
         }
 

@@ -30,6 +30,8 @@ namespace FilesEncryptor.helpers
         private BitCode _fullCode;
         private uint _redundanceCodeLength;
 
+        public HammingEncodeType EncodeType => _encodeType;
+
         public static uint CalculateControlBits(HammingEncodeType encodeType)
         {
             uint cantControlBits = 1;

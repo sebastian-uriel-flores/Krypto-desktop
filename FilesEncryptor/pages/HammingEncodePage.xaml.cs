@@ -215,7 +215,7 @@ namespace FilesEncryptor.pages
                     using (var outputStream = stream.GetOutputStreamAt(0))
                     {
                         using (var dataWriter = new DataWriter(outputStream))
-                        {                            
+                        {  
                             string fileHeader = string.Format("{0}:{1}{2}:{3}{4}:{5}",
                                 originalFileType.Length,
                                 originalFileType,

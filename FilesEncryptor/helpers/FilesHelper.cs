@@ -60,7 +60,7 @@ namespace FilesEncryptor.helpers
             return file != null;
         }
 
-        public async Task<bool> OpenFile()
+        public async Task<bool> OpenFile(FileAccessMode accesMode)
         {
             bool result = false;
             _fileSize = 0;
@@ -74,7 +74,7 @@ namespace FilesEncryptor.helpers
             if (_selectedFile != null)
             {
                 //Abro el archivo para lectura
-                _fileStream = await _selectedFile.OpenAsync(FileAccessMode.Read);
+                _fileStream = await _selectedFile.OpenAsync(accesMode);
                 _fileInputStream = _fileStream.GetInputStreamAt(0);
                 _fileDataReader = new DataReader(_fileInputStream);
                 var size = _fileStream.Size;
@@ -96,7 +96,7 @@ namespace FilesEncryptor.helpers
 
             if (!fileOpened)
             {
-                fileOpened = await OpenFile();
+                fileOpened = await OpenFile(FileAccessMode.Read);
             }
 
             //Abrir el archivo y obtener sus propiedades
@@ -138,7 +138,7 @@ namespace FilesEncryptor.helpers
 
             if(!isOpened)
             {
-                isOpened = await OpenFile();
+                isOpened = await OpenFile(FileAccessMode.Read);
             }
 
             if (isOpened)
@@ -156,7 +156,7 @@ namespace FilesEncryptor.helpers
 
             if (!isOpened)
             {
-                isOpened = await OpenFile();
+                isOpened = await OpenFile(FileAccessMode.Read);
             }
 
             if (isOpened)
@@ -180,7 +180,7 @@ namespace FilesEncryptor.helpers
 
             if (!isOpened)
             {
-                isOpened = await OpenFile();
+                isOpened = await OpenFile(FileAccessMode.Read);
             }
 
             if (isOpened)

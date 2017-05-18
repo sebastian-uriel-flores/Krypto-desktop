@@ -1,11 +1,14 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -23,22 +26,78 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class IntroduceErrorsPage : Page
     {
+        private FilesHelper _filesHelper;
+        private HammingEncoder _decoder;
+
         Random _moduleRandom, _bitPositionRandom;
         public IntroduceErrorsPage()
         {
             this.InitializeComponent();
             _moduleRandom = new Random();
             _bitPositionRandom = new Random();
+
+            List<string> extensions = new List<string>();
+            foreach (HammingEncodeType type in HammingEncoder.EncodeTypes)
+            {
+                extensions.Add(type.Extension);
+            }
+
+            _filesHelper = new FilesHelper(extensions);
         }
 
-        private void SelectFileButton_Click(object sender, RoutedEventArgs e)
+        private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
+            bool pickResult = await _filesHelper.Pick();
 
+            if (pickResult)
+            {
+                ShowProgressPanel();
+                await Task.Delay(200);
+
+                settingsPanel.Visibility = Visibility.Collapsed;
+                pageCommandsDivider.Visibility = Visibility.Collapsed;
+                pageCommands.Visibility = Visibility.Collapsed;
+
+                bool openResult = await _filesHelper.OpenFile(FileAccessMode.ReadWrite);
+
+                if (openResult)
+                {
+                    fileNameBlock.Text = _filesHelper.SelectedFileName;
+                    fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
+                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayName, _filesHelper.SelectedFileExtension);
+
+                    settingsPanel.Visibility = Visibility.Visible;
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
+
+                    bool extractResult = await ExtractFileProperties();
+                    _filesHelper.Finish();
+                    DebugUtils.Write("File extracted properly");
+                }
+            }
+            HideProgressPanel();
         }
 
-        private void ConfirmBt_Click(object sender, RoutedEventArgs e)
+        
+        private async Task<bool> ExtractFileProperties()
         {
-            List<BitCode> codeBlocks = new List<BitCode>();
+            bool extractResult = false;
+            var header = await _filesHelper.ExtractFileHeader();
+
+            if (header != null)
+            {
+                _decoder = new HammingEncoder(HammingEncoder.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
+                extractResult = await _decoder.ReadFileContent(_filesHelper);
+            }
+
+            return extractResult;
+        }
+
+        private async void ConfirmBt_Click(object sender, RoutedEventArgs e)
+        {
+            BitCode decoded = await _decoder.Decode();
+
+            List<BitCode> codeBlocks = decoded.Explode(_decoder.EncodeType.WordBitsSize, false).Item1;
             List<BitCode> blocksWithError = new List<BitCode>();
 
             foreach(BitCode block in codeBlocks)
@@ -61,5 +120,10 @@ namespace FilesEncryptor.pages
         private bool InsertErrorInModule() => _moduleRandom.Next(-1, 1) >= 0;
         
         private int SelectBitPositionRandom(int min, int max) => _bitPositionRandom.Next(min, max);
+
+
+        private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
+
+        private void HideProgressPanel() => progressPanel.Visibility = Visibility.Collapsed;
     }
 }
