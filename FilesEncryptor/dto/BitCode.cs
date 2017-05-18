@@ -138,6 +138,16 @@ namespace FilesEncryptor.dto
                 new List<byte>() { disp2 }, 1);
         }
 
+        public BitCode ReplaceAt(uint bitPosition, BitCode replacement)
+        {
+            BitCode firstHalf = GetRange(0, bitPosition);
+            BitCode secondHalf = GetRange(bitPosition + 1, (uint)CodeLength - bitPosition - 1);
+
+            firstHalf.Append(replacement);
+            firstHalf.Append(secondHalf);
+            return firstHalf;
+        }
+
         public List<int> ToIntList()
         {
             List<int> result = new List<int>(CodeLength);
@@ -189,6 +199,19 @@ namespace FilesEncryptor.dto
                 //dicho byte y el byte 'b'
                 Code[byteIndex] |= b; 
             }
+        }
+
+        public BitCode Negate()
+        {
+            BitCode result = Copy();
+                        
+            //Opero bit a bit
+            for (int pos = 0; pos < Code.Count; pos++)
+            {
+                result.Code[pos] ^= result.Code[pos];
+            }
+            
+            return result;
         }
 
         public void ReplaceCode(List<byte> code, int length)

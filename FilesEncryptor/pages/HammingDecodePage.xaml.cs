@@ -32,17 +32,21 @@ namespace FilesEncryptor.pages
     /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
     /// </summary>
     public sealed partial class HammingDecodePage : Page
-    {
-        private string _originalFileSize;
-        private int _selectedEncoding;
-        private List<byte> _rawFileBytes;
-        private StorageFile originalFile;
-        private HammingDecodeResult decodedFileResult;
-        private HammingEncodeResult encodedFileResult;
+    {        
+        private FilesHelper _filesHelper;
+        private HammingEncoder _decoder;
 
         public HammingDecodePage()
         {
             this.InitializeComponent();
+            
+            List<string> extensions = new List<string>();
+            foreach (HammingEncodeType type in HammingEncoder.EncodeTypes)
+            {
+                extensions.Add(type.Extension);
+            }
+
+            _filesHelper = new FilesHelper(extensions);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -65,151 +69,49 @@ namespace FilesEncryptor.pages
 
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
-            var picker = new FileOpenPicker()
-            {
-                ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
+            bool pickResult = await _filesHelper.Pick();
 
-            foreach (HammingEncodeType type in HammingEncoder.EncodeTypes)
+            if(pickResult)
             {
-                picker.FileTypeFilter.Add(type.Extension);
+                ShowProgressPanel();
+                await Task.Delay(200);
+
+                settingsPanel.Visibility = Visibility.Collapsed;
+                pageCommandsDivider.Visibility = Visibility.Collapsed;
+                pageCommands.Visibility = Visibility.Collapsed;
+
+                bool openResult = await _filesHelper.OpenFile();
+
+                if(openResult)
+                {
+                    fileNameBlock.Text = _filesHelper.SelectedFileName;
+                    fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
+                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayName, _filesHelper.SelectedFileExtension);
+
+                    settingsPanel.Visibility = Visibility.Visible;
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
+
+                    bool extractResult = await ExtractFileProperties();
+                    DebugUtils.Write("File extracted properly");
+                }
+            }
+            HideProgressPanel();
+        }
+
+        private async Task<bool> ExtractFileProperties()
+        {
+            bool extractResult = false;
+            var header = await _filesHelper.ExtractFileHeader();
+
+            if (header != null)
+            {
+                _decoder = new HammingEncoder(HammingEncoder.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
+                extractResult = await _decoder.ReadFileContent(_filesHelper);
             }
 
-            var file = await picker.PickSingleFileAsync();
-
-            if (file != null)
-            {                
-                HammingEncodeType encodeType = HammingEncoder.EncodeTypes.FirstOrDefault(encType => encType.Extension == file.FileType);
-
-                if (encodeType == default(HammingEncodeType))
-                {
-                    //Extension invalida
-                }
-                else
-                {
-                    decodedFileResult = new HammingDecodeResult();
-                    encodedFileResult = null;
-
-                    try
-                    {
-                        _rawFileBytes = null;
-
-                        ShowProgressPanel();
-                        await Task.Delay(200);
-
-                        settingsPanel.Visibility = Visibility.Collapsed;
-                        pageCommandsDivider.Visibility = Visibility.Collapsed;
-                        pageCommands.Visibility = Visibility.Collapsed;
-
-                        //Abro el archivo para lectura
-                        using (var stream = await file.OpenAsync(FileAccessMode.Read))
-                        {
-                            using (var inputStream = stream.GetInputStreamAt(0))
-                            {
-                                using (var dataReader = new DataReader(inputStream))
-                                {
-                                    var size = stream.Size;
-
-                                    //Cargo en el buffer todos los bytes del archivo
-                                    uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
-
-                                    _originalFileSize = numBytesLoaded.ToString();
-
-                                    string temp = "";
-
-                                    //Obtengo el largo del tipo de archivo
-                                    string fileExtLength = "";
-
-                                    temp = dataReader.ReadString(1);
-
-                                    while (temp != ":")
-                                    {
-                                        fileExtLength += temp;
-                                        temp = dataReader.ReadString(1);
-                                    }
-
-                                    //Obtengo el tipo de archivo
-                                    decodedFileResult.FileExtension = dataReader.ReadString(uint.Parse(fileExtLength));
-
-                                    //Obtengo el largo de la descripcion del tipo de archivo
-                                    string fileDisplayTypeLength = "";
-
-                                    temp = dataReader.ReadString(1);
-
-                                    while (temp != ":")
-                                    {
-                                        fileDisplayTypeLength += temp;
-                                        temp = dataReader.ReadString(1);
-                                    }
-
-                                    //Obtengo la descripcion del tipo de archivo
-                                    decodedFileResult.FileDescription = dataReader.ReadString(uint.Parse(fileDisplayTypeLength));
-
-                                    //Obtengo el largo del nombre original del archivo
-                                    string fileNameLength = "";
-
-                                    temp = dataReader.ReadString(1);
-
-                                    while (temp != ":")
-                                    {
-                                        fileNameLength += temp;
-                                        temp = dataReader.ReadString(1);
-                                    }
-
-                                    //Obtengo la descripcion del tipo de archivo
-                                    decodedFileResult.FileName = dataReader.ReadString(uint.Parse(fileNameLength));
-
-                                    //Obtengo el largo del código
-                                    string rawCodeLength = "";
-
-                                    temp = dataReader.ReadString(1);
-
-                                    while (temp != ",")
-                                    {
-                                        rawCodeLength += temp;
-                                        temp = dataReader.ReadString(1);
-                                    }
-
-                                    //Obtengo la cantidad de bits de redundancia ubicados al final del código
-                                    string redundanceBitsCount = "";
-
-                                    temp = dataReader.ReadString(1);
-
-                                    while (temp != ":")
-                                    {
-                                        redundanceBitsCount += temp;
-                                        temp = dataReader.ReadString(1);
-                                    }
-
-                                    //Obtengo los bytes del código
-                                    byte[] rawCodeBytes = new byte[CommonUtils.BitsLengthToBytesLength(uint.Parse(rawCodeLength))];
-                                    dataReader.ReadBytes(rawCodeBytes);
-                                    encodedFileResult = new HammingEncodeResult(new BitCode(rawCodeBytes.ToList(), int.Parse(rawCodeLength)), encodeType, int.Parse(redundanceBitsCount));
-                                }
-                            }
-                        }
-
-                        originalFile = file;
-                        fileNameBlock.Text = originalFile.Name;
-                        fileSizeBlock.Text = string.Format("{0} bytes", _originalFileSize);
-                        fileDescriptionBlock.Text = string.Format("{0} ({1})", encodedFileResult.EncodeType.LongDescription, encodedFileResult.EncodeType.Extension);
-                        
-                        settingsPanel.Visibility = Visibility.Visible;
-                        pageCommandsDivider.Visibility = Visibility.Visible;
-                        pageCommands.Visibility = Visibility.Visible;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
-                        await errorDialog.ShowAsync();
-
-                        DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
-                    }
-                }
-
-                HideProgressPanel();
-            }
+            _filesHelper.Finish();
+            return extractResult;
         }
 
         private async void DecodeBt_Click(object sender, RoutedEventArgs e)
@@ -217,9 +119,9 @@ namespace FilesEncryptor.pages
             var savePicker = new FileSavePicker()
             {
                 SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = originalFile.DisplayName
+                SuggestedFileName = _filesHelper.SelectedFileHeader.FileName
             };
-            savePicker.FileTypeChoices.Add(decodedFileResult.FileDescription , new List<string>() { decodedFileResult.FileExtension });
+            savePicker.FileTypeChoices.Add(_filesHelper.SelectedFileHeader.FileDisplayType, new List<string>() { _filesHelper.SelectedFileHeader.FileExtension });
             StorageFile file = await savePicker.PickSaveFileAsync();
 
             //Si el usuario no canceló la operación
@@ -229,7 +131,7 @@ namespace FilesEncryptor.pages
                 await Task.Delay(200);
 
                 //Codifico el archivo original
-                BitCode result = await HammingEncoder.Decode(encodedFileResult);
+                BitCode result = await _decoder.Decode();
 
                 //Vuelco el código obtenido en disco
                 bool dumpRes = await DumpDecodedResult(result, file);

@@ -13,7 +13,7 @@ using Windows.UI.Xaml.Media;
 
 namespace FilesEncryptor.helpers
 {
-    public static class HammingEncoder
+    public class HammingEncoder : BaseCodifier
     {
         private static List<HammingEncodeType> _encodeTypes => new List<HammingEncodeType>
         {
@@ -25,6 +25,10 @@ namespace FilesEncryptor.helpers
         };
 
         public static ReadOnlyCollection<HammingEncodeType> EncodeTypes => _encodeTypes.AsReadOnly();
+
+        private HammingEncodeType _encodeType;
+        private BitCode _fullCode;
+        private uint _redundanceCodeLength;
 
         public static uint CalculateControlBits(HammingEncodeType encodeType)
         {
@@ -187,7 +191,7 @@ namespace FilesEncryptor.helpers
             return result;
         }
 
-        public static async Task<BitCode> Decode(HammingEncodeResult encodedResult)
+        public async Task<BitCode> Decode()
         {
             BitCode result = BitCode.EMPTY;
 
@@ -196,10 +200,10 @@ namespace FilesEncryptor.helpers
                 DebugUtils.WriteLine("Checking words parity");
 
                 //Separo el codigo completo en bloques representando a cada palabra del mismo
-                List<BitCode> parityControlMatrix = CreateParityControlMatrix(encodedResult.EncodeType);
+                List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
                 uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
-                List<BitCode> encodedWords = encodedResult.Encoded.Explode(encodedWordSize, false).Item1;
+                List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false).Item1;
 
                 BitCodePresenter.From(encodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Encoded matrix");
 
@@ -209,7 +213,7 @@ namespace FilesEncryptor.helpers
                 DebugUtils.WriteLine("Decodifying words");
 
                 List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
-                List<uint> controlBitsIndexes = GetControlBitsIndexes(encodedResult.EncodeType);
+                List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
 
                 foreach (BitCode encoded in encodedWords)
                 {
@@ -229,7 +233,7 @@ namespace FilesEncryptor.helpers
                 result = BitOps.Join(decodedWords);
 
                 //Remuevo los bits de redundancia
-                result = result.GetRange(0, (uint) (result.CodeLength - encodedResult.RedundanceBitsCount));
+                result = result.GetRange(0, (uint)result.CodeLength - _redundanceCodeLength);
             });
             
             return result;
@@ -259,6 +263,47 @@ namespace FilesEncryptor.helpers
             dataBits = dataBits.Except(controlBits).ToList();
 
             return dataBits;
+        }
+
+
+
+
+        private HammingEncoder()
+        {
+
+        }
+        
+        public HammingEncoder(HammingEncodeType encodeType)
+        {
+            _encodeType = encodeType;
+        }
+
+        public HammingEncoder (HammingEncodeResult encodeResult)
+        {
+            _encodeType = encodeResult.EncodeType;
+            _fullCode = encodeResult.Encoded;
+            _redundanceCodeLength = (uint)encodeResult.RedundanceBitsCount;
+        }
+
+        public override async Task<bool> ReadFileContent(FilesHelper filesHelper)
+        {
+            bool result = false;
+
+            //Obtengo la cantidad de bits del codigo completo, incluyendo la redundancia
+            string fullCodeLength = await filesHelper.ReadStringUntil(",");
+
+            //Obtengo la cantidad de bits de redundancia ubicados al final del código
+            string redundanceCodeLength = await filesHelper.ReadStringUntil(":");
+
+            //Obtengo los bytes del codigo, incluyendo la redundancia
+            byte[] fullCodeBytes = await filesHelper.ReadBytes(CommonUtils.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
+
+            _fullCode = new BitCode(fullCodeBytes.ToList(), int.Parse(fullCodeLength));
+            _redundanceCodeLength = uint.Parse(redundanceCodeLength);
+
+            result = true;
+
+            return result;
         }
     }
 

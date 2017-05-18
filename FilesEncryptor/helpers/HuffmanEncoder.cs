@@ -10,6 +10,8 @@ namespace FilesEncryptor.helpers
 {
     public static class HuffmanEncoder
     {
+
+
         public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {
             BitCode fullCode = null;
@@ -119,6 +121,11 @@ namespace FilesEncryptor.helpers
             while (currentByteIndex + currentCodeBytes.Count < encodedText.Code.Count && !analyzingTrashBits);
 
             return result;
+        }
+
+        public static IDecoder From(BitCode encoded, object codeLength)
+        {
+            throw new NotImplementedException();
         }
     }
 }

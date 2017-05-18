@@ -96,18 +96,29 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="dto\Hamming\HammingCodeLength.cs" />
+    <Compile Include="dto\Huffman\HuffmanCodeLengthParser.cs" />
+    <Compile Include="dto\ICodeLengthParser.cs" />
+    <Compile Include="dto\FileHeader.cs" />
     <Compile Include="dto\HammingDecodeResult.cs" />
     <Compile Include="dto\HammingEncodeResult.cs" />
     <Compile Include="dto\HammingEncodeType.cs" />
+    <Compile Include="dto\Hamming\HammingCodeLengthParser.cs" />
+    <Compile Include="dto\IDecoder.cs" />
     <Compile Include="dto\IEncodeResult.cs" />
+    <Compile Include="helpers\BaseCodifier.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\DebugUtils.cs" />
+    <Compile Include="helpers\FilesHelper.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="pages\HammingDecodePage.xaml.cs">
       <DependentUpon>HammingDecodePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="pages\HammingEncodePage.xaml.cs">
       <DependentUpon>HammingEncodePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="pages\IntroduceErrorsPage.xaml.cs">
+      <DependentUpon>IntroduceErrorsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="utils\BitOps.cs" />
     <Compile Include="utils\CommonUtils.cs" />
@@ -160,6 +171,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="pages\HammingEncodePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="pages\IntroduceErrorsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
