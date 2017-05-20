@@ -9,6 +9,8 @@ namespace FilesEncryptor.helpers
 {
     public abstract class BaseCodifier
     {   
-        public abstract Task<bool> ReadFileContent(FilesHelper filesHelper);
+        public abstract bool ReadFileContent(FileHelper fileHelper);
+
+        public abstract bool WriteFileContent(FileHelper fileHelper);
     }
 }

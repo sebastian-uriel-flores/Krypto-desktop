@@ -26,8 +26,8 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class IntroduceErrorsPage : Page
     {
-        private FilesHelper _filesHelper;
-        private HammingEncoder _decoder;
+        private FileHelper _filesHelper;
+        private HammingCodifier _decoder;
 
         Random _moduleRandom, _bitPositionRandom;
         public IntroduceErrorsPage()
@@ -35,19 +35,18 @@ namespace FilesEncryptor.pages
             this.InitializeComponent();
             _moduleRandom = new Random();
             _bitPositionRandom = new Random();
-
-            List<string> extensions = new List<string>();
-            foreach (HammingEncodeType type in HammingEncoder.EncodeTypes)
-            {
-                extensions.Add(type.Extension);
-            }
-
-            _filesHelper = new FilesHelper(extensions);
+            _filesHelper = new FileHelper();
         }
 
         private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
-            bool pickResult = await _filesHelper.Pick();
+            List<string> extensions = new List<string>();
+            foreach (HammingEncodeType type in HammingCodifier.EncodeTypes)
+            {
+                extensions.Add(type.Extension);
+            }
+
+            bool pickResult = await _filesHelper.PickToOpen(extensions);
 
             if (pickResult)
             {
@@ -70,24 +69,24 @@ namespace FilesEncryptor.pages
                     pageCommandsDivider.Visibility = Visibility.Visible;
                     pageCommands.Visibility = Visibility.Visible;
 
-                    bool extractResult = await ExtractFileProperties();
-                    _filesHelper.Finish();
-                    DebugUtils.Write("File extracted properly");
+                    bool extractResult = ExtractFileProperties();
+                    await _filesHelper.Finish();
+                    DebugUtils.WriteLine("File extracted properly");
                 }
             }
             HideProgressPanel();
         }
 
         
-        private async Task<bool> ExtractFileProperties()
+        private bool ExtractFileProperties()
         {
             bool extractResult = false;
-            var header = await _filesHelper.ExtractFileHeader();
+            var header = _filesHelper.ExtractFileHeader();
 
             if (header != null)
             {
-                _decoder = new HammingEncoder(HammingEncoder.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
-                extractResult = await _decoder.ReadFileContent(_filesHelper);
+                _decoder = new HammingCodifier(HammingCodifier.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
+                extractResult = _decoder.ReadFileContent(_filesHelper);
             }
 
             return extractResult;

@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ using Windows.UI.Xaml.Media;
 
 namespace FilesEncryptor.helpers
 {
-    public class HammingEncoder : BaseCodifier
+    public class HammingCodifier : BaseCodifier
     {
         private static List<HammingEncodeType> _encodeTypes => new List<HammingEncodeType>
         {
@@ -26,13 +27,15 @@ namespace FilesEncryptor.helpers
 
         public static ReadOnlyCollection<HammingEncodeType> EncodeTypes => _encodeTypes.AsReadOnly();
 
-        private HammingEncodeType _encodeType;
         private BitCode _fullCode;
-        private uint _redundanceCodeLength;
+        private uint _redundanceBitsCount;
+
+        private HammingEncodeResult _encoded;
+        private HammingEncodeType _encodeType;
 
         public HammingEncodeType EncodeType => _encodeType;
 
-        public static uint CalculateControlBits(HammingEncodeType encodeType)
+        public uint CalculateControlBits(HammingEncodeType encodeType)
         {
             uint cantControlBits = 1;
 
@@ -44,7 +47,7 @@ namespace FilesEncryptor.helpers
             return cantControlBits;
         }
 
-        public static List<BitCode> CreateGeneratorMatrix(HammingEncodeType encodeType)
+        public List<BitCode> CreateGeneratorMatrix(HammingEncodeType encodeType)
         {
             uint cantControlBits = CalculateControlBits(encodeType);
 
@@ -74,7 +77,7 @@ namespace FilesEncryptor.helpers
             return genMatrix;
         }
 
-        public static List<BitCode> CreateParityControlMatrix(HammingEncodeType encodeType)
+        public List<BitCode> CreateParityControlMatrix(HammingEncodeType encodeType)
         {
             uint controlBitsCount = CalculateControlBits(encodeType);
 
@@ -122,73 +125,75 @@ namespace FilesEncryptor.helpers
             return parContMatrix;
         }
 
-        public static async Task<HammingEncodeResult> Encode(List<byte> rawBytes, HammingEncodeType encodeType)
-        {
-            HammingEncodeResult result = null;
+        
 
-            await Task.Factory.StartNew(() =>
+        
+
+        private List<uint> GetControlBitsIndexes(HammingEncodeType encodeType)
+        {            
+            uint ctrlBits = CalculateControlBits(encodeType);
+            List<uint> result = new List<uint>((int)ctrlBits);
+
+            for (uint i = 0; i < ctrlBits; i++)
             {
-                if (encodeType?.WordBitsSize > 0)
-                {
-                    DebugUtils.WriteLine("Extracting input words");
+                result.Add((uint)Math.Pow(2, i) - 1);
+            }
 
-                    //Obtengo todos los bloques de informacion o palabras
-                    Tuple<List<BitCode>, int> exploded = new BitCode(rawBytes, rawBytes.Count * 8).Explode(encodeType.WordBitsSize);
-                    List<BitCode> dataBlocks = exploded.Item1;
-                    
-                    //Imprimo todas las palabras de entrada
-                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
+            return result;
+        }
 
-                    //Creo la matriz generadora
-                    DebugUtils.WriteLine("Creating generator matrix");
+        private List<uint> GetDataBitsIndexes(uint wordSize, List<uint> controlBits)
+        {
+            List<uint> dataBits = new List<uint>();
+            for(uint i = 0; i < wordSize; i++)
+            {
+                dataBits.Add(i);
+            }
 
-                    List<BitCode> genMatrix = CreateGeneratorMatrix(encodeType);
+            dataBits = dataBits.Except(controlBits).ToList();
 
-                    //Determino el tamaño de los bloques de salida
-                    //sumando la cantidad de bits de la palabra de entrada y la cantidad de columnas
-                    //de la matriz generadora
-                    uint outWordSize = encodeType.WordBitsSize + (uint)genMatrix.Count;
+            return dataBits;
+        }
 
-                    DebugUtils.WriteLine("Codifying words");
 
-                    //Creo la lista con los bloques de salida
-                    List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
 
-                    foreach (BitCode currentWord in dataBlocks)
-                    {
-                        int currentExp = 0;
-                        int currentDataBit = 0;
-                        BitCode currentOutputWord = BitCode.EMPTY;
 
-                        for (int i = 0; i < outWordSize; i++)
-                        {
-                            //Si es un bit de control, calculo su valor, basandome en la matriz generadora
-                            if (i + 1 == Math.Pow(2, currentExp))
-                            {
-                                //Al realizar un and, estoy haciendo la multiplicacion bit a bit
-                                //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
-                                //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
-                                currentExp++;
-                            }
-                            //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
-                            else
-                            {
-                                currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
-                                currentDataBit++;
-                            }
-                        }
+        private HammingCodifier()
+        {
 
-                        //Agrego la palabra recién creada a la lista de palabras de salida
-                        outputBlocks.Add(currentOutputWord);
-                    }
+        }
+        
+        public HammingCodifier(HammingEncodeType encodeType)
+        {
+            _encodeType = encodeType;
+        }
 
-                    //Imprimo todas las palabras de salida
-                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
+        public HammingCodifier (HammingEncodeResult encodeResult)
+        {
+            _encodeType = encodeResult.EncodeType;
+            _fullCode = encodeResult.Encoded;
+            _redundanceBitsCount = encodeResult.Length.RedundanceCodeLength;
+        }
 
-                    result = new HammingEncodeResult(BitOps.Join(outputBlocks), encodeType, exploded.Item2);
-                }                
-            });
+
+        public override bool ReadFileContent(FileHelper fileHelper)
+        {
+            bool result = false;
+
+            //Obtengo la cantidad de bits del codigo completo, incluyendo la redundancia
+            string fullCodeLength = fileHelper.ReadStringUntil(",");
+
+            //Obtengo la cantidad de bits de redundancia ubicados al final del código
+            string redundanceCodeLength = fileHelper.ReadStringUntil(":");
+
+            //Obtengo los bytes del codigo, incluyendo la redundancia
+            byte[] fullCodeBytes = fileHelper.ReadBytes(CommonUtils.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
+
+            _fullCode = new BitCode(fullCodeBytes.ToList(), int.Parse(fullCodeLength));
+
+            _redundanceBitsCount = uint.Parse(redundanceCodeLength);            
+
+            result = true;
 
             return result;
         }
@@ -235,73 +240,101 @@ namespace FilesEncryptor.helpers
                 result = BitOps.Join(decodedWords);
 
                 //Remuevo los bits de redundancia
-                result = result.GetRange(0, (uint)result.CodeLength - _redundanceCodeLength);
+                result = result.GetRange(0, (uint)result.CodeLength - _redundanceBitsCount);
             });
-            
-            return result;
-        }
-
-        private static List<uint> GetControlBitsIndexes(HammingEncodeType encodeType)
-        {            
-            uint ctrlBits = CalculateControlBits(encodeType);
-            List<uint> result = new List<uint>((int)ctrlBits);
-
-            for (uint i = 0; i < ctrlBits; i++)
-            {
-                result.Add((uint)Math.Pow(2, i) - 1);
-            }
 
             return result;
         }
 
-        private static List<uint> GetDataBitsIndexes(uint wordSize, List<uint> controlBits)
+
+        public async Task<bool> Encode(BitCode rawBytes)
         {
-            List<uint> dataBits = new List<uint>();
-            for(uint i = 0; i < wordSize; i++)
+            bool result = false;
+            _encoded = null;
+
+            await Task.Factory.StartNew(() =>
             {
-                dataBits.Add(i);
-            }
+                if (_encodeType?.WordBitsSize > 0)
+                {
+                    DebugUtils.WriteLine("Extracting input words");
 
-            dataBits = dataBits.Except(controlBits).ToList();
+                    //Obtengo todos los bloques de informacion o palabras
+                    Tuple<List<BitCode>, int> exploded = rawBytes.Explode(_encodeType.WordBitsSize);
+                    List<BitCode> dataBlocks = exploded.Item1;
 
-            return dataBits;
+                    //Imprimo todas las palabras de entrada
+                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
+
+                    //Creo la matriz generadora
+                    DebugUtils.WriteLine("Creating generator matrix");
+
+                    List<BitCode> genMatrix = CreateGeneratorMatrix(_encodeType);
+
+                    //Determino el tamaño de los bloques de salida
+                    //sumando la cantidad de bits de la palabra de entrada y la cantidad de columnas
+                    //de la matriz generadora
+                    uint outWordSize = _encodeType.WordBitsSize + (uint)genMatrix.Count;
+
+                    DebugUtils.WriteLine("Codifying words");
+
+                    //Creo la lista con los bloques de salida
+                    List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
+
+                    foreach (BitCode currentWord in dataBlocks)
+                    {
+                        int currentExp = 0;
+                        int currentDataBit = 0;
+                        BitCode currentOutputWord = BitCode.EMPTY;
+
+                        for (int i = 0; i < outWordSize; i++)
+                        {
+                            //Si es un bit de control, calculo su valor, basandome en la matriz generadora
+                            if (i + 1 == Math.Pow(2, currentExp))
+                            {
+                                //Al realizar un and, estoy haciendo la multiplicacion bit a bit
+                                //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
+                                //Y realizo la suma entre todos los bits, haciendo un xor entre todos
+                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
+                                currentExp++;
+                            }
+                            //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
+                            else
+                            {
+                                currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
+                                currentDataBit++;
+                            }
+                        }
+
+                        //Agrego la palabra recién creada a la lista de palabras de salida
+                        outputBlocks.Add(currentOutputWord);
+                    }
+
+                    //Imprimo todas las palabras de salida
+                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
+                    BitCode resultCode = BitOps.Join(outputBlocks);
+
+                    _encoded = new HammingEncodeResult(resultCode, 
+                        _encodeType, 
+                        new HammingCodeLength()
+                        {
+                            FullCodeLength = (uint)resultCode.CodeLength,
+                            RedundanceCodeLength = (uint)exploded.Item2
+                        });
+
+                    result = true;
+                }
+            });
+
+            return result;
         }
 
-
-
-
-        private HammingEncoder()
-        {
-
-        }
-        
-        public HammingEncoder(HammingEncodeType encodeType)
-        {
-            _encodeType = encodeType;
-        }
-
-        public HammingEncoder (HammingEncodeResult encodeResult)
-        {
-            _encodeType = encodeResult.EncodeType;
-            _fullCode = encodeResult.Encoded;
-            _redundanceCodeLength = (uint)encodeResult.RedundanceBitsCount;
-        }
-
-        public override async Task<bool> ReadFileContent(FilesHelper filesHelper)
+        public override bool WriteFileContent(FileHelper fileHelper)
         {
             bool result = false;
 
-            //Obtengo la cantidad de bits del codigo completo, incluyendo la redundancia
-            string fullCodeLength = await filesHelper.ReadStringUntil(",");
-
-            //Obtengo la cantidad de bits de redundancia ubicados al final del código
-            string redundanceCodeLength = await filesHelper.ReadStringUntil(":");
-
-            //Obtengo los bytes del codigo, incluyendo la redundancia
-            byte[] fullCodeBytes = await filesHelper.ReadBytes(CommonUtils.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
-
-            _fullCode = new BitCode(fullCodeBytes.ToList(), int.Parse(fullCodeLength));
-            _redundanceCodeLength = uint.Parse(redundanceCodeLength);
+            string codeLength = string.Format("{0},{1}:", _encoded.Length.FullCodeLength, _encoded.Length.RedundanceCodeLength);
+            fileHelper.WriteString(codeLength);
+            fileHelper.WriteBytes(_encoded.Encoded.Code.ToArray());
 
             result = true;
 

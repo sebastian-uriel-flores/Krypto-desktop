@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.dto
+namespace FilesEncryptor.dto.Hamming
 {
     public class HammingEncodeResult : IEncodeResult
     {
@@ -12,18 +12,19 @@ namespace FilesEncryptor.dto
 
         public HammingEncodeType EncodeType { get; set; }
 
-        public int RedundanceBitsCount { get; set; }
+        public HammingCodeLength Length { get; set; }
+
 
         private HammingEncodeResult()
         {
 
         }
 
-        public HammingEncodeResult(BitCode encoded, HammingEncodeType encodeType, int redundanceBitsCount)
+        public HammingEncodeResult(BitCode encoded, HammingEncodeType encodeType, HammingCodeLength length)
         {
             Encoded = encoded;
             EncodeType = encodeType;
-            RedundanceBitsCount = redundanceBitsCount;
+            Length = length;
         }
     }
 }
