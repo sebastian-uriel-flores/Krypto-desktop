@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace FilesEncryptor.pages
     public sealed partial class IntroduceErrorsPage : Page
     {
         private FileHelper _filesHelper;
-        private HammingCodifier _decoder;
+        private BaseHammingCodifier _decoder;
 
         Random _moduleRandom, _bitPositionRandom;
         public IntroduceErrorsPage()
@@ -41,7 +42,7 @@ namespace FilesEncryptor.pages
         private async void SelectFileButton_Click(object sender, RoutedEventArgs e)
         {
             List<string> extensions = new List<string>();
-            foreach (HammingEncodeType type in HammingCodifier.EncodeTypes)
+            foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
             {
                 extensions.Add(type.Extension);
             }
@@ -85,8 +86,8 @@ namespace FilesEncryptor.pages
 
             if (header != null)
             {
-                _decoder = new HammingCodifier(HammingCodifier.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
-                extractResult = _decoder.ReadFileContent(_filesHelper);
+                //_decoder = h (BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
+                //extractResult = _decoder.ReadFileContent(_filesHelper);
             }
 
             return extractResult;
@@ -94,7 +95,7 @@ namespace FilesEncryptor.pages
 
         private async void ConfirmBt_Click(object sender, RoutedEventArgs e)
         {
-            BitCode decoded = await _decoder.Decode();
+            /*BitCode decoded = await _decoder.Decode();
 
             List<BitCode> codeBlocks = decoded.Explode(_decoder.EncodeType.WordBitsSize, false).Item1;
             List<BitCode> blocksWithError = new List<BitCode>();
@@ -110,7 +111,7 @@ namespace FilesEncryptor.pages
                 {
                     blocksWithError.Add(block);
                 }
-            }
+            }*/
 
             //Ahora, escribo los bloques con error, reemplazando el archivo original
 

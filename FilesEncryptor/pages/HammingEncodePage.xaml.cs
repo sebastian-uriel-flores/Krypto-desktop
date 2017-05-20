@@ -38,7 +38,7 @@ namespace FilesEncryptor.pages
     {
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
-        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(HammingCodifier.EncodeTypes);
+        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
 
         private FileHelper _filesHelper;
         private FileHeader _fileHeader;
@@ -155,18 +155,18 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
 
                     //Codifico el archivo original
-                    HammingCodifier encoder = new HammingCodifier(selectedEncodingType);
-                    bool encodingResult = await encoder.Encode(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
+                    HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
+                    HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType);
 
                     //Si pudo encodearse el archivo
-                    if (encodingResult)
+                    if (encodeResult != null)
                     {
                         //Escribo el Header
                         if (_filesHelper.WriteFileHeader(_fileHeader))
                         {
                             DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"{0}\"", _filesHelper.SelectedFilePath));
 
-                            bool writeResult = encoder.WriteFileContent(_filesHelper);
+                            bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, _filesHelper);
 
                             await _filesHelper.Finish();
 

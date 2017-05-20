@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
 using FilesEncryptor.utils;
 using System;
@@ -34,7 +35,7 @@ namespace FilesEncryptor.pages
     public sealed partial class HammingDecodePage : Page
     {        
         private FileHelper _filesHelper;
-        private HammingCodifier _decoder;
+        private HammingDecoder _decoder;
         private FileHeader _fileHeader;
 
         public HammingDecodePage()
@@ -64,7 +65,7 @@ namespace FilesEncryptor.pages
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             var extensions = new List<string>();
-            foreach (HammingEncodeType type in HammingCodifier.EncodeTypes)
+            foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
             {
                 extensions.Add(type.Extension);
             }
@@ -107,8 +108,8 @@ namespace FilesEncryptor.pages
 
             if (_fileHeader != null)
             {
-                _decoder = new HammingCodifier(HammingCodifier.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
-                extractResult = _decoder.ReadFileContent(_filesHelper);
+                _decoder = HammingDecoder.FromFile(_filesHelper, BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _filesHelper.SelectedFileExtension));
+                extractResult = true;
             }
 
             return extractResult;
@@ -130,24 +131,27 @@ namespace FilesEncryptor.pages
                     //Codifico el archivo original
                     BitCode result = await _decoder.Decode();
 
-                    DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"{0}{1}\"", _fileHeader.FileName, _fileHeader.FileExtension));
-
-                    bool writeResult = _filesHelper.WriteBytes(result.Code.ToArray());
-
-                    await _filesHelper.Finish();
-
-                    DebugUtils.WriteLine(string.Format("Dump Completed: {0}", writeResult));
-
-                    //Show congrats message
-                    if (writeResult)
+                    if (result != null)
                     {
-                        MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
-                        await dialog.ShowAsync();
-                    }
-                    else
-                    {
-                        MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
-                        await dialog.ShowAsync();
+                        DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"{0}{1}\"", _fileHeader.FileName, _fileHeader.FileExtension));
+
+                        bool writeResult = _filesHelper.WriteBytes(result.Code.ToArray());
+
+                        await _filesHelper.Finish();
+
+                        DebugUtils.WriteLine(string.Format("Dump Completed: {0}", writeResult));
+
+                        //Show congrats message
+                        if (writeResult)
+                        {
+                            MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
+                            await dialog.ShowAsync();
+                        }
+                        else
+                        {
+                            MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
+                            await dialog.ShowAsync();
+                        }
                     }
 
                     HideProgressPanel();

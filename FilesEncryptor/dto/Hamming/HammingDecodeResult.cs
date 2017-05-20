@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.dto
+namespace FilesEncryptor.dto.Hamming
 {
     public class HammingDecodeResult
     {

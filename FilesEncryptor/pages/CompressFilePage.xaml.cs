@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Huffman;
 using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;

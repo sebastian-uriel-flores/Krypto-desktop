@@ -100,16 +100,17 @@
     <Compile Include="dto\Huffman\HuffmanCodeLengthParser.cs" />
     <Compile Include="dto\ICodeLengthParser.cs" />
     <Compile Include="dto\FileHeader.cs" />
-    <Compile Include="dto\HammingDecodeResult.cs" />
-    <Compile Include="dto\HammingEncodeResult.cs" />
-    <Compile Include="dto\HammingEncodeType.cs" />
+    <Compile Include="dto\Hamming\HammingDecodeResult.cs" />
+    <Compile Include="dto\Hamming\HammingEncodeResult.cs" />
+    <Compile Include="dto\Hamming\HammingEncodeType.cs" />
     <Compile Include="dto\Hamming\HammingCodeLengthParser.cs" />
     <Compile Include="dto\IDecoder.cs" />
     <Compile Include="dto\IEncodeResult.cs" />
-    <Compile Include="helpers\BaseCodifier.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\FileHelper.cs" />
+    <Compile Include="helpers\BaseHammingCodifier.cs" />
+    <Compile Include="helpers\HammingDecoder.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="pages\HammingDecodePage.xaml.cs">
       <DependentUpon>HammingDecodePage.xaml</DependentUpon>
@@ -123,7 +124,7 @@
     <Compile Include="utils\BitOps.cs" />
     <Compile Include="utils\CommonUtils.cs" />
     <Compile Include="dto\BitCode.cs" />
-    <Compile Include="dto\Hamming\HuffmanEncodeResult.cs" />
+    <Compile Include="dto\Huffman\HuffmanEncodeResult.cs" />
     <Compile Include="helpers\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
