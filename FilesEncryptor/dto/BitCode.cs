@@ -225,11 +225,18 @@ namespace FilesEncryptor.dto
         public BitCode GetRange(uint startBitPos, uint bitsCount)
         {
             int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
-            int bytesCount = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
+            int bytesLength = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
+            int endBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos + bitsCount - 1);
+            int bytesCount = (endBytePos - startBytePos) + 1;
+
+            //Debo tomar bytesCount desde el startBitPos y no desde el startBytePos
 
             //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
             List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
             bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
+
+            //Pongo en cero los bits a la derecha del final del codigo
+            //bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount % 8);
             
             return new BitCode(bytesRange, (int)bitsCount);
         }
@@ -270,6 +277,11 @@ namespace FilesEncryptor.dto
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
+                if(i <= 2448 && i >= 2432)
+                {
+
+                }
+
                 uint bitsToObtain = !fillRemainingWithZeros && i + blockBitsSize >= copy.CodeLength
                     ? (uint)copy.CodeLength - i
                     : blockBitsSize;

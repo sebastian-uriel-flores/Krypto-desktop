@@ -76,6 +76,22 @@ namespace FilesEncryptor.utils
             return masked;
         }
 
+        public static byte MaskRight(byte b, int rightBitsCount)
+        {
+            byte mask = 255; //Mask = 1111 1111
+
+            //Solamente dejo en la mascara los unos correspondientes
+            //a los caracteres de mas a la izquierda que se perderan
+            //al hacer los desplazamientos
+            mask >>= (8 - rightBitsCount);
+
+            //Guardo los bits de mas a la izquierda que seran desplazados,
+            //haciendo uso de la mascara
+            byte masked = (byte)(b & mask);
+
+            return masked;
+        }
+
         public static uint BitsLengthToBytesLength(uint bitsLength) => (uint)Math.Ceiling((float)bitsLength / 8.0);
 
         public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
