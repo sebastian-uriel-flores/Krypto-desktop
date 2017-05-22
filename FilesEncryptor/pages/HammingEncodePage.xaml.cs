@@ -81,7 +81,11 @@ namespace FilesEncryptor.pages
             bool pickResult = await _filesHelper.PickToOpen(new List<string>()
             {
                 ".txt",
-                ".huf"
+                ".huf",
+                ".pdf",
+                ".docx",
+                ".doc",
+                ".jpg"
             });
 
             if (pickResult)
@@ -98,6 +102,8 @@ namespace FilesEncryptor.pages
                 
                 if (openResult)
                 {
+                    DebugUtils.WriteLine(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
+
                     //Muestro los datos del archivo cargado
                     fileNameBlock.Text = _filesHelper.SelectedFileName;
                     fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
@@ -115,16 +121,10 @@ namespace FilesEncryptor.pages
                         FileExtension = _filesHelper.SelectedFileExtension
                     };
 
+                    DebugUtils.WriteLine("File bytes extracted properly");
+                    DebugUtils.WriteLine("Closing file");
                     await _filesHelper.Finish();
-                    DebugUtils.WriteLine("File extracted properly");
                 }
-                /*catch (Exception ex)
-                {
-                    MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
-                    await errorDialog.ShowAsync();
-
-                    DebugUtils.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
-                }*/
 
                 HideProgressPanel();
             }
@@ -155,7 +155,7 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
 
                     //Codifico el archivo original
-                    HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
+                    HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));                    
                     HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType);
 
                     //Si pudo encodearse el archivo
@@ -164,22 +164,24 @@ namespace FilesEncryptor.pages
                         //Escribo el Header
                         if (_filesHelper.WriteFileHeader(_fileHeader))
                         {
-                            DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"{0}\"", _filesHelper.SelectedFilePath));
+                            DebugUtils.WriteLine(string.Format("Dumping hamming encoded bytes to \"{0}\"", _filesHelper.SelectedFilePath));
 
                             bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, _filesHelper);
-
-                            await _filesHelper.Finish();
-
-                            DebugUtils.WriteLine(string.Format("Dump Completed: {0}", writeResult));
 
                             //Show congrats message
                             if (writeResult)
                             {
+                                DebugUtils.WriteLine("Dumping completed properly");
+                                DebugUtils.WriteLine("Closing file");
+                                await _filesHelper.Finish();
                                 MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
                                 await dialog.ShowAsync();
                             }
                             else
                             {
+                                DebugUtils.WriteLine("Dumping uncompleted");
+                                DebugUtils.WriteLine("Closing file");
+                                await _filesHelper.Finish();
                                 MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
                                 await dialog.ShowAsync();
                             }

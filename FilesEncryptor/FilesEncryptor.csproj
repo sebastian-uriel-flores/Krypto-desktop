@@ -121,6 +121,9 @@
     <Compile Include="pages\IntroduceErrorsPage.xaml.cs">
       <DependentUpon>IntroduceErrorsPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="pages\ResultsPage.xaml.cs">
+      <DependentUpon>ResultsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="utils\BitOps.cs" />
     <Compile Include="utils\CommonUtils.cs" />
     <Compile Include="dto\BitCode.cs" />
@@ -176,6 +179,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="pages\IntroduceErrorsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="pages\ResultsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

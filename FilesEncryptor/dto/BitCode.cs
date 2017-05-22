@@ -236,7 +236,7 @@ namespace FilesEncryptor.dto
             bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
 
             //Pongo en cero los bits a la derecha del final del codigo
-            //bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount % 8);
+            bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8 ));
             
             return new BitCode(bytesRange, (int)bitsCount);
         }

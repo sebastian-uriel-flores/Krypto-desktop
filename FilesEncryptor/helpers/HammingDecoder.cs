@@ -14,6 +14,7 @@ namespace FilesEncryptor.helpers
         private uint _redundanceBitsCount;
         private BitCode _fullCode;
         private HammingEncodeType _encodeType;
+        public EventHandler<double> DecodingProgressChanged;
 
         private HammingDecoder()
         {
@@ -55,20 +56,23 @@ namespace FilesEncryptor.helpers
 
             await Task.Factory.StartNew(() =>
             {
-                DebugUtils.WriteLine("Checking words parity");
-
                 //Separo el codigo completo en bloques representando a cada palabra del mismo
+                DebugUtils.WriteLine("Creating parity matrix");
+
                 List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
                 uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
+                DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
                 List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false).Item1;
 
-                //BitCodePresenter.From(encodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Encoded matrix");
-
+                DebugUtils.Write(string.Format("Extracted {0} encoded words", encodedWords.Count));
+                DebugUtils.WriteLine("Checking words parity");
+                
                 //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
+                DebugUtils.WriteLine("Parity check OK");
 
                 //Decodifico cada una de las palabras
-                DebugUtils.WriteLine("Decodifying words");
+                DebugUtils.WriteLine(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
 
                 List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
                 List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
@@ -83,11 +87,20 @@ namespace FilesEncryptor.helpers
                     }
 
                     decodedWords.Add(decoded);
+
+                    if (decodedWords.Count % 10 == 0)
+                    {
+                        DebugUtils.WriteLine(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
+                        //DecodingProgressChanged(this, (decodedWords.Count * 100) / encodedWords.Count);
+                    }
                 }
+
+                DebugUtils.WriteLine(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
 
                 BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
 
                 //Junto todas las palabras decodificadas en un solo codigo
+                DebugUtils.WriteLine("Joining decoded words into one array of bytes");
                 result = BitOps.Join(decodedWords);
 
                 //Remuevo los bits de redundancia

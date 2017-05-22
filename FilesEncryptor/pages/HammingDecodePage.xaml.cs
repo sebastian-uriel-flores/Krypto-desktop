@@ -85,6 +85,8 @@ namespace FilesEncryptor.pages
 
                 if(openResult)
                 {
+                    DebugUtils.WriteLine(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
+
                     fileNameBlock.Text = _filesHelper.SelectedFileName;
                     fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
                     fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayName, _filesHelper.SelectedFileExtension);
@@ -95,7 +97,8 @@ namespace FilesEncryptor.pages
 
                     bool extractResult = ExtractFileProperties();
                     await _filesHelper.Finish();
-                    DebugUtils.WriteLine("File extracted properly");
+                    DebugUtils.WriteLine("File bytes extracted properly");
+                    DebugUtils.WriteLine("Closing file");
                 }
             }
             HideProgressPanel();
@@ -128,27 +131,32 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
+                    DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
+                    DebugUtils.WriteLine("Starting Hamming Decoding");
+
                     //Codifico el archivo original
                     BitCode result = await _decoder.Decode();
 
                     if (result != null)
                     {
-                        DebugUtils.WriteLine(string.Format("Dumping hamming decoded file to \"{0}{1}\"", _fileHeader.FileName, _fileHeader.FileExtension));
+                        DebugUtils.WriteLine(string.Format("Dumping hamming decoded bytes to \"{0}\"", _filesHelper.SelectedFilePath));
 
                         bool writeResult = _filesHelper.WriteBytes(result.Code.ToArray());
-
-                        await _filesHelper.Finish();
-
-                        DebugUtils.WriteLine(string.Format("Dump Completed: {0}", writeResult));
 
                         //Show congrats message
                         if (writeResult)
                         {
+                            DebugUtils.WriteLine("Dumping completed properly");
+                            DebugUtils.WriteLine("Closing file");
+                            await _filesHelper.Finish();
                             MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
                             await dialog.ShowAsync();
                         }
                         else
                         {
+                            DebugUtils.WriteLine("Dumping uncompleted");
+                            DebugUtils.WriteLine("Closing file");
+                            await _filesHelper.Finish();
                             MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
                             await dialog.ShowAsync();
                         }

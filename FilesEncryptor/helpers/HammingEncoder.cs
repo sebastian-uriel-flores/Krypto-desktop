@@ -12,7 +12,8 @@ namespace FilesEncryptor.helpers
     public class HammingEncoder : BaseHammingCodifier
     {
         private BitCode _baseCode;
-
+        public EventHandler<double> EncodingProgressChanged;
+        
         private HammingEncoder()
         {
 
@@ -55,7 +56,7 @@ namespace FilesEncryptor.helpers
                     //de la matriz generadora
                     uint outWordSize = encodeType.WordBitsSize + (uint)genMatrix.Count;
 
-                    DebugUtils.WriteLine(string.Format("Codifying words in {0} bits output size", outWordSize));
+                    DebugUtils.WriteLine(string.Format("Encoding words in {0} bits output size", outWordSize));
 
                     //Creo la lista con los bloques de salida
                     List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
@@ -85,17 +86,22 @@ namespace FilesEncryptor.helpers
                             }
                         }
 
-                        //BitCodePresenter.From(new List<BitCode>() { currentWord }).Print(BitCodePresenter.LinesDisposition.Row, "Input word");
-                        //BitCodePresenter.From(new List<BitCode>() { currentOutputWord }).Print(BitCodePresenter.LinesDisposition.Row, "Output word");
-
                         //Agrego la palabra recién creada a la lista de palabras de salida
                         outputBlocks.Add(currentOutputWord);
+
+                        if(outputBlocks.Count % 10 == 0)
+                        {
+                            DebugUtils.WriteLine(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
+                            //EncodingProgressChanged(this, (outputBlocks.Count * 100) / dataBlocks.Count);
+                        }
                     }
 
-                    DebugUtils.WriteLine(string.Format("Created {0} output words", outputBlocks.Count));
+                    DebugUtils.WriteLine(string.Format("Encoding process finished with a total of {0} output words", outputBlocks.Count));
 
                     //Imprimo todas las palabras de salida
                     BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
+
+                    DebugUtils.WriteLine("Joining encoded words into one array of bytes");
                     BitCode resultCode = BitOps.Join(outputBlocks);
 
                     BitCodePresenter.From(new List<BitCode>() { resultCode }).Print(BitCodePresenter.LinesDisposition.Row, "Output words");
@@ -110,7 +116,7 @@ namespace FilesEncryptor.helpers
                 }
             });
 
-            bool verify = await Verify(result);
+            //bool verify = await Verify(result);
 
             return result;
         }

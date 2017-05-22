@@ -11,7 +11,7 @@ namespace FilesEncryptor.helpers
 {
     public class BitCodePresenter
     {
-        public static bool ENABLED = true;
+        public static bool ENABLED = false;
         public enum LinesDisposition
         {
             Row, Column
