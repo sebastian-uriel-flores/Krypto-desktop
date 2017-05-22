@@ -16,6 +16,9 @@ namespace FilesEncryptor.helpers
         private HammingEncodeType _encodeType;
         public EventHandler<double> DecodingProgressChanged;
 
+        public BitCode RawCode => _fullCode.Copy();
+        public HammingCodeLength RawCodeLength => new HammingCodeLength() { FullCodeLength = (uint)RawCode.CodeLength, RedundanceCodeLength = _redundanceBitsCount };
+
         private HammingDecoder()
         {
 
@@ -67,8 +70,30 @@ namespace FilesEncryptor.helpers
 
                 DebugUtils.Write(string.Format("Extracted {0} encoded words", encodedWords.Count));
                 DebugUtils.WriteLine("Checking words parity");
-                
+
                 //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
+                /*for (int wordIndex = 0; wordIndex < encodedWords.Count; wordIndex++)
+                {
+                    BitCode syndrome = BitCode.EMPTY;
+
+                    for (int columnIndex = 0; columnIndex < parityControlMatrix.Count; columnIndex++)
+                    {
+                        syndrome.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { encodedWords[wordIndex], parityControlMatrix[columnIndex] }).Explode(1, false).Item1));
+                    }
+
+                    int errorPosition = 0;
+                    foreach (int bitValue in syndrome.ToIntList())
+                    {
+                        errorPosition += bitValue;
+                    }
+
+                    if(errorPosition > 0)
+                    {
+                        errorPosition -= 1;
+                        encodedWords[wordIndex] = encodedWords[wordIndex].ReplaceAt((uint)errorPosition, encodedWords[wordIndex].ElementAt((uint)errorPosition).Negate());
+                    }
+                }*/
+
                 DebugUtils.WriteLine("Parity check OK");
 
                 //Decodifico cada una de las palabras

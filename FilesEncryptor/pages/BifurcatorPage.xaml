@@ -143,6 +143,32 @@
                         />
                 </Grid>
             </RelativePanel>
+            <RelativePanel x:Name="introduceErrorItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe16b;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                    Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Introducir errores"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+
+            </RelativePanel>
             <RelativePanel x:Name="compressFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"

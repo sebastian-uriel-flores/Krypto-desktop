@@ -107,7 +107,7 @@ namespace FilesEncryptor.pages
                     //Muestro los datos del archivo cargado
                     fileNameBlock.Text = _filesHelper.SelectedFileName;
                     fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
-                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayName, _filesHelper.SelectedFileExtension);
+                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayType, _filesHelper.SelectedFileExtension);
                     
                     settingsPanel.Visibility = Visibility.Visible;
                     pageCommandsDivider.Visibility = Visibility.Visible;

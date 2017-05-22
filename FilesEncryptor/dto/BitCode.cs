@@ -141,7 +141,10 @@ namespace FilesEncryptor.dto
         public BitCode ReplaceAt(uint bitPosition, BitCode replacement)
         {
             BitCode firstHalf = GetRange(0, bitPosition);
-            BitCode secondHalf = GetRange(bitPosition + 1, (uint)CodeLength - bitPosition - 1);
+
+            BitCode secondHalf = bitPosition + 1 >= CodeLength
+                ? EMPTY 
+                : GetRange(bitPosition + 1, (uint)CodeLength - bitPosition - 1);
 
             firstHalf.Append(replacement);
             firstHalf.Append(secondHalf);
@@ -208,7 +211,7 @@ namespace FilesEncryptor.dto
             //Opero bit a bit
             for (int pos = 0; pos < Code.Count; pos++)
             {
-                result.Code[pos] ^= result.Code[pos];
+                result.Code[pos] ^= 255;
             }
             
             return result;
@@ -224,20 +227,26 @@ namespace FilesEncryptor.dto
 
         public BitCode GetRange(uint startBitPos, uint bitsCount)
         {
+            if(bitsCount == 0)
+            {
+                return EMPTY;
+            }
+
             int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
-            int bytesLength = (int)CommonUtils.BitsLengthToBytesLength(bitsCount);
             int endBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos + bitsCount - 1);
             int bytesCount = (endBytePos - startBytePos) + 1;
 
-            //Debo tomar bytesCount desde el startBitPos y no desde el startBytePos
+            List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
 
             //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
-            List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
-            bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
+            if (bytesRange.Count > 0)
+            {
+                bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
 
-            //Pongo en cero los bits a la derecha del final del codigo
-            bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8 ));
-            
+                //Pongo en cero los bits a la derecha del final del codigo
+                bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8));
+            }
+
             return new BitCode(bytesRange, (int)bitsCount);
         }
 

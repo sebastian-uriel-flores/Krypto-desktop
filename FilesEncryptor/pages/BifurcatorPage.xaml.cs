@@ -116,6 +116,9 @@ namespace FilesEncryptor.pages
                 case "decodeFileItem":
                     Frame.Navigate(typeof(HammingDecodePage));
                     break;
+                case "introduceErrorItem":
+                    Frame.Navigate(typeof(IntroduceErrorsPage));
+                    break;
             }            
         }
     }

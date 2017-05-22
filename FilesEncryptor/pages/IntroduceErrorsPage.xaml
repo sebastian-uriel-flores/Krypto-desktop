@@ -46,7 +46,7 @@
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 FontSize="20"
-                Click="SelectFileButton_Click"
+                Click="SelectFileBt_Click"
                 />
             </Grid>
             <Rectangle
