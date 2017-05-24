@@ -88,7 +88,7 @@ namespace FilesEncryptor.helpers
                             //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
                             //para eliminar el codigo que acabo de agregar y continuar con el siguiente
                             remainingEncodedText.ReplaceCode(
-                                CommonUtils.LeftShifting(remainingEncodedText.Code, currentCodeLength),
+                                BitCode.LeftShifting(remainingEncodedText.Code, currentCodeLength),
                                 remainingEncodedText.CodeLength - currentCodeLength);
 
                             currentCodeBytes = new List<byte>();

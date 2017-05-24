@@ -12,7 +12,6 @@ namespace FilesEncryptor.dto
         #region CONSTS
 
         public static BitCode EMPTY => new BitCode(new List<byte> (), 0).Copy();
-
         public static BitCode ZERO => new BitCode(new List<byte> { 0 }, 1).Copy(); 
         public static BitCode ONE => new BitCode(new List<byte> { 128 }, 1).Copy();
 
@@ -36,7 +35,7 @@ namespace FilesEncryptor.dto
 
         public static BitCode Zeros(uint zerosCount)
         {
-            BitCode zeros = new BitCode(new List<byte>(), 0);
+            BitCode zeros = EMPTY;
 
             for(uint i = 0; i < zerosCount; i++)
             {
@@ -48,7 +47,7 @@ namespace FilesEncryptor.dto
 
         public static BitCode Ones(uint onesCount)
         {
-            BitCode ones = new BitCode(new List<byte>(), 0);
+            BitCode ones = EMPTY;
 
             for (uint i = 0; i < onesCount; i++)
             {
@@ -83,20 +82,20 @@ namespace FilesEncryptor.dto
                         int significantBits = 8 - excedent;
 
                         //Elimino los bits del excedente del codigo actual, poniendolos en 0
-                        byte maskSignificant = CommonUtils.MaskLeft(Code.Last(), significantBits);
+                        byte maskSignificant = MaskLeft(Code.Last(), significantBits);
                         And(Code.Count - 1, maskSignificant);
 
                         //Obtengo los bits del nuevo codigo que seran desplazados a izquierda,
                         //para ser insertados en el espacio restante del ultimo byte
                         //del codigo completo
-                        byte maskExcedent = CommonUtils.MaskLeft(newCode.Code.First(), excedent);
+                        byte maskExcedent = MaskLeft(newCode.Code.First(), excedent);
                         maskExcedent >>= significantBits;                       
                         
                         Or(Code.Count - 1, maskExcedent);
 
                         //Ahora, desplazo los demas bytes del codigo hacia la izquierda 
                         //hasta cubrir los bits que se insertaron en el codigo completo
-                        List<byte> shifted = CommonUtils.LeftShifting(newCode.Code, excedent);
+                        List<byte> shifted = LeftShifting(newCode.Code, excedent);
                         int newLength = Math.Max(newCode.CodeLength - excedent, 0);
 
                         //Si al hacer los desplazamientos me quedo un byte de mas, con todos ceros
@@ -129,7 +128,7 @@ namespace FilesEncryptor.dto
 
         public BitCode ElementAt(uint bitPosition)
         {
-            uint bytePosition = CommonUtils.BitPositionToBytePosition(bitPosition);
+            uint bytePosition = BitPositionToBytePosition(bitPosition);
             uint effectiveBitPosition = bitPosition % 8;
 
             byte disp1 = (byte)(Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition));
@@ -149,6 +148,82 @@ namespace FilesEncryptor.dto
             firstHalf.Append(replacement);
             firstHalf.Append(secondHalf);
             return firstHalf;
+        }
+
+        public BitCode GetRange(uint startBitPos, uint bitsCount)
+        {
+            BitCode result = EMPTY;
+
+            if (bitsCount > 0)
+            {
+                int startBytePos = (int)BitPositionToBytePosition(startBitPos);
+                int endBytePos = (int)BitPositionToBytePosition(startBitPos + bitsCount - 1);
+                int bytesCount = (endBytePos - startBytePos) + 1;
+
+                List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
+
+                //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
+                if (bytesRange.Count > 0)
+                {
+                    bytesRange = LeftShifting(bytesRange, (int)startBitPos % 8);
+
+                    //Pongo en cero los bits a la derecha del final del codigo
+                    bytesRange[bytesRange.Count - 1] = MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8));
+                }
+
+                result = new BitCode(bytesRange, (int)bitsCount);
+            }
+
+            return result;
+        }
+
+        public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true)
+        {
+            BitCode copy = Copy();
+            int addedZeros = 0;
+
+            if (fillRemainingWithZeros)
+            {
+                //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
+                if (blockBitsSize > (uint)copy.CodeLength)
+                {
+                    addedZeros = (int)blockBitsSize - copy.CodeLength;
+
+                    //Agrego Ceros al BitCode para rellenar
+                    copy.Append(Zeros((uint)addedZeros));
+                }
+                //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
+                else if ((uint)copy.CodeLength > blockBitsSize)
+                {
+                    uint mod = (uint)copy.CodeLength % blockBitsSize;
+
+                    //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
+                    if (mod != 0)
+                    {
+                        //Agrego tantos ceros cómo sea necesario, 
+                        //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
+                        addedZeros = (int)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
+                        copy.Append(Zeros((uint)addedZeros));
+                    }
+                }
+            }
+
+            //Construyo la lista de bloques
+            List<BitCode> blocks = new List<BitCode>();
+
+            for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
+            {
+                //Si la siguiente palabra es mas chica, es decir,
+                //quedan menos bits que 'blockBitsSize', 
+                //entonces solo devuelvo los bits restantes
+                uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
+                    ? (uint)copy.CodeLength - i
+                    : blockBitsSize;
+
+                blocks.Add(copy.GetRange(i, bitsToObtain));
+            }
+
+            return new Tuple<List<BitCode>, int>(blocks, addedZeros);
         }
 
         public List<int> ToIntList()
@@ -223,105 +298,6 @@ namespace FilesEncryptor.dto
             CodeLength = length;
         }
 
-        #region HAMMING
-
-        public BitCode GetRange(uint startBitPos, uint bitsCount)
-        {
-            if(bitsCount == 0)
-            {
-                return EMPTY;
-            }
-
-            int startBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos);
-            int endBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos + bitsCount - 1);
-            int bytesCount = (endBytePos - startBytePos) + 1;
-
-            /*if(bytesCount == 0)
-            {
-                bytesCount++;
-            }*/
-
-            List<byte> bytesRange = new List<byte>();
-            /*try
-            {*/
-                bytesRange = Code.GetRange(startBytePos, bytesCount);
-            /*}
-            catch(Exception ex)
-            {
-
-            }*/
-
-            //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
-            if (bytesRange.Count > 0)
-            {
-                bytesRange = CommonUtils.LeftShifting(bytesRange, (int)startBitPos % 8);
-
-                //Pongo en cero los bits a la derecha del final del codigo
-                bytesRange[bytesRange.Count - 1] = CommonUtils.MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8));
-            }
-
-            return new BitCode(bytesRange, (int)bitsCount);
-        }
-
-        public Tuple<List<BitCode>,int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true)
-        {
-            BitCode copy = Copy();
-            int addedZeros = 0;
-            
-            if (fillRemainingWithZeros)
-            {
-                //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
-                if (blockBitsSize > (uint)copy.CodeLength)
-                {
-                    addedZeros = (int)blockBitsSize - copy.CodeLength;
-
-                    //Agrego Ceros al BitCode para rellenar
-                    copy.Append(Zeros((uint)addedZeros));
-                }
-                //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
-                else if ((uint)copy.CodeLength > blockBitsSize)
-                {
-                    uint mod = (uint)copy.CodeLength % blockBitsSize;
-
-                    //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
-                    if (mod != 0)
-                    {
-                        //Agrego tantos ceros cómo sea necesario, 
-                        //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
-                        addedZeros = (int)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
-                        copy.Append(Zeros((uint)addedZeros));
-                    }
-                }
-            }
-
-            //Construyo la lista de bloques
-            List<BitCode> blocks = new List<BitCode>();
-
-            for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
-            {
-                uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
-                    ? (uint)copy.CodeLength - i
-                    : blockBitsSize;
-
-                if(bitsToObtain < blockBitsSize)
-                {
-
-                }
-                try
-                {
-                    blocks.Add(copy.GetRange(i, bitsToObtain));
-                }
-                catch(Exception ex)
-                {
-
-                }
-            }
-
-            return new Tuple<List<BitCode>, int>(blocks, addedZeros);
-        }
-
-        #endregion
-
         #region INHERITED
 
         public override bool Equals(object obj)
@@ -363,6 +339,97 @@ namespace FilesEncryptor.dto
         {
             // TODO: write your implementation of GetHashCode() here
             return base.GetHashCode();
+        }
+
+        #endregion
+
+        #region UTILS
+
+        public static uint BitsLengthToBytesLength(uint bitsLength) => (uint)Math.Ceiling((float)bitsLength / 8.0);
+
+        public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
+
+        /// <summary>
+        /// Hace desplazamientos a la izquierda entre arreglos de bytes.
+        /// </summary>
+        /// <param name="bytes">Arreglo de bytes a desplazar</param>
+        /// <param name="shifts">Cantidad de desplazamientos, entre 0 y 8</param>
+        /// <returns></returns>
+        public static List<byte> LeftShifting(List<byte> bytes, int shifts)
+        {
+            List<byte> copy = bytes.ToList();
+
+            if (copy != null && copy.Count * 8 >= shifts)
+            {
+                if (shifts >= 8)
+                {
+                    copy.RemoveRange(0, shifts / 8);
+                    shifts %= 8;
+                }
+
+                for (int i = 0; i < copy.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        //Si es el primer byte, simplemente hago los desplazamientos
+                        copy[i] <<= shifts;
+                    }
+                    else
+                    {
+                        //Si no es el primer byte
+
+                        //Guardo los bits de mas a la izquierda que seran desplazados,
+                        //haciendo uso de la mascara
+                        byte masked = MaskLeft(copy[i], shifts);
+
+                        //Hago los desplazamientos a izquierda
+                        copy[i] <<= shifts;
+
+                        //Corro los bit almacenados, desde el extremo izquierdo
+                        //hacia el extremo derecho del byte
+                        masked >>= (8 - shifts);
+
+                        //Al byte anterior (el cual ya fue desplazado previamente)
+                        //le agrego los bits guardados del byte actual, 
+                        //en su extremo derecho
+                        copy[i - 1] |= masked;
+                    }
+                }
+            }
+
+            return copy;
+        }
+
+        public static byte MaskLeft(byte b, int leftBitsCount)
+        {
+            byte mask = 255; //Mask = 1111 1111
+
+            //Solamente dejo en la mascara los unos correspondientes
+            //a los caracteres de mas a la izquierda que se perderan
+            //al hacer los desplazamientos
+            mask <<= (8 - leftBitsCount);
+
+            //Guardo los bits de mas a la izquierda que seran desplazados,
+            //haciendo uso de la mascara
+            byte masked = (byte)(b & mask);
+
+            return masked;
+        }
+
+        public static byte MaskRight(byte b, int rightBitsCount)
+        {
+            byte mask = 255; //Mask = 1111 1111
+
+            //Solamente dejo en la mascara los unos correspondientes
+            //a los caracteres de mas a la izquierda que se perderan
+            //al hacer los desplazamientos
+            mask >>= (8 - rightBitsCount);
+
+            //Guardo los bits de mas a la izquierda que seran desplazados,
+            //haciendo uso de la mascara
+            byte masked = (byte)(b & mask);
+
+            return masked;
         }
 
         #endregion

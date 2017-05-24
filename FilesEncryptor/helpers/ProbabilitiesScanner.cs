@@ -257,7 +257,7 @@ namespace FilesEncryptor.helpers
                     encoded = encoded.Remove(0, index + 1);
 
                     int codeBitsLength = int.Parse(codeLengthStr);
-                    int codeBytesLength = (int)CommonUtils.BitsLengthToBytesLength((uint)codeBitsLength);
+                    int codeBytesLength = (int)BitCode.BitsLengthToBytesLength((uint)codeBitsLength);
                     List<byte> codeBytes = new List<byte>();
                                         
                     foreach (byte b in encoded)

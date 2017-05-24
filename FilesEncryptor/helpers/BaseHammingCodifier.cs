@@ -146,6 +146,4 @@ namespace FilesEncryptor.helpers
             return dataBits;
         }
     }
-
-    
 }

@@ -33,7 +33,7 @@ namespace FilesEncryptor.helpers
             string redundanceCodeLength = fileHelper.ReadStringUntil(":");
 
             //Obtengo los bytes del codigo, incluyendo la redundancia
-            byte[] fullCodeBytes = fileHelper.ReadBytes(CommonUtils.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
+            byte[] fullCodeBytes = fileHelper.ReadBytes(BitCode.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
 
             return new HammingDecoder()
             {
