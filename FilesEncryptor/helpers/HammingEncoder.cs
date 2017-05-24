@@ -75,14 +75,28 @@ namespace FilesEncryptor.helpers
                                 //Al realizar un and, estoy haciendo la multiplicacion bit a bit
                                 //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
                                 //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
-                                currentExp++;
+                                try
+                                {
+                                    currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
+                                    currentExp++;
+                                }
+                                catch(Exception ex)
+                                {
+
+                                }
                             }
                             //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
                             else
                             {
-                                currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
-                                currentDataBit++;
+                                try
+                                {
+                                    currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
+                                    currentDataBit++;
+                                }
+                                catch(Exception ex)
+                                {
+
+                                }
                             }
                         }
 

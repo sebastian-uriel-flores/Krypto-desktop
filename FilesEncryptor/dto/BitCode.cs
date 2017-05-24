@@ -236,7 +236,20 @@ namespace FilesEncryptor.dto
             int endBytePos = (int)CommonUtils.BitPositionToBytePosition(startBitPos + bitsCount - 1);
             int bytesCount = (endBytePos - startBytePos) + 1;
 
-            List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
+            /*if(bytesCount == 0)
+            {
+                bytesCount++;
+            }*/
+
+            List<byte> bytesRange = new List<byte>();
+            /*try
+            {*/
+                bytesRange = Code.GetRange(startBytePos, bytesCount);
+            /*}
+            catch(Exception ex)
+            {
+
+            }*/
 
             //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
             if (bytesRange.Count > 0)
@@ -286,16 +299,22 @@ namespace FilesEncryptor.dto
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
-                if(i <= 2448 && i >= 2432)
-                {
-
-                }
-
-                uint bitsToObtain = !fillRemainingWithZeros && i + blockBitsSize >= copy.CodeLength
+                uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
                     ? (uint)copy.CodeLength - i
                     : blockBitsSize;
 
-                blocks.Add(copy.GetRange(i, bitsToObtain));
+                if(bitsToObtain < blockBitsSize)
+                {
+
+                }
+                try
+                {
+                    blocks.Add(copy.GetRange(i, bitsToObtain));
+                }
+                catch(Exception ex)
+                {
+
+                }
             }
 
             return new Tuple<List<BitCode>, int>(blocks, addedZeros);
