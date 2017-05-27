@@ -271,10 +271,6 @@ namespace FilesEncryptor.helpers
                             string str = encoding.GetString(codeBytes.ToArray());
                             var bts = encoding.GetBytes(str);
 
-                        if (key == 'e')
-                            {
-
-                            }
                             //Agrego el nuevo codigo junto con su clave al diccionario
                             scanner._codesTable.Add(key, new BitCode(bts.ToList(), codeBitsLength));
                             break;

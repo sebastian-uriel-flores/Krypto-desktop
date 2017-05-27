@@ -118,6 +118,32 @@
                 </Grid>
             </RelativePanel>
 
+            <RelativePanel x:Name="checkHammingAlgorithmItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe179;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                        Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Chequear algoritmos Hamming"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+
             <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
@@ -246,5 +272,34 @@
                 </Grid>
             </RelativePanel>
         </GridView>
+
+        <RelativePanel
+            x:Name="progressPanel"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"                
+            RelativePanel.AlignTopWithPanel="True"
+            RelativePanel.AlignBottomWithPanel="True"
+            Background="#66000000"
+            Visibility="Collapsed"
+            >
+            <ProgressRing
+                x:Name="progressIndicator"
+                RelativePanel.AlignHorizontalCenterWithPanel="True"
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                Height="60"
+                Width="60"
+                Foreground="#ff9200"
+                IsActive="True"
+                />
+            <TextBlock
+                x:Name="progressText"
+                RelativePanel.Below="progressIndicator"
+                RelativePanel.AlignHorizontalCenterWith="progressIndicator"                
+                FontSize="20"
+                Foreground="#ff9200"
+                />
+        </RelativePanel>
     </RelativePanel>
+    
+
 </Page>

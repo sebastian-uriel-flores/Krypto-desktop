@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FilesEncryptor.utils;
+using System.Collections;
 
 namespace FilesEncryptor.dto
 {
@@ -246,9 +247,20 @@ namespace FilesEncryptor.dto
                 //Si la siguiente palabra es mas chica, es decir,
                 //quedan menos bits que 'blockBitsSize', 
                 //entonces solo devuelvo los bits restantes
-                uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
+
+                uint bitsToObtain = blockBitsSize;
+
+                if(i + blockBitsSize >= copy.CodeLength)
+                {
+                    uint localStartBitPos = GlobalBitPositionToLocal(i);
+                    uint startBytePos = BitPositionToBytePosition(i);
+                    uint bytesCountExceptFirst = (uint)copy.Code.Count - startBytePos - 1;
+                    bitsToObtain = bytesCountExceptFirst * 8 + (8 - localStartBitPos);
+                }
+
+                /*uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
                     ? (uint)copy.CodeLength - i
-                    : blockBitsSize;
+                    : blockBitsSize;*/
 
                 blocks.Add(copy.GetRange(i, bitsToObtain));
             }
@@ -371,6 +383,21 @@ namespace FilesEncryptor.dto
             return base.GetHashCode();
         }
 
+        public Tuple<bool, List<uint>> CompareTo(BitCode secondCode)
+        {
+            bool lengthEq = (CodeLength == secondCode?.CodeLength);
+            List<uint> differentBits = new List<uint>();
+
+            for (uint i = 0; i < (uint)Math.Min(CodeLength, secondCode.CodeLength); i++)
+            {
+                if (!ElementAt(i).Code.First().Equals(secondCode.ElementAt(i).Code.First()))
+                {
+                    differentBits.Add(i);
+                }
+            }
+            return new Tuple<bool, List<uint>>(lengthEq, differentBits);
+        }
+
         #endregion
 
         #region UTILS
@@ -468,6 +495,7 @@ namespace FilesEncryptor.dto
             return masked;
         }
 
+        
         #endregion
     }
 }

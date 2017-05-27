@@ -70,6 +70,8 @@ namespace FilesEncryptor.pages
                     titleBar.ForegroundColor = Colors.WhiteSmoke;
                 }
             }
+
+            DebugUtils.ShowConsoleInNewWindow();
         }
 
         private void BifurcatorPage_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -118,12 +120,13 @@ namespace FilesEncryptor.pages
                     }*/
 
                     bool pickRes = await filesComp.PickFiles(new List<string>() { ".txt", ".pdf", ".doc", ".docx", ".jpg" });
+                    //bool pickRes = await filesComp.PickFiles(new List<string>() { "." });
 
-                    if(pickRes)
+                    if (pickRes)
                     {
                         bool openRes = await filesComp.OpenFiles();
 
-                        if(openRes)
+                        if (openRes)
                         {
                             bool compRes = filesComp.CompareFiles();
                             await filesComp.Finish();
@@ -132,6 +135,128 @@ namespace FilesEncryptor.pages
                             await diag.ShowAsync();
                         }
                     }
+                    break;
+                case "checkHammingAlgorithmItem":
+                    FileHelper openFileHelper = new FileHelper();
+
+                    if(await openFileHelper.PickToOpen(new List<string>() { ".txt", ".pdf", ".doc", ".docx", ".jpg" }))
+                    {
+                        if(await openFileHelper.OpenFile(Windows.Storage.FileAccessMode.Read))
+                        {
+                            progressPanel.Visibility = Visibility.Visible;
+
+                            string message = "Loading file bytes";
+                            DebugUtils.WriteLine(message);
+                            progressText.Text = message;
+
+                            DateTime startTime = DateTime.Now;
+                            
+                            var rawFileBytes = openFileHelper.ReadBytes(openFileHelper.FileSize).ToList();
+
+                            DebugUtils.WriteLine(string.Format("Loaded {0} bytes", rawFileBytes.Count));
+
+                            //Creo el codificador
+                            HammingEncoder encoder = HammingEncoder.From(new dto.BitCode(rawFileBytes, rawFileBytes.Count * 8));
+                            List<HammingEncodeResult> encodedResults = new List<HammingEncodeResult>();
+
+                            //Por cada tipo de codificacion Hamming, codifico el archivo
+                            DebugUtils.WriteLine("Starting encoding process");
+
+                            foreach (HammingEncodeType encodeType in BaseHammingCodifier.EncodeTypes)
+                            {
+                                message = string.Format("Encoding in {0} encode type", encodeType.ShortDescription);
+                                DebugUtils.WriteLine(message);
+                                progressText.Text = message;
+
+                                var encodeRes = await encoder.Encode(encodeType);
+
+                                if (encodeRes != null)
+                                {
+                                    DebugUtils.WriteLine(string.Format("Encoding was successfull in {0} encode type", encodeType.ShortDescription));
+                                    encodedResults.Add(encodeRes);
+                                }
+                                else
+                                {
+                                    DebugUtils.WriteLine(string.Format("Encoding with error in {0} encode type", encodeType.ShortDescription));
+                                    /*progressPanel.Visibility = Visibility.Collapsed;
+
+                                    await new MessageDialog(string.Format("Hubo un error al codificar en: {0}", encodeType.ShortDescription)).ShowAsync();                                    
+                                    return;*/
+                                }
+                            }
+
+                            DebugUtils.WriteLine("All encodings were finished");
+
+                            //Ahora decodifico a todos los archivos codificados
+                            DebugUtils.WriteLine("Starting decoding process");
+
+                            List<List<byte>> decodedBytes = new List<List<byte>>();
+                            
+                            foreach (HammingEncodeResult encodeRes in encodedResults)
+                            {
+                                message = string.Format("Decoding in {0} encode type", encodeRes.EncodeType.ShortDescription);
+                                DebugUtils.WriteLine(message);
+                                progressText.Text = message;
+
+                                HammingDecoder decoder = HammingDecoder.FromEncoded(encodeRes);                                
+                                var decodeRes = await decoder.Decode();
+
+                                if (decodeRes != null)
+                                {
+                                    DebugUtils.WriteLine(string.Format("Decoding was successfull in {0} encode type", encodeRes.EncodeType.ShortDescription));
+                                    decodedBytes.Add(decodeRes.Code);
+                                }
+                                else
+                                {
+                                    DebugUtils.WriteLine(string.Format("Decoding with error in {0} encode type", encodeRes.EncodeType.ShortDescription));
+                                    /*progressPanel.Visibility = Visibility.Collapsed;
+
+                                    await new MessageDialog(string.Format("Hubo un error al decodificar en: {0}", encodeRes.EncodeType.ShortDescription)).ShowAsync();
+                                    return;*/
+                                }                                
+                            }
+
+                            DebugUtils.WriteLine("All encodings were finished");
+
+                            //Por ultimo, comparo los archivos decodificados
+                            DebugUtils.WriteLine("Starting comparing process");
+
+                            bool compareResult = false;
+                            for(int i = 1; i< decodedBytes.Count; i++)
+                            {
+                                message = 
+                                    string.Format("Comparing {0} with {1} encode types", 
+                                    encodedResults[i-1].EncodeType.ShortDescription, 
+                                    encodedResults[i].EncodeType.ShortDescription);
+
+                                DebugUtils.WriteLine(message);
+                                progressText.Text = message;
+
+                                compareResult = decodedBytes[i - 1].SequenceEqual(decodedBytes[i]);
+                                DebugUtils.WriteLine(string.Format("Compare result: {0}", compareResult));
+
+                                if(!compareResult)
+                                {
+                                    break;
+                                }
+                            }
+
+                            DebugUtils.WriteLine("Comparing with original file bytes");
+
+                            compareResult = decodedBytes.Last().SequenceEqual(rawFileBytes);
+
+                            DebugUtils.WriteLine(string.Format("Compare result: {0}", compareResult));
+
+                            DateTime endTime = DateTime.Now;
+                            var timeDif = endTime.Subtract(startTime);
+
+                            progressPanel.Visibility = Visibility.Collapsed;
+                            message = string.Format("El resultado de la comparacion es: {0}, realizado en {1} horas, {2} minutos, {3} segundos, {4} milisegundos", compareResult, timeDif.Hours, timeDif.Minutes, timeDif.Seconds, timeDif.Milliseconds);
+                            DebugUtils.WriteLine(message, "[RESULT]");
+                            await new MessageDialog(message).ShowAsync();
+                        }
+                    }
+                    
                     break;
                 case "compressFileItem":
                     Frame.Navigate(typeof(CompressFilePage));

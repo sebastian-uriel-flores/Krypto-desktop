@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FilesEncryptor.dto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -86,23 +87,30 @@ namespace FilesEncryptor.helpers.file_management
         public bool CompareFiles()
         {
             bool compareResult = false;
-            List<byte[]> filesBytes = new List<byte[]>();
+            List<BitCode> filesBytes = new List<BitCode>();
             
             foreach(FileHelper fileHelper in _filesHelpers)
             {
-                filesBytes.Add(fileHelper.ReadBytes(fileHelper.FileSize));
+                byte[] arr = fileHelper.ReadBytes(fileHelper.FileSize);
+                filesBytes.Add(new BitCode(arr.ToList(), arr.Count()*8));
             }
 
             for(int i = 1; i < _filesHelpers.Count; i++)
             {
-                byte[] file1Bytes = filesBytes[i - 1];
-                byte[] file2Bytes = filesBytes[i];
+                BitCode file1Bytes = filesBytes[i - 1];
+                BitCode file2Bytes = filesBytes[i];
 
-                compareResult = file1Bytes.SequenceEqual(file2Bytes);
+                var res = file1Bytes.CompareTo(file2Bytes);
+                compareResult = res.Item1 && res.Item2.Count == 0;
 
                 //Si hay 1 archivo diferente, cancelo la comparacion
                 if(!compareResult)
                 {
+                    DebugUtils.WriteLine(string.Format("Files {0} {1} are different:", i, i-1));
+                    foreach (uint diff in res.Item2)
+                    {
+                        DebugUtils.WriteLine(string.Format("Difference at bit {0}", diff));
+                    }
                     break;
                 }
             }

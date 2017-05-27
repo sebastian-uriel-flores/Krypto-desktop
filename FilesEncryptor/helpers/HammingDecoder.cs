@@ -61,82 +61,82 @@ namespace FilesEncryptor.helpers
         {
             BitCode result = BitCode.EMPTY;
 
-            await Task.Factory.StartNew(() =>
+            try
             {
-                //Separo el codigo completo en bloques representando a cada palabra del mismo
-                DebugUtils.WriteLine("Creating parity matrix");
-
-                List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
-                uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
-
-                DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
-                List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false).Item1;
-
-                DebugUtils.Write(string.Format("Extracted {0} encoded words", encodedWords.Count));
-                DebugUtils.WriteLine("Checking words parity");
-
-                //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
-                for(int encodedWordIndex = 0; encodedWordIndex < encodedWords.Count; encodedWordIndex++)
+                await Task.Factory.StartNew(() =>
                 {
-                    /*int errorPosition = CheckParity(parityControlMatrix, encodedWords[encodedWordIndex]);
+                    //Separo el codigo completo en bloques representando a cada palabra del mismo
+                    DebugUtils.WriteLine("Creating parity matrix");
 
-                    //Si encuentra un error en la palabra
-                    if(errorPosition > - 1)
-                    {                        
-                        //TODO: Fix error
-                        /*encodedWords[encodedWordIndex] = encodedWords[encodedWordIndex].ReplaceAt(
-                            (uint)errorPosition, 
-                            encodedWords[encodedWordIndex].ElementAt((uint)errorPosition).Negate());
-                            */
-                      /*  DebugUtils.WriteLine(string.Format("Fixed error in word {0} at bit {1}", encodedWordIndex, errorPosition));
-                    }*/
-                }
-                
-                DebugUtils.WriteLine("Parity check OK");
+                    List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
+                    uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
-                //Decodifico cada una de las palabras
-                DebugUtils.WriteLine(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
+                    DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
+                    List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false).Item1;
 
-                List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
-                List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
+                    DebugUtils.WriteLine(string.Format("Extracted {0} encoded words", encodedWords.Count));
+                    DebugUtils.WriteLine("Checking words parity");
 
-                foreach (BitCode encoded in encodedWords)
-                {
-                    BitCode decoded = BitCode.EMPTY;
-
-                    foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
+                    //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
+                    for (int encodedWordIndex = 0; encodedWordIndex < encodedWords.Count; encodedWordIndex++)
                     {
-                        decoded.Append(encoded.ElementAt(index));
+                        /*int errorPosition = CheckParity(parityControlMatrix, encodedWords[encodedWordIndex]);
+
+                        //Si encuentra un error en la palabra
+                        if(errorPosition > - 1)
+                        {                        
+                            //TODO: Fix error
+                            /*encodedWords[encodedWordIndex] = encodedWords[encodedWordIndex].ReplaceAt(
+                                (uint)errorPosition, 
+                                encodedWords[encodedWordIndex].ElementAt((uint)errorPosition).Negate());
+                                */
+                        /*  DebugUtils.WriteLine(string.Format("Fixed error in word {0} at bit {1}", encodedWordIndex, errorPosition));
+                      }*/
                     }
 
-                    decodedWords.Add(decoded);
+                    DebugUtils.WriteLine("Parity check OK");
 
-                    if (decodedWords.Count % 10 == 0)
+                    //Decodifico cada una de las palabras
+                    DebugUtils.WriteLine(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
+
+                    List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
+                    List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
+
+                    foreach (BitCode encoded in encodedWords)
                     {
-                        DebugUtils.WriteLine(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
-                        //DecodingProgressChanged(this, (decodedWords.Count * 100) / encodedWords.Count);
+                        BitCode decoded = BitCode.EMPTY;
 
-                    if(decodedWords.Count == 8110)
+                        foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
                         {
+                            decoded.Append(encoded.ElementAt(index));
+                        }
 
+                        decodedWords.Add(decoded);
+
+                        if (decodedWords.Count % 10 == 0)
+                        {
+                            DebugUtils.WriteLine(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
                         }
                     }
-                }
 
-                DebugUtils.WriteLine(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
+                    DebugUtils.WriteLine(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
 
-                BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
+                    BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
 
-                //Junto todas las palabras decodificadas en un solo codigo
-                DebugUtils.WriteLine("Joining decoded words into one array of bytes");
-                result = BitOps.Join(decodedWords);
+                    //Junto todas las palabras decodificadas en un solo codigo
+                    DebugUtils.WriteLine("Joining decoded words into one array of bytes");
+                    result = BitOps.Join(decodedWords);
 
-                //Remuevo los bits de redundancia
-                result = result.GetRange(0, (uint)result.CodeLength - _redundanceBitsCount);
+                    //Remuevo los bits de redundancia
+                    result = result.GetRange(0, (uint)result.CodeLength - _redundanceBitsCount);
 
-                BitCodePresenter.From(new List<BitCode>() { result }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
-            });
-
+                    BitCodePresenter.From(new List<BitCode>() { result }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
+                });
+            }
+            catch (Exception ex)
+            {
+                result = null;
+            }
             return result;
         }
 
