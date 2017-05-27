@@ -128,13 +128,23 @@ namespace FilesEncryptor.dto
 
         public BitCode ElementAt(uint bitPosition)
         {
-            uint bytePosition = BitPositionToBytePosition(bitPosition);
-            uint effectiveBitPosition = bitPosition % 8;
+            int bytePosition = (int)BitPositionToBytePosition(bitPosition);
+            int localBitPosition = (int)GlobalBitPositionToLocal(bitPosition);
 
-            byte disp1 = (byte)(Code[(int)bytePosition] >> (byte)(7 - effectiveBitPosition));
-            byte disp2 = (byte)(disp1 << 7);
-            return new BitCode(
-                new List<byte>() { disp2 }, 1);
+            //Tomo el byte en el que se encuentra el bit indicado
+            byte container = Code[bytePosition];
+
+            //Pongo en cero los bits a la derecha del bit indicado
+            container = MaskLeft(container, localBitPosition + 1);
+
+            //Elimino los bits a la izquierda que esten de mas. 
+            //Por ejemplo, si se indica el bit 2, tendre 2 bits redundantes a la izquierda.
+            //Para eliminarlos hago shifts a la izquierda.
+            container <<= localBitPosition;
+
+            return container == 0
+                ? ZERO
+                : ONE;            
         }
 
         public BitCode ReplaceAt(uint bitPosition, BitCode replacement)
@@ -154,21 +164,41 @@ namespace FilesEncryptor.dto
         {
             BitCode result = EMPTY;
 
-            if (bitsCount > 0)
+            if (bitsCount > 0 && Code.Count > 0)
             {
-                int startBytePos = (int)BitPositionToBytePosition(startBitPos);
-                int endBytePos = (int)BitPositionToBytePosition(startBitPos + bitsCount - 1);
-                int bytesCount = (endBytePos - startBytePos) + 1;
+                //NOTA: Es limite izquierdo inclusivo y limite derecho exclusivo
 
-                List<byte> bytesRange = Code.GetRange(startBytePos, bytesCount);
+                uint localStartBitPos = GlobalBitPositionToLocal(startBitPos);
+                uint bytesLength = BitsLengthToBytesLength(bitsCount + localStartBitPos);
+                uint startBytePos = BitPositionToBytePosition(startBitPos);
 
-                //Hago shifts a la izquierda para eliminar bits que no estan incluidos en el rango
+                List<byte> bytesRange = new List<byte>();
+                try
+                {
+                    bytesRange = Code.GetRange((int)startBytePos, (int)bytesLength);
+                }
+                catch(Exception ex)
+                {
+
+                }
+
                 if (bytesRange.Count > 0)
                 {
-                    bytesRange = LeftShifting(bytesRange, (int)startBitPos % 8);
+                    
+                    //Calculo la cantidad de bits usados en el ultimo byte
+                    int leftBits = (int)GlobalBitPositionToLocal(startBitPos + bitsCount);
 
-                    //Pongo en cero los bits a la derecha del final del codigo
-                    bytesRange[bytesRange.Count - 1] = MaskLeft(bytesRange.Last(), (int)bitsCount - ((bytesRange.Count - 1) * 8));
+                    //Si da 0, es porque usamos los 8 bit
+                    //Sino, pongo en cero los bits a la derecha del final del codigo
+                    if (leftBits > 0)
+                    {
+                        bytesRange[bytesRange.Count - 1] = MaskLeft(bytesRange.Last(), (int)GlobalBitPositionToLocal(startBitPos + bitsCount));
+                    }
+
+                    //Elimino los bits a la izquierda que esten de mas. 
+                    //Por ejemplo, si empiezo en el bit 2, tendre 2 bits redundantes a la izquierda.
+                    //Para eliminarlos hago shifts a la izquierda.
+                    bytesRange = LeftShifting(bytesRange, (int)localStartBitPos);
                 }
 
                 result = new BitCode(bytesRange, (int)bitsCount);
@@ -349,11 +379,13 @@ namespace FilesEncryptor.dto
 
         public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
 
+        public static uint GlobalBitPositionToLocal(uint bitPosition) => bitPosition % 8;
+
         /// <summary>
         /// Hace desplazamientos a la izquierda entre arreglos de bytes.
         /// </summary>
         /// <param name="bytes">Arreglo de bytes a desplazar</param>
-        /// <param name="shifts">Cantidad de desplazamientos, entre 0 y 8</param>
+        /// <param name="shifts">Cantidad de desplazamientos</param>
         /// <returns></returns>
         public static List<byte> LeftShifting(List<byte> bytes, int shifts)
         {
@@ -361,12 +393,16 @@ namespace FilesEncryptor.dto
 
             if (copy != null && copy.Count * 8 >= shifts)
             {
+                //Si se requiere desplazar 1 byte o mas, 
+                //entonces elimino todos los bytes posibles de la lista
+                //Y luego, solamente quedaran hacer los ultimos n desplazamientos, 
+                //con n menor a 1 byte
                 if (shifts >= 8)
                 {
-                    copy.RemoveRange(0, shifts / 8);
+                    copy.RemoveRange(0, (int)Math.Floor(shifts / 8.0));
                     shifts %= 8;
                 }
-
+                
                 for (int i = 0; i < copy.Count; i++)
                 {
                     if (i == 0)

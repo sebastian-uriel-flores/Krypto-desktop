@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FilesEncryptor.dto.Hamming;
+using FilesEncryptor.helpers;
+using FilesEncryptor.helpers.file_management;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +12,7 @@ using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -100,10 +104,35 @@ namespace FilesEncryptor.pages
 
         private void HammingDecodeBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HammingDecodePage));
 
-        private void commandsPanel_ItemClick(object sender, ItemClickEventArgs e)
+        private async void commandsPanel_ItemClick(object sender, ItemClickEventArgs e)
         {
             switch ((e.ClickedItem as FrameworkElement).Name)
             {
+                case "compareFilesItem":
+                    FilesComparer filesComp = new FilesComparer();
+
+                    /*var extensions = new List<string>();
+                    foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
+                    {
+                        extensions.Add(type.Extension);
+                    }*/
+
+                    bool pickRes = await filesComp.PickFiles(new List<string>() { ".txt", ".pdf", ".doc", ".docx", ".jpg" });
+
+                    if(pickRes)
+                    {
+                        bool openRes = await filesComp.OpenFiles();
+
+                        if(openRes)
+                        {
+                            bool compRes = filesComp.CompareFiles();
+                            await filesComp.Finish();
+
+                            MessageDialog diag = new MessageDialog(string.Format("Resultado de la comparación: {0}", compRes));
+                            await diag.ShowAsync();
+                        }
+                    }
+                    break;
                 case "compressFileItem":
                     Frame.Navigate(typeof(CompressFilePage));
                     break;

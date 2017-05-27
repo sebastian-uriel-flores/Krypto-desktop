@@ -92,6 +92,32 @@
                     <Setter Property="Margin" Value="15"/>
                 </Style>
             </GridView.Resources>
+            <RelativePanel x:Name="compareFilesItem" Style="{StaticResource ItemPanelStyle}">
+                <FontIcon                        
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xe11e;"                        
+                        RelativePanel.AlignHorizontalCenterWithPanel="True"
+                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
+                        FontSize="60"
+                        Foreground="#FF9200"
+                        Margin="0,0,0,25"
+                        />
+                <Grid
+                    RelativePanel.AlignBottomWithPanel="True" 
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="45"
+                    Background="#FF9200">
+                    <TextBlock 
+                        Text="Comparar archivos"
+                        FontSize="18"
+                        Foreground="White"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        />
+                </Grid>
+            </RelativePanel>
+
             <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
                         FontFamily="Segoe MDL2 Assets"
@@ -220,50 +246,5 @@
                 </Grid>
             </RelativePanel>
         </GridView>
-        <StackPanel
-            x:Name="buttonsPanel"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            RelativePanel.AlignVerticalCenterWithPanel="True"
-            MaxWidth="500"
-            Visibility="Collapsed"
-            >
-            <Button
-                x:Name="compressFileBt"
-                Content="Comprimir un archivo"
-                HorizontalAlignment="Stretch"                
-                Padding="0,15"
-                Margin="20,10"
-                Click="CompressFileBt_Click"
-            />
-
-            <Button
-                x:Name="hammingEncodeBt"
-                Content="Codificar un archivo .huf con Hamming"
-                HorizontalAlignment="Stretch"                
-                Padding="0,15"
-                Margin="20,10"
-                Click="HammingEncodeBt_Click"
-            />
-
-            <Button
-                x:Name="uncompressFileBt"            
-                Content="Descomprimir un archivo"
-                HorizontalAlignment="Stretch"
-                Padding="0,15"
-                Margin="20,10"
-                Click="UncompressFileBt_Click"
-            />
-
-            <Button
-                x:Name="hammingDecodeBt"            
-                Content="Decodificar con Hamming"
-                HorizontalAlignment="Stretch"
-                Padding="0,15"
-                Margin="20,10"
-                Click="HammingDecodeBt_Click"
-            />
-
-        </StackPanel>
     </RelativePanel>
 </Page>

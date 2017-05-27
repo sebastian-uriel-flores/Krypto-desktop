@@ -108,8 +108,9 @@
     <Compile Include="dto\IEncodeResult.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\DebugUtils.cs" />
-    <Compile Include="helpers\FileHelper.cs" />
+    <Compile Include="helpers\file_management\FileHelper.cs" />
     <Compile Include="helpers\BaseHammingCodifier.cs" />
+    <Compile Include="helpers\file_management\FilesComparer.cs" />
     <Compile Include="helpers\HammingDecoder.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="pages\HammingDecodePage.xaml.cs">
