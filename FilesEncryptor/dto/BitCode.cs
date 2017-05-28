@@ -119,12 +119,14 @@ namespace FilesEncryptor.dto
             }
         }
 
-        public void Insert(uint bitPosition, BitCode encoded)
+        public BitCode Insert(uint bitPosition, BitCode encoded)
         {
             BitCode concatenated = GetRange(0, bitPosition);
             concatenated.Append(encoded);
             concatenated.Append(GetRange(bitPosition, (uint)CodeLength - bitPosition));
-            ReplaceCode(concatenated.Code, concatenated.CodeLength);
+            //ReplaceCode(concatenated.Code, concatenated.CodeLength);
+
+            return concatenated;
         }
 
         public BitCode ElementAt(uint bitPosition)
@@ -193,13 +195,21 @@ namespace FilesEncryptor.dto
                     //Sino, pongo en cero los bits a la derecha del final del codigo
                     if (leftBits > 0)
                     {
-                        bytesRange[bytesRange.Count - 1] = MaskLeft(bytesRange.Last(), (int)GlobalBitPositionToLocal(startBitPos + bitsCount));
+                        bytesRange[bytesRange.Count - 1] = MaskLeft(bytesRange.Last(), leftBits);
                     }
 
                     //Elimino los bits a la izquierda que esten de mas. 
                     //Por ejemplo, si empiezo en el bit 2, tendre 2 bits redundantes a la izquierda.
                     //Para eliminarlos hago shifts a la izquierda.
                     bytesRange = LeftShifting(bytesRange, (int)localStartBitPos);
+
+                    //Por ultimo, elimino los bytes a derecha que esten de mas
+                    int outputBytesCount = (int)BitsLengthToBytesLength(bitsCount);
+
+                    if (bytesRange.Count > outputBytesCount)
+                    {
+                        bytesRange = bytesRange.GetRange(0, outputBytesCount);
+                    }
                 }
 
                 result = new BitCode(bytesRange, (int)bitsCount);
@@ -244,6 +254,11 @@ namespace FilesEncryptor.dto
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
+                if(i >= copy.CodeLength - blockBitsSize - 1)
+                {
+
+                }
+
                 //Si la siguiente palabra es mas chica, es decir,
                 //quedan menos bits que 'blockBitsSize', 
                 //entonces solo devuelvo los bits restantes

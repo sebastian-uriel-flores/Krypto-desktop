@@ -119,8 +119,8 @@ namespace FilesEncryptor.pages
                         extensions.Add(type.Extension);
                     }*/
 
-                    bool pickRes = await filesComp.PickFiles(new List<string>() { ".txt", ".pdf", ".doc", ".docx", ".jpg" });
-                    //bool pickRes = await filesComp.PickFiles(new List<string>() { "." });
+                    //bool pickRes = await filesComp.PickFiles(new List<string>() { ".txt", ".pdf", ".doc", ".docx", ".jpg" });
+                    bool pickRes = await filesComp.PickFiles(new List<string>() { "*" });
 
                     if (pickRes)
                     {

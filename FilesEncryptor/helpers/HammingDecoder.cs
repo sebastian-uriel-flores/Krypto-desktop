@@ -104,12 +104,22 @@ namespace FilesEncryptor.helpers
 
                     foreach (BitCode encoded in encodedWords)
                     {
-                        BitCode decoded = BitCode.EMPTY;
+                        if(decodedWords.Count == encodedWords.Count - 1)
+                        {
 
-                        foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
+                        }
+                        BitCode decoded = encoded.Copy();
+
+                        uint currentExp = 0;
+                        foreach(uint index in controlBitsIndexes)
+                        {
+                            decoded = decoded.ReplaceAt(index - currentExp, BitCode.EMPTY);
+                            currentExp++;
+                        }
+                        /*foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
                         {
                             decoded.Append(encoded.ElementAt(index));
-                        }
+                        }*/
 
                         decodedWords.Add(decoded);
 
