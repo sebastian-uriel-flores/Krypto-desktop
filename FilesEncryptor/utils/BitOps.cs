@@ -86,5 +86,40 @@ namespace FilesEncryptor.utils
 
             return result;
         }
+
+        public static BitCode Or(List<BitCode> codes)
+        {
+            BitCode result = BitCode.EMPTY;
+
+            if (codes != null)
+            {
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
+
+                //Opero de a pares de códigos
+                for (int pos = 1; pos < codes.Count; pos++)
+                {
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
+                    List<BitCode> orBits = new List<BitCode>();
+
+                    //Determino cual de los elementos posee la menor cantidad de bits
+                    //y realizo el Or sobre esa cantidad de bits
+                    int bitsCount = Math.Min(bitsFirstElement.Count, bitsSecondElement.Count);
+
+                    //Realizo el 'or' bit a bit,
+                    //entre el bit 'i' del primer elemento y el bit 'i' del segundo elemento
+                    for (int i = 0; i < bitsCount; i++)
+                    {
+                        byte orRes = (byte)(bitsFirstElement[i].Code[0] | bitsSecondElement[i].Code[0]);
+                        orBits.Add(new BitCode(new List<byte>() { orRes }, 1));
+                    }
+
+                    //El resultado pasará a ser el primer operandi del siguiente 'or'
+                    bitsFirstElement = orBits;
+                }
+                result = Join(bitsFirstElement);
+            }
+
+            return result;
+        }
     }
 }

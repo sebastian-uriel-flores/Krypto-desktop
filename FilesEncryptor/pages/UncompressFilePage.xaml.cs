@@ -159,7 +159,7 @@ namespace FilesEncryptor.pages
                                 uint currentCodeBitsLength = uint.Parse(currentCodeLength);
 
                                 //Creo un buffer y guardo en él la tabla de probabilidades
-                                byte[] currentCodeBytes = new byte[CommonUtils.BitsLengthToBytesLength(currentCodeBitsLength)];
+                                byte[] currentCodeBytes = new byte[BitCode.BitsLengthToBytesLength(currentCodeBitsLength)];
                                 dataReader.ReadBytes(currentCodeBytes);
 
                                 probabilitiesTable.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeBitsLength));
@@ -182,7 +182,7 @@ namespace FilesEncryptor.pages
                             uint encodedTextBitsLength = uint.Parse(encodedTextLength);
 
                             //Creo un buffer y guardo en él el texto codificado
-                            byte[] encodedTextBytes = new byte[CommonUtils.BitsLengthToBytesLength(encodedTextBitsLength)];
+                            byte[] encodedTextBytes = new byte[BitCode.BitsLengthToBytesLength(encodedTextBitsLength)];
                             dataReader.ReadBytes(encodedTextBytes);
 
                             //Creo un EncodedString con el texto codificado

@@ -11,6 +11,7 @@ namespace FilesEncryptor.helpers
 {
     public class BitCodePresenter
     {
+        public static bool ENABLED = false;
         public enum LinesDisposition
         {
             Row, Column
@@ -37,86 +38,89 @@ namespace FilesEncryptor.helpers
 
         public void Print(LinesDisposition disposition, string codeName, int interSpacing = 4)
         {
-            List<string> lines = new List<string>();
-            int rowsCount = 0;
-            int columnsCount = 0;
-
-            if (disposition == LinesDisposition.Row)
+            if (ENABLED)
             {
-                if (_codes.Count > 0)
+                List<string> lines = new List<string>();
+                int rowsCount = 0;
+                int columnsCount = 0;
+
+                if (disposition == LinesDisposition.Row)
                 {
-                    //Dado que cada BitCode corresponde a una fila
-                    //la cantidad de filas será la cantidad de BitCodes
-                    rowsCount = _codes.Count;
-
-                    //Dado que todas las filas tienen la misma longitud,
-                    //la cantidad de columnas será la cantidad de bits de una fila
-                    columnsCount = _codes[0].CodeLength;
-
-                    foreach (BitCode code in _codes)
+                    if (_codes.Count > 0)
                     {
-                        string currentLine = "";
-                        List<int> bitsList = code.ToIntList();
+                        //Dado que cada BitCode corresponde a una fila
+                        //la cantidad de filas será la cantidad de BitCodes
+                        rowsCount = _codes.Count;
 
-                        for (int pos = 0; pos < bitsList.Count; pos++)
+                        //Dado que todas las filas tienen la misma longitud,
+                        //la cantidad de columnas será la cantidad de bits de una fila
+                        columnsCount = _codes[0].CodeLength;
+
+                        foreach (BitCode code in _codes)
                         {
-                            currentLine += bitsList[pos].ToString();
+                            string currentLine = "";
+                            List<int> bitsList = code.ToIntList();
 
-                            if ((pos + 1) % interSpacing == 0)
+                            for (int pos = 0; pos < bitsList.Count; pos++)
                             {
-                                currentLine += " ";
-                            }
-                        }
+                                currentLine += bitsList[pos].ToString();
 
-                        lines.Add(currentLine.TrimEnd(' '));
+                                if ((pos + 1) % interSpacing == 0)
+                                {
+                                    currentLine += " ";
+                                }
+                            }
+
+                            lines.Add(currentLine.TrimEnd(' '));
+                        }
                     }
                 }
-            }
-            else if(disposition == LinesDisposition.Column)
-            {
-                if (_codes.Count > 0)
+                else if (disposition == LinesDisposition.Column)
                 {
-                    //Dado que cada BitCode corresponde a una columna
-                    //la cantidad de columnas será la cantidad de BitCodes
-                    columnsCount = _codes.Count;
-
-                    //Obtengo la cantidad de filas que hay en todas las columnas
-                    //Dado que son todas iguales, consultare por la cantidad en la primera columna
-                    rowsCount = _codes[0].CodeLength;
-
-                    //Convierto a cada columna en una lista de enteros
-                    List<List<int>> bitsColumns = new List<List<int>>();
-                    foreach (BitCode column in _codes)
+                    if (_codes.Count > 0)
                     {
-                        bitsColumns.Add(column.ToIntList());
-                    }
+                        //Dado que cada BitCode corresponde a una columna
+                        //la cantidad de columnas será la cantidad de BitCodes
+                        columnsCount = _codes.Count;
 
-                    //Por cada fila
-                    for (int rowIndex = 0; rowIndex < rowsCount; rowIndex++)
-                    {
-                        string currentLine = "";
+                        //Obtengo la cantidad de filas que hay en todas las columnas
+                        //Dado que son todas iguales, consultare por la cantidad en la primera columna
+                        rowsCount = _codes[0].CodeLength;
 
-                        //Por cada columna, agrego a la línea de texto actual el bit en la fila actual
-                        for (int columnIndex = 0; columnIndex < bitsColumns.Count; columnIndex++)
+                        //Convierto a cada columna en una lista de enteros
+                        List<List<int>> bitsColumns = new List<List<int>>();
+                        foreach (BitCode column in _codes)
                         {
-                            currentLine += bitsColumns[columnIndex][rowIndex].ToString();
-
-                            if ((columnIndex + 1) % interSpacing == 0)
-                            {
-                                currentLine += " ";
-                            }
+                            bitsColumns.Add(column.ToIntList());
                         }
 
-                        lines.Add(currentLine.TrimEnd(' '));
+                        //Por cada fila
+                        for (int rowIndex = 0; rowIndex < rowsCount; rowIndex++)
+                        {
+                            string currentLine = "";
+
+                            //Por cada columna, agrego a la línea de texto actual el bit en la fila actual
+                            for (int columnIndex = 0; columnIndex < bitsColumns.Count; columnIndex++)
+                            {
+                                currentLine += bitsColumns[columnIndex][rowIndex].ToString();
+
+                                if ((columnIndex + 1) % interSpacing == 0)
+                                {
+                                    currentLine += " ";
+                                }
+                            }
+
+                            lines.Add(currentLine.TrimEnd(' '));
+                        }
                     }
                 }
-            }
 
-            Debug.WriteLine(codeName, "[NAME]");
-            Debug.WriteLine(string.Format("{0} rows", rowsCount), "[INFO]");
-            Debug.WriteLine(string.Format("{0} columns", columnsCount), "[INFO]");
-            Debug.WriteLine(string.Join("\n", lines));
-            Debug.WriteLine(" ");
+                Debug.WriteLine(codeName, "[NAME]");
+                Debug.WriteLine(string.Format("{0} rows", rowsCount), "[INFO]");
+                Debug.WriteLine(string.Format("{0} columns", columnsCount), "[INFO]");
+                Debug.WriteLine(string.Join("\n", lines));
+                Debug.WriteLine(" ");
+            }
         }
 
         public async void Dump()
