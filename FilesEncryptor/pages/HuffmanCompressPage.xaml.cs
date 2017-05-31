@@ -35,15 +35,12 @@ namespace FilesEncryptor.pages
     public sealed partial class HuffmanCompressPage : Page
     {
         private string _originalFileContent;
-
-        private FileHelper _fileOpener, _fileSaver;
-        private FileHeader _fileHeader;
+        private FileHelper _fileOpener;
 
         public HuffmanCompressPage()
         {
             this.InitializeComponent();
             _fileOpener = new FileHelper();
-            _fileSaver = new FileHelper();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -100,10 +97,11 @@ namespace FilesEncryptor.pages
         private async void CompressBt_Click(object sender, RoutedEventArgs e)
         {
             bool writeResult = false;
+            FileHelper fileSaver = new FileHelper();
 
-            if (await _fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, "Huffman encrypted file", ".huf"))
+            if (await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, "Huffman encrypted file", ".huf"))
             {
-                if(await _fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                if(await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
 
@@ -122,26 +120,26 @@ namespace FilesEncryptor.pages
                         //Creo y escribo el header del archivo                        
                         FileHeader header = new FileHeader()
                         {
-                            FileName = _fileSaver.SelectedFileDisplayName,
-                            FileDisplayType = _fileSaver.SelectedFileDisplayType,
-                            FileExtension = _fileSaver.SelectedFileExtension
+                            FileName = fileSaver.SelectedFileDisplayName,
+                            FileDisplayType = fileSaver.SelectedFileDisplayType,
+                            FileExtension = fileSaver.SelectedFileExtension
                         };
 
                         DebugUtils.WriteLine(string.Format("File header: {0}", header.ToString()));
-                        writeResult = _fileSaver.WriteFileHeader(header);
+                        writeResult = fileSaver.WriteFileHeader(header);
 
                         //Escribo la tabla de probabilidades
                         DebugUtils.WriteLine("Dumping probabilities table to file");
                         foreach (var element in encodeResult.ProbabilitiesTable)
                         {
-                            writeResult = _fileSaver.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
-                            writeResult = _fileSaver.WriteBytes(element.Value.Code.ToArray());
+                            writeResult = fileSaver.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
+                            writeResult = fileSaver.WriteBytes(element.Value.Code.ToArray());
                         }
 
                         //Escribo el texto comprimido
                         DebugUtils.WriteLine("Dumping compressed bytes to file");
-                        writeResult = _fileSaver.WriteString(string.Format("..{0}:", encodeResult.Encoded.CodeLength));
-                        writeResult = _fileSaver.WriteBytes(encodeResult.Encoded.Code.ToArray());
+                        writeResult = fileSaver.WriteString(string.Format("..{0}:", encodeResult.Encoded.CodeLength));
+                        writeResult = fileSaver.WriteBytes(encodeResult.Encoded.Code.ToArray());
                     }
 
                     //Cierro el archivo comprimido

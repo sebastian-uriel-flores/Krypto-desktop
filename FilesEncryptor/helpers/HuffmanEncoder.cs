@@ -9,9 +9,34 @@ using System.Threading.Tasks;
 
 namespace FilesEncryptor.helpers
 {
-    public static class HuffmanEncoder
+    public class HuffmanEncoder
     {
+        private string _baseText;
+        private ProbabilitiesScanner _probabilitiesScanner;
 
+        private HuffmanEncoder()
+        {
+
+        }
+
+        public static HuffmanEncoder From(string text)
+        {
+            return new HuffmanEncoder() { _baseText = text, _probabilitiesScanner = ProbabilitiesScanner.From(text) };
+        }
+        public void Scan()
+        {
+            _probabilitiesScanner.Scan();
+        }
+        public Task<HuffmanEncodeResult> Compress()
+        {
+            //TODO: Compress text
+            return null;
+        }
+
+        public void WriteToFile(FileHelper fileHelper)
+        {
+            //TODO: Write to file probabilities table
+        }
 
         public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {

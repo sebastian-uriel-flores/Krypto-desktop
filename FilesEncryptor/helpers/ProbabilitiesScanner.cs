@@ -69,6 +69,48 @@ namespace FilesEncryptor.helpers
         }
 
         #region FROM_TEXT
+        public static ProbabilitiesScanner From(string text)
+        {
+            return new ProbabilitiesScanner() { Text = text };
+        }
+
+        public void Scan()
+        {
+            if (Text != null)
+            {
+                Dictionary<char, float> charsCount = new Dictionary<char, float>();
+
+                //Primero, obtengo las cantidades de cada caracter del texto
+                foreach (char c in Text)
+                {
+                    if (charsCount.ContainsKey(c))
+                    {
+                        charsCount[c]++;
+                    }
+                    else
+                    {
+                        charsCount.Add(c, 1);
+                    }
+                }
+
+                //Ahora que tengo las cantidades, calculo las probabilidades
+                foreach (char key in charsCount.Keys.ToList())
+                {
+                    charsCount[key] /= Text.Length;
+                }
+
+                //A continuacion, ordeno las probabilidades de mayor a menor
+                var probabilitiesList = charsCount.ToList();
+                probabilitiesList.Sort((a, b) => a.Value < b.Value
+                    ? 1
+                    : a.Value > b.Value
+                        ? -1
+                        : 0);
+
+                _codesTable = ApplyHuffman(probabilitiesList);
+            }
+        }
+
 
         public static async Task<ProbabilitiesScanner> FromText(string text)
         {
