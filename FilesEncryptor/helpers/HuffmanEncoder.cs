@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Huffman;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace FilesEncryptor.helpers
 {
     public static class HuffmanEncoder
     {
+
+
         public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
         {
             BitCode fullCode = null;
@@ -85,7 +88,7 @@ namespace FilesEncryptor.helpers
                             //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
                             //para eliminar el codigo que acabo de agregar y continuar con el siguiente
                             remainingEncodedText.ReplaceCode(
-                                CommonUtils.LeftShifting(remainingEncodedText.Code, currentCodeLength),
+                                BitCode.LeftShifting(remainingEncodedText.Code, currentCodeLength),
                                 remainingEncodedText.CodeLength - currentCodeLength);
 
                             currentCodeBytes = new List<byte>();
@@ -119,6 +122,11 @@ namespace FilesEncryptor.helpers
             while (currentByteIndex + currentCodeBytes.Count < encodedText.Code.Count && !analyzingTrashBits);
 
             return result;
+        }
+
+        public static IDecoder From(BitCode encoded, object codeLength)
+        {
+            throw new NotImplementedException();
         }
     }
 }

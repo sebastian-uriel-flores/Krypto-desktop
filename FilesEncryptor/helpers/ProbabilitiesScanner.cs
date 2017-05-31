@@ -257,7 +257,7 @@ namespace FilesEncryptor.helpers
                     encoded = encoded.Remove(0, index + 1);
 
                     int codeBitsLength = int.Parse(codeLengthStr);
-                    int codeBytesLength = (int)CommonUtils.BitsLengthToBytesLength((uint)codeBitsLength);
+                    int codeBytesLength = (int)BitCode.BitsLengthToBytesLength((uint)codeBitsLength);
                     List<byte> codeBytes = new List<byte>();
                                         
                     foreach (byte b in encoded)
@@ -271,10 +271,6 @@ namespace FilesEncryptor.helpers
                             string str = encoding.GetString(codeBytes.ToArray());
                             var bts = encoding.GetBytes(str);
 
-                        if (key == 'e')
-                            {
-
-                            }
                             //Agrego el nuevo codigo junto con su clave al diccionario
                             scanner._codesTable.Add(key, new BitCode(bts.ToList(), codeBitsLength));
                             break;

@@ -27,12 +27,12 @@ namespace FilesEncryptor.utils
 
             if (codes != null)
             {
-                List<BitCode> bitsFirstElement = codes[0].Explode(1);
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
 
                 //Opero de a pares de códigos
                 for (int pos = 1; pos < codes.Count; pos++)
                 {
-                    List<BitCode> bitsSecondElement = codes[pos].Explode(1);
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
                     List<BitCode> xorBits = new List<BitCode>();
 
                     //Realizo el xor bit a bit,
@@ -58,17 +58,21 @@ namespace FilesEncryptor.utils
 
             if(codes != null)
             {
-                List<BitCode> bitsFirstElement = codes[0].Explode(1);
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
 
                 //Opero de a pares de códigos
                 for (int pos = 1; pos < codes.Count; pos++)
                 {
-                    List<BitCode> bitsSecondElement = codes[pos].Explode(1);
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
                     List<BitCode> andBits = new List<BitCode>();
+
+                    //Determino cual de los elementos posee la menor cantidad de bits
+                    //y realizo el And sobre esa cantidad de bits
+                    int bitsCount = Math.Min(bitsFirstElement.Count, bitsSecondElement.Count);
 
                     //Realizo el 'and' bit a bit,
                     //entre el bit 'i' del primer elemento y el bit 'i' del segundo elemento
-                    for(int i = 0; i < bitsFirstElement.Count; i++)
+                    for(int i = 0; i < bitsCount; i++)
                     {
                         byte andRes = (byte)(bitsFirstElement[i].Code[0] & bitsSecondElement[i].Code[0]);
                         andBits.Add(new BitCode(new List<byte>() { andRes }, 1));
@@ -76,6 +80,41 @@ namespace FilesEncryptor.utils
 
                     //El resultado pasará a ser el primer operandi del siguiente 'and'
                     bitsFirstElement = andBits;
+                }
+                result = Join(bitsFirstElement);
+            }
+
+            return result;
+        }
+
+        public static BitCode Or(List<BitCode> codes)
+        {
+            BitCode result = BitCode.EMPTY;
+
+            if (codes != null)
+            {
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
+
+                //Opero de a pares de códigos
+                for (int pos = 1; pos < codes.Count; pos++)
+                {
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
+                    List<BitCode> orBits = new List<BitCode>();
+
+                    //Determino cual de los elementos posee la menor cantidad de bits
+                    //y realizo el Or sobre esa cantidad de bits
+                    int bitsCount = Math.Min(bitsFirstElement.Count, bitsSecondElement.Count);
+
+                    //Realizo el 'or' bit a bit,
+                    //entre el bit 'i' del primer elemento y el bit 'i' del segundo elemento
+                    for (int i = 0; i < bitsCount; i++)
+                    {
+                        byte orRes = (byte)(bitsFirstElement[i].Code[0] | bitsSecondElement[i].Code[0]);
+                        orBits.Add(new BitCode(new List<byte>() { orRes }, 1));
+                    }
+
+                    //El resultado pasará a ser el primer operandi del siguiente 'or'
+                    bitsFirstElement = orBits;
                 }
                 result = Join(bitsFirstElement);
             }

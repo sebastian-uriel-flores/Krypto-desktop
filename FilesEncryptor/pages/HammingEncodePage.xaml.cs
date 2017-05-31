@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
 using System;
 using System.Collections.Generic;
@@ -37,8 +38,10 @@ namespace FilesEncryptor.pages
     {
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
-        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(HammingEncoder.EncodeTypes);
-        private StorageFile originalFile;
+        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
+
+        private FileHelper _filesHelper;
+        private FileHeader _fileHeader;
 
         public HammingEncodePage()
         {
@@ -50,7 +53,7 @@ namespace FilesEncryptor.pages
                     hammingEncodeTypeSelector.SelectedIndex = 0;
                 }
             });
-            
+            _filesHelper = new FileHelper();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -75,59 +78,52 @@ namespace FilesEncryptor.pages
 
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
-            var picker = new FileOpenPicker()
+            bool pickResult = await _filesHelper.PickToOpen(new List<string>()
             {
-                ViewMode = PickerViewMode.Thumbnail,
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary
-            };
-            picker.FileTypeFilter.Add(".txt");
-            picker.FileTypeFilter.Add(".huf");
-            
-            var file = await picker.PickSingleFileAsync();
+                ".txt",
+                ".huf",
+                ".pdf",
+                ".docx",
+                ".doc",
+                ".jpg"
+            });
 
-            if (file != null)
+            if (pickResult)
             {
-                try
+                _rawFileBytes = null;
+                ShowProgressPanel();
+                await Task.Delay(200);
+
+                settingsPanel.Visibility = Visibility.Collapsed;
+                pageCommandsDivider.Visibility = Visibility.Collapsed;
+                pageCommands.Visibility = Visibility.Collapsed;
+
+                bool openResult = await _filesHelper.OpenFile(FileAccessMode.Read);
+                
+                if (openResult)
                 {
-                    _rawFileBytes = null;
+                    DebugUtils.WriteLine(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
 
-                    ShowProgressPanel();
-                    await Task.Delay(200);
-
-                    settingsPanel.Visibility = Visibility.Collapsed;
-                    encodeBt.Visibility = Visibility.Collapsed;
-
-                    using (var stream = await file.OpenAsync(FileAccessMode.Read))
-                    {
-                        ulong size = stream.Size;
-
-                        using (var inputStream = stream.GetInputStreamAt(0))
-                        {
-                            using (var dataReader = new DataReader(inputStream))
-                            {
-                                uint numBytesLoaded = await dataReader.LoadAsync((uint)size);
-                                byte[] buffer = new byte[numBytesLoaded];
-                                dataReader.ReadBytes(buffer);
-
-                                _rawFileBytes = new List<byte>(buffer);
-                            }
-                        }
-                    }
-
-                    originalFile = file;
-                }
-                catch (Exception ex)
-                {
-                    MessageDialog errorDialog = new MessageDialog("No se pudo abrir el archivo. Intente con otro formato.", "Ha ocurrido un error");
-                    await errorDialog.ShowAsync();
-
-                    Debug.Fail("Excepcion al cargar archivo para codificacion con hamming", ex.Message);
-                }
-
-                if (_rawFileBytes != null)
-                {
+                    //Muestro los datos del archivo cargado
+                    fileNameBlock.Text = _filesHelper.SelectedFileName;
+                    fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
+                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _filesHelper.SelectedFileDisplayType, _filesHelper.SelectedFileExtension);
+                    
                     settingsPanel.Visibility = Visibility.Visible;
-                    encodeBt.Visibility = Visibility.Visible;                    
+                    pageCommandsDivider.Visibility = Visibility.Visible;
+                    pageCommands.Visibility = Visibility.Visible;
+
+                    _rawFileBytes = _filesHelper.ReadBytes(_filesHelper.FileSize).ToList();
+                    _fileHeader = new FileHeader()
+                    {
+                        FileName = _filesHelper.SelectedFileDisplayName,
+                        FileDisplayType = _filesHelper.SelectedFileDisplayType,
+                        FileExtension = _filesHelper.SelectedFileExtension
+                    };
+
+                    DebugUtils.WriteLine("File bytes extracted properly");
+                    DebugUtils.WriteLine("Closing file");
+                    await _filesHelper.Finish();
                 }
 
                 HideProgressPanel();
@@ -141,89 +137,64 @@ namespace FilesEncryptor.pages
 
         private async void EncodeBt_Click(object sender, RoutedEventArgs e)
         {
-            var savePicker = new FileSavePicker()
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = originalFile.DisplayName
-            };
-            savePicker.FileTypeChoices.Add(_encodeTypes[_selectedEncoding].LongDescription, new List<string>()
-            {
-                _encodeTypes[_selectedEncoding].Extension }
-            );
+            HammingEncodeType selectedEncodingType = _encodeTypes[_selectedEncoding];
 
-            StorageFile file = await savePicker.PickSaveFileAsync();
+            bool pickResult = await _filesHelper.PickToSave(_filesHelper.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension);
 
             //Si el usuario no canceló la operación
-            if (file != null)
+            if (pickResult)
             {
-                ShowProgressPanel();
-                await Task.Delay(200);
+                bool openFileResult = await _filesHelper.OpenFile(FileAccessMode.ReadWrite);
 
-                //Codifico el archivo original
-                HammingEncodeResult result = await HammingEncoder.Encode(_rawFileBytes, _encodeTypes[_selectedEncoding]);
-
-                //Vuelco el código obtenido en disco
-                bool dumpRes = await DumpEncodedResult(result, file, originalFile.FileType, originalFile.DisplayType);
-
-                //Show congrats message
-                if(dumpRes)
+                if (openFileResult)
                 {
-                    MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
-                    await dialog.ShowAsync();
-                }
-                else
-                {
-                    MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
-                    await dialog.ShowAsync();
-                }
+                    ShowProgressPanel();
+                    await Task.Delay(200);
 
-                HideProgressPanel();
-            }
-        }
+                    DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
+                    DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
 
-        private async Task<bool> DumpEncodedResult(HammingEncodeResult result, StorageFile file, string originalFileType, string originalFileDisplayType)
-        {
-            Debug.WriteLine(string.Format("Dumping hamming encoded result to file {0}", file.Name), "[INFO]");
+                    //Codifico el archivo original
+                    HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));                    
+                    HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType);
 
-            bool dumpResult = false;
-
-            if (file.IsAvailable)
-            {
-                // Prevent updates to the remote version of the file until
-                // we finish making changes and call CompleteUpdatesAsync.
-                CachedFileManager.DeferUpdates(file);
-
-                using (var stream = await file.OpenAsync(FileAccessMode.ReadWrite))
-                {
-                    using (var outputStream = stream.GetOutputStreamAt(0))
+                    //Si pudo encodearse el archivo
+                    if (encodeResult != null)
                     {
-                        using (var dataWriter = new DataWriter(outputStream))
+                        //Escribo el Header
+                        if (_filesHelper.WriteFileHeader(_fileHeader))
                         {
-                            //Escribo el tipo de archivo original y su descripción
-                            dataWriter.WriteString(string.Format("{0}:{1}{2}:{3}", originalFileType.Length, originalFileType, originalFileDisplayType.Length, originalFileDisplayType));
+                            DebugUtils.WriteLine(string.Format("Dumping hamming encoded bytes to \"{0}\"", _filesHelper.SelectedFilePath));
 
-                            //Escribo el archivo codificado                       
-                            dataWriter.WriteString(string.Format("..{0}:", result.Encoded.CodeLength));
-                            dataWriter.WriteBytes(result.Encoded.Code.ToArray());
+                            bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, _filesHelper);
 
-                            await dataWriter.StoreAsync();
-                            await outputStream.FlushAsync();
+                            //Show congrats message
+                            if (writeResult)
+                            {
+                                DebugUtils.WriteLine("Dumping completed properly");
+                                DebugUtils.WriteLine("Closing file");
+                                await _filesHelper.Finish();
+                                MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
+                                await dialog.ShowAsync();
+                            }
+                            else
+                            {
+                                DebugUtils.WriteLine("Dumping uncompleted");
+                                DebugUtils.WriteLine("Closing file");
+                                await _filesHelper.Finish();
+                                MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
+                                await dialog.ShowAsync();
+                            }
                         }
                     }
+
+                    HideProgressPanel();
                 }
-
-                // Let Windows know that we're finished changing the file so
-                // the other app can update the remote version of the file.
-                // Completing updates may require Windows to ask for user input.
-                Windows.Storage.Provider.FileUpdateStatus status =
-                    await CachedFileManager.CompleteUpdatesAsync(file);
-
-                dumpResult = status == Windows.Storage.Provider.FileUpdateStatus.Complete;
             }
-
-            Debug.WriteLine(string.Format("Dump Completed: {0}", dumpResult), "[INFO]");
-
-            return dumpResult;
+            else
+            {
+                DebugUtils.WriteLine("File encoded canceled because user cancel output file selection");
+            }
         }
 
         private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
