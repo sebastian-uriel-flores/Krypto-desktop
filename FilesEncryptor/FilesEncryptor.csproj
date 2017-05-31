@@ -135,8 +135,8 @@
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="pages\CompressFilePage.xaml.cs">
-      <DependentUpon>CompressFilePage.xaml</DependentUpon>
+    <Compile Include="pages\HuffmanCompressPage.xaml.cs">
+      <DependentUpon>HuffmanCompressPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="pages\UncompressFilePage.xaml.cs">
       <DependentUpon>UncompressFilePage.xaml</DependentUpon>
@@ -169,7 +169,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="pages\CompressFilePage.xaml">
+    <Page Include="pages\HuffmanCompressPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

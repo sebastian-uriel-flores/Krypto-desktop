@@ -98,7 +98,7 @@ namespace FilesEncryptor.pages
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
         }
 
-        private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
+        private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HuffmanCompressPage));
 
         private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
 
@@ -259,7 +259,7 @@ namespace FilesEncryptor.pages
                     
                     break;
                 case "compressFileItem":
-                    Frame.Navigate(typeof(CompressFilePage));
+                    Frame.Navigate(typeof(HuffmanCompressPage));
                     break;
                 case "uncompressFileItem":
                     Frame.Navigate(typeof(UncompressFilePage));
