@@ -3,34 +3,87 @@ using FilesEncryptor.dto.Huffman;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.helpers
+namespace FilesEncryptor.helpers.huffman
 {
-    public class HuffmanEncoder
+    public class HuffmanEncoder : BaseHuffmanCodifier
     {
         private string _baseText;
-        private ProbabilitiesScanner _probabilitiesScanner;
+        private Dictionary<char, float> _charsProbabilities;
 
-        private HuffmanEncoder()
+        public ReadOnlyDictionary<char, BitCode> CharsCodes => new ReadOnlyDictionary<char, BitCode>(_charsCodes);
+
+        private HuffmanEncoder() : base()
         {
-
+            _charsProbabilities = new Dictionary<char, float>();
         }
 
         public static HuffmanEncoder From(string text)
         {
-            return new HuffmanEncoder() { _baseText = text, _probabilitiesScanner = ProbabilitiesScanner.From(text) };
+            return new HuffmanEncoder() { _baseText = text };
         }
+
         public void Scan()
         {
-            _probabilitiesScanner.Scan();
+            _charsProbabilities.Clear();
+            _charsCodes.Clear();
+
+            //Primero, obtengo las cantidades de cada caracter del texto
+            foreach (char c in _baseText)
+            {
+                if (_charsProbabilities.ContainsKey(c))
+                {
+                    _charsProbabilities[c]++;
+                }
+                else
+                {
+                    _charsProbabilities.Add(c, 1);
+                }
+            }
+
+            //Ahora que tengo las cantidades, calculo las probabilidades
+            foreach (char key in _charsProbabilities.Keys)
+            {
+                _charsProbabilities[key] /= _baseText.Length;
+            }
+
+            //A continuacion, ordeno las probabilidades de mayor a menor
+            var probabilitiesList = _charsProbabilities.ToList();
+            probabilitiesList.Sort((a, b) => a.Value < b.Value
+                ? 1
+                : a.Value > b.Value
+                    ? -1
+                    : 0);
+
+            _charsCodes = ApplyHuffman(probabilitiesList);
         }
-        public Task<HuffmanEncodeResult> Compress()
+
+        public HuffmanEncodeResult Compress()
         {
-            //TODO: Compress text
-            return null;
+            BitCode fullCode = null;
+
+            int counter = 0;
+            foreach (char c in _baseText)
+            {
+                counter++;
+                //Obtengo el codigo Huffman para el caracter
+                BitCode code = GetCode(c);
+
+                if (fullCode == null)
+                {
+                    fullCode = code;
+                }
+                else
+                {
+                    fullCode.Append(code);
+                }
+            }
+
+            return new HuffmanEncodeResult(fullCode, CharsCodes);
         }
 
         public void WriteToFile(FileHelper fileHelper)

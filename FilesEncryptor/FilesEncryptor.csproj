@@ -113,6 +113,8 @@
     <Compile Include="helpers\file_management\FilesComparer.cs" />
     <Compile Include="helpers\HammingDecoder.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
+    <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
+    <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
     </Compile>
@@ -131,7 +133,7 @@
     <Compile Include="utils\BitOps.cs" />
     <Compile Include="dto\BitCode.cs" />
     <Compile Include="dto\Huffman\HuffmanEncodeResult.cs" />
-    <Compile Include="helpers\HuffmanEncoder.cs" />
+    <Compile Include="helpers\huffman\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
     </Compile>
