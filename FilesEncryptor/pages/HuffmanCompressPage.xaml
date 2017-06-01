@@ -124,8 +124,7 @@
                     ScrollViewer.HorizontalScrollMode="Auto"
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                     ScrollViewer.VerticalScrollMode="Enabled"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" IsReadOnly="True"
-                    
+                    ScrollViewer.VerticalScrollBarVisibility="Auto" AcceptsReturn="True" IsReadOnly="True"                    
                     />
             </StackPanel>
 

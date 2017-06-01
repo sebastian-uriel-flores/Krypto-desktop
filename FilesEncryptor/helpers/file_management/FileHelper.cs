@@ -17,7 +17,6 @@ namespace FilesEncryptor.helpers
         #region VARIABLES
 
         private StorageFile _selectedFile;
-        private FileHeader _selectedFileHeader;
         private IRandomAccessStream _fileStream;
         private IInputStream _fileInputStream;
         private IOutputStream _fileOutputStream;
@@ -137,10 +136,9 @@ namespace FilesEncryptor.helpers
 
         #region READ_ACTIONS
 
-        public FileHeader ExtractFileHeader()
+        public FileHeader ReadFileHeader()
         {
             FileHeader result = null;
-            _selectedFileHeader = null;
 
             //Abrir el archivo y obtener sus propiedades
             if (_fileDataReader != null)
@@ -162,8 +160,6 @@ namespace FilesEncryptor.helpers
                     FileName = headerParts[2] //Obtengo el nombre del archivo
                 };
             }
-
-            _selectedFileHeader = result;
 
             return result;
         }
@@ -210,7 +206,56 @@ namespace FilesEncryptor.helpers
 
             return result;
         }
-        
+
+
+        /// <summary>
+        /// Determines a text file's encoding by analyzing its byte order mark (BOM).
+        /// Defaults to ASCII when detection of the text file's endianness fails.
+        /// </summary>
+        /// <param name="filename">The text file to analyze.</param>
+        /// <returns>The detected encoding.</returns>
+        public Encoding GetEncoding()
+        {
+            // Read the BOM
+            /*_fileDataReader.DetachStream();
+            
+            _fileInputStream = _fileStream.GetInputStreamAt(0);
+            _fileDataReader = new DataReader(_fileInputStream);
+            */
+            var bom = ReadBytes(4);
+            
+            Encoding result = null;
+
+            // Analyze the BOM
+            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+            {
+                result = Encoding.UTF7;
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+            }
+            else if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
+            {
+                result = Encoding.UTF8;
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+            }
+            else if (bom[0] == 0xff && bom[1] == 0xfe)
+            {
+                result = Encoding.Unicode; //UTF-16LE
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
+            }
+            else if (bom[0] == 0xfe && bom[1] == 0xff)
+            {
+                result = Encoding.BigEndianUnicode; //UTF-16BE
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16BE;
+            }
+            else if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
+            {
+                result = Encoding.UTF32;
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+            }
+
+            return Encoding.UTF8;
+        }
+
         #endregion
 
         #region WRITE_ACTIONS
@@ -289,7 +334,7 @@ namespace FilesEncryptor.helpers
                 _fileInputStream = null;
                 _fileOutputStream = null;
                 _fileStream = null;
-                _fileSize = 0;
+                //_fileSize = 0;
 
                 if(_fileAccessMode == FileAccessMode.ReadWrite)
                 {

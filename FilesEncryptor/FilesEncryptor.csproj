@@ -114,6 +114,7 @@
     <Compile Include="helpers\HammingDecoder.cs" />
     <Compile Include="helpers\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
+    <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
@@ -140,8 +141,8 @@
     <Compile Include="pages\HuffmanCompressPage.xaml.cs">
       <DependentUpon>HuffmanCompressPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="pages\UncompressFilePage.xaml.cs">
-      <DependentUpon>UncompressFilePage.xaml</DependentUpon>
+    <Compile Include="pages\HuffmanUncompressPage.xaml.cs">
+      <DependentUpon>HuffmanUncompressPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="helpers\ProbabilitiesScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -195,7 +196,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="pages\UncompressFilePage.xaml">
+    <Page Include="pages\HuffmanUncompressPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

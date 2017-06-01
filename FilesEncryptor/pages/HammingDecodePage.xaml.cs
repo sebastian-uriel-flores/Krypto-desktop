@@ -107,7 +107,7 @@ namespace FilesEncryptor.pages
         private bool ExtractFileProperties()
         {
             bool extractResult = false;
-            _fileHeader = _filesHelper.ExtractFileHeader();
+            _fileHeader = _filesHelper.ReadFileHeader();
 
             if (_fileHeader != null)
             {

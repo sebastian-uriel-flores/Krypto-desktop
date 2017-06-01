@@ -1,7 +1,7 @@
 ﻿using FilesEncryptor.dto;
-using FilesEncryptor.dto.Huffman;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.huffman;
+using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,24 +21,24 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-// La plantilla de elemento Página en blanco está documentada en https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0xc0a
+// La plantilla de elemento Página en blanco está documentada en https://go.microsoft.com/fwlink/?LinkId=234238
 
 namespace FilesEncryptor.pages
 {
     /// <summary>
-    /// Página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
+    /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
     /// </summary>
-    public sealed partial class HuffmanCompressPage : Page
+    public sealed partial class UncompressFilePage : Page
     {
-        private string _originalFileContent;
         private FileHelper _fileOpener;
-
-        public HuffmanCompressPage()
+        private FileHeader _fileHeader;
+        private HuffmanDecoder _decoder;
+        
+        public UncompressFilePage()
         {
             this.InitializeComponent();
             _fileOpener = new FileHelper();
@@ -65,85 +65,56 @@ namespace FilesEncryptor.pages
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             bool allOK = false;
-            if(await _fileOpener.PickToOpen(new List<string>() { ".txt" }))
+            if (await _fileOpener.PickToOpen(new List<string>() { ".huf" }))
             {
                 if (await _fileOpener.OpenFile(FileAccessMode.Read))
                 {
                     await ShowProgressPanel();
                     HidePanels();
 
-                    //Leo todos los bytes del archivo y los convierto a string UTF8
-                    var enc = _fileOpener.GetEncoding();
-                    await _fileOpener.Finish();
-                    await _fileOpener.OpenFile(FileAccessMode.Read);
+                    //Leo el header del archivo
+                    FileHeader header = _fileOpener.ReadFileHeader();
 
-                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);
-                    
-                    _originalFileContent = enc.GetString(fileBytes);
+                    //Leo el archivo
+                    _decoder = HuffmanDecoder.FromFile(_fileOpener); ;
 
                     //Cierro el archivo
                     await _fileOpener.Finish();
 
                     //Muestro la informacion del archivo
-                    await ShowFileInformation();
+                    ShowFileInformation();
 
                     ShowPanels();
                     HideProgressPanel();
 
-                    allOK = true;
+                    allOK = _decoder != null;
                 }
-            }   
+            }
 
-            if(!allOK)
+            if (!allOK)
             {
                 await new MessageDialog("Ha ocurrido un error").ShowAsync();
             }
         }
 
-        private async void CompressBt_Click(object sender, RoutedEventArgs e)
+        private async void UncompressBt_Click(object sender, RoutedEventArgs e)
         {
-            bool compressResult = false;
+            bool decodeResult = false;
             FileHelper fileSaver = new FileHelper();
 
-            if (await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, "Huffman encrypted file", ".huf"))
+            if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
             {
-                if(await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
 
-                    //Creo el Huffman Encoder
-                    DebugUtils.WriteLine("Creating Huffman Encoder");
-                    HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent);
+                    //Decodifico el archivo
+                    DebugUtils.WriteLine("Starting decoding process");
+                    string decoded = _decoder.Decode();
 
-                    //Creo la tabla de probabilidades                                        
-                    encoder.Scan();
-                    
-                    //Comprimo el archivo
-                    DebugUtils.WriteLine("Compressing file");
-                    HuffmanEncodeResult encodeResult = encoder.Encode();
-
-                    if (encodeResult != null)
-                    {
-                        DebugUtils.WriteLine("File compressed successfully");
-
-                        //Creo y escribo el header del archivo
-                        FileHeader header = new FileHeader()
-                        {
-                            FileName = _fileOpener.SelectedFileDisplayName,
-                            FileDisplayType = _fileOpener.SelectedFileDisplayType,
-                            FileExtension = _fileOpener.SelectedFileExtension
-                        };
-
-                        DebugUtils.WriteLine(string.Format("File header: {0}", header.ToString()));
-                        compressResult = fileSaver.WriteFileHeader(header);
-
-                        if (compressResult)
-                        {
-                            //Escribo la tabla de probabilidades
-                            DebugUtils.WriteLine(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
-                            compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult);
-                        }
-                    }
+                    //Si la decodificacion se realizo con exito, 
+                    //escribo el texto decodificado en el archivo de salida
+                    decodeResult = decoded != null && fileSaver.WriteString(decoded);
 
                     //Cierro el archivo comprimido
                     DebugUtils.WriteLine("Closing file");
@@ -153,18 +124,18 @@ namespace FilesEncryptor.pages
                 }
             }
 
-            if (compressResult)
+            if (decodeResult)
             {
                 await new MessageDialog("El archivo ha sido comprimido con exito").ShowAsync();
-                DebugUtils.WriteLine("Compressing finished successfully");
+                DebugUtils.WriteLine("Huffman decoding finished successfully");
             }
             else
             {
                 await new MessageDialog("Ha ocurrido un error").ShowAsync();
-                DebugUtils.WriteLine("Compressing process failed");
+                DebugUtils.WriteLine("Huffman decoding process failed");
             }
         }
-
+        
         private async Task ShowProgressPanel()
         {
             progressPanel.Visibility = Visibility.Visible;
@@ -187,16 +158,12 @@ namespace FilesEncryptor.pages
             pageCommands.Visibility = Visibility.Collapsed;
         }
 
-        private async Task ShowFileInformation()
+        private void ShowFileInformation()
         {
             fileNameBlock.Text = _fileOpener.SelectedFileDisplayName;
             fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
             fileDescriptionBlock.Text = _fileOpener.SelectedFileDisplayType;
-
-            await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-            {
-                fileContentBlock.Text = _originalFileContent;
-            });            
+            fileContentBlock.Text = "";            
         }
     }
 }

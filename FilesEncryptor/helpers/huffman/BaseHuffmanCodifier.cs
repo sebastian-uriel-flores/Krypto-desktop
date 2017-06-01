@@ -16,6 +16,8 @@ namespace FilesEncryptor.helpers.huffman
             _charsCodes = new Dictionary<char, BitCode>();
         }
 
+        public char GetChar(BitCode encoded) => _charsCodes.First(pair => pair.Value.Equals(encoded)).Key;
+
         protected BitCode GetCode(char c) => ContainsChar(c) ? _charsCodes[c].Copy() : null;
 
         protected bool ContainsChar(char c) => _charsCodes != null && _charsCodes.ContainsKey(c);

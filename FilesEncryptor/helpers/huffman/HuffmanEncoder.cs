@@ -33,6 +33,8 @@ namespace FilesEncryptor.helpers.huffman
             _charsCodes.Clear();
 
             //Primero, obtengo las cantidades de cada caracter del texto
+            DebugUtils.WriteLine("Scanning chars aparitions");
+
             foreach (char c in _baseText)
             {
                 if (_charsProbabilities.ContainsKey(c))
@@ -46,12 +48,14 @@ namespace FilesEncryptor.helpers.huffman
             }
 
             //Ahora que tengo las cantidades, calculo las probabilidades
-            foreach (char key in _charsProbabilities.Keys)
+            DebugUtils.WriteLine("Calculating probabilities");
+            foreach (char key in _charsProbabilities.Keys.ToList())
             {
                 _charsProbabilities[key] /= _baseText.Length;
             }
 
             //A continuacion, ordeno las probabilidades de mayor a menor
+            DebugUtils.WriteLine("Creating Probabilities table");
             var probabilitiesList = _charsProbabilities.ToList();
             probabilitiesList.Sort((a, b) => a.Value < b.Value
                 ? 1
@@ -62,71 +66,51 @@ namespace FilesEncryptor.helpers.huffman
             _charsCodes = ApplyHuffman(probabilitiesList);
         }
 
-        public HuffmanEncodeResult Compress()
-        {
-            BitCode fullCode = null;
-
+        public HuffmanEncodeResult Encode()
+        {            
+            HuffmanEncodeResult encoded = null;
             int counter = 0;
-            foreach (char c in _baseText)
-            {
-                counter++;
-                //Obtengo el codigo Huffman para el caracter
-                BitCode code = GetCode(c);
 
-                if (fullCode == null)
+            try
+            {
+                BitCode fullCode = BitCode.EMPTY;
+
+                foreach (char c in _baseText)
                 {
-                    fullCode = code;
+                    //Obtengo el codigo Huffman para el caracter
+                    fullCode.Append(GetCode(c));
+                    counter++;
                 }
-                else
-                {
-                    fullCode.Append(code);
-                }
+
+                encoded = new HuffmanEncodeResult(fullCode, CharsCodes);
+            }
+            catch (Exception ex)
+            {
+                DebugUtils.Fail(string.Format("Exception encoding file with huffman, counter = {0}", counter), ex.Message);
             }
 
-            return new HuffmanEncodeResult(fullCode, CharsCodes);
+            return encoded;
         }
 
-        public void WriteToFile(FileHelper fileHelper)
+        public static bool WriteToFile(FileHelper fileHelper, HuffmanEncodeResult encodeResult)
         {
-            //TODO: Write to file probabilities table
-        }
+            bool writeResult = false;
 
-        public async static Task<HuffmanEncodeResult> Encode(ProbabilitiesScanner scanner, string text)
-        {
-            BitCode fullCode = null;
-                        
-            if(text != null)
+            DebugUtils.WriteLine("Dumping probabilities table to file");
+
+            foreach (var element in encodeResult.ProbabilitiesTable)
             {
-                await Task.Factory.StartNew(() =>
-                {
-                    int counter = 0;
-                    foreach (char c in text)
-                    {
-                        counter++;
-                        try
-                        {
-                            //Obtengo el codigo Huffman para el caracter
-                            BitCode code = scanner.GetCode(c);
-
-                            if (fullCode == null)
-                            {
-                                fullCode = code;
-                            }
-                            else
-                            {
-                                fullCode.Append(code);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-
-                        }
-                    }
-                });
+                writeResult = fileHelper.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
+                writeResult = fileHelper.WriteBytes(element.Value.Code.ToArray());
             }
 
-            return new HuffmanEncodeResult(fullCode, scanner.CodesTable);
-        }        
+            //Escribo el texto comprimido
+            DebugUtils.WriteLine("Dumping compressed bytes to file");
+            writeResult = fileHelper.WriteString(string.Format("..{0}:", encodeResult.Encoded.CodeLength));
+            writeResult = fileHelper.WriteBytes(encodeResult.Encoded.Code.ToArray());
+
+            return writeResult;
+        } 
 
         public static string Decode(ProbabilitiesScanner scanner, BitCode encodedText)
         {
@@ -200,11 +184,6 @@ namespace FilesEncryptor.helpers.huffman
             while (currentByteIndex + currentCodeBytes.Count < encodedText.Code.Count && !analyzingTrashBits);
 
             return result;
-        }
-
-        public static IDecoder From(BitCode encoded, object codeLength)
-        {
-            throw new NotImplementedException();
         }
     }
 }
