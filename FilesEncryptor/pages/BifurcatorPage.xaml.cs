@@ -1,6 +1,7 @@
 ﻿using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.file_management;
+using FilesEncryptor.helpers.hamming;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -70,8 +71,6 @@ namespace FilesEncryptor.pages
                     titleBar.ForegroundColor = Colors.WhiteSmoke;
                 }
             }
-
-            DebugUtils.ShowConsoleInNewWindow();
         }
 
         private void BifurcatorPage_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -274,6 +273,11 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(IntroduceErrorsPage));
                     break;
             }            
+        }
+
+        private void ShowConsoleBt_Click(object sender, RoutedEventArgs e)
+        {
+            DebugUtils.ShowConsoleInNewWindow();
         }
     }
 }

@@ -26,6 +26,7 @@ namespace FilesEncryptor.helpers
             if (_consoleWindowId == -1)
             {
                 _newView = CoreApplication.CreateNewView();
+                
                 int newViewId = 0;
                 await _newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -33,8 +34,8 @@ namespace FilesEncryptor.helpers
                     frame.Navigate(typeof(DebugConsolePage), null);                                        
                     Window.Current.Content = frame;
                 // You have to activate the window in order to show it later.
-                Window.Current.Activate();
-
+                    Window.Current.Activate();
+                    Window.Current.Closed += Current_Closed;
                     newViewId = ApplicationView.GetForCurrentView().Id;
                 });
                 bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
@@ -45,6 +46,12 @@ namespace FilesEncryptor.helpers
                 }
             }
         }
+
+        private static void Current_Closed(object sender, CoreWindowEventArgs e)
+        {
+            _consoleWindowId = -1;
+        }
+
         public static void Write(object message, string category = "[INFO]")
         {
             Debug.Write(string.Format("({0}) - {1}", DateTime.Now, message), category);

@@ -97,22 +97,16 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="dto\Hamming\HammingCodeLength.cs" />
-    <Compile Include="dto\Huffman\HuffmanCodeLengthParser.cs" />
-    <Compile Include="dto\ICodeLengthParser.cs" />
     <Compile Include="dto\FileHeader.cs" />
-    <Compile Include="dto\Hamming\HammingDecodeResult.cs" />
     <Compile Include="dto\Hamming\HammingEncodeResult.cs" />
     <Compile Include="dto\Hamming\HammingEncodeType.cs" />
-    <Compile Include="dto\Hamming\HammingCodeLengthParser.cs" />
-    <Compile Include="dto\IDecoder.cs" />
-    <Compile Include="dto\IEncodeResult.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
-    <Compile Include="helpers\BaseHammingCodifier.cs" />
+    <Compile Include="helpers\hamming\BaseHammingCodifier.cs" />
     <Compile Include="helpers\file_management\FilesComparer.cs" />
-    <Compile Include="helpers\HammingDecoder.cs" />
-    <Compile Include="helpers\HammingEncoder.cs" />
+    <Compile Include="helpers\hamming\HammingDecoder.cs" />
+    <Compile Include="helpers\hamming\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
@@ -144,7 +138,6 @@
     <Compile Include="pages\HuffmanUncompressPage.xaml.cs">
       <DependentUpon>HuffmanUncompressPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="helpers\ProbabilitiesScanner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

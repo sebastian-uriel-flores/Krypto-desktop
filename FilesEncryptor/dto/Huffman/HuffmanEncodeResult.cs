@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FilesEncryptor.dto.Huffman
 {
-    public class HuffmanEncodeResult : IEncodeResult
+    public class HuffmanEncodeResult
     {
         public BitCode Encoded { get; set; }
 
