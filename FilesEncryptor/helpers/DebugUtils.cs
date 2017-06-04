@@ -54,7 +54,10 @@ namespace FilesEncryptor.helpers
 
         public static void Write(object message, string category = "[INFO]")
         {
-            Debug.Write(string.Format("({0}) - {1}", DateTime.Now, message), category);
+            string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
+            Debug.Write(messageWithDate, category);
+
+            ConsoleWrited?.Invoke(messageWithDate, category);
         }
         public static void WriteLine(object message, string category = "[INFO]")
         {
@@ -65,7 +68,10 @@ namespace FilesEncryptor.helpers
         }
         public static void Fail(object shortMessage, string detailedMessage = "")
         {
-            Debug.Fail(string.Format("({0}) - {1}", DateTime.Now, shortMessage), detailedMessage);
+            string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, shortMessage);
+            Debug.Fail(messageWithDate, detailedMessage);
+
+            ConsoleWrited?.Invoke(string.Format("{0}\r\n{1}",messageWithDate, detailedMessage), "[EXCEPTION]");
         }
     }
 }

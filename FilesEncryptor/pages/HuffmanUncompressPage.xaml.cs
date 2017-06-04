@@ -102,7 +102,7 @@ namespace FilesEncryptor.pages
         {
             bool decodeResult = false;
             FileHelper fileSaver = new FileHelper();
-
+                        
             if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
             {
                 if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
@@ -111,16 +111,20 @@ namespace FilesEncryptor.pages
 
                     //Decodifico el archivo
                     DebugUtils.WriteLine("Starting decoding process");
-                    string decoded = _decoder.Decode();
 
-                    //Si la decodificacion se realizo con exito, 
-                    //escribo el texto decodificado en el archivo de salida
-                    decodeResult = decoded != null && fileSaver.WriteString(decoded);
+                    await Task.Factory.StartNew(async () =>
+                    {
+                        string decoded = _decoder.Decode();
 
-                    //Cierro el archivo comprimido
-                    DebugUtils.WriteLine("Closing file");
-                    await fileSaver.Finish();
-                    DebugUtils.WriteLine("File closed");
+                        //Si la decodificacion se realizo con exito, 
+                        //escribo el texto decodificado en el archivo de salida
+                        decodeResult = decoded != null && fileSaver.WriteString(decoded);
+
+                        //Cierro el archivo comprimido
+                        DebugUtils.WriteLine("Closing file");
+                        await fileSaver.Finish();
+                        DebugUtils.WriteLine("File closed");
+                    });
                     HideProgressPanel();
                 }
             }
