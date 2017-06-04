@@ -37,8 +37,10 @@ namespace FilesEncryptor.helpers.huffman
                     //Obtengo el caracter del siguiente codigo de la tabla
                     char currentChar = endOfTableReader.First();
 
+
                     //Obtengo la longitud en bits del codigo indicado
-                    uint currentCodeLength = uint.Parse(endOfTableReader.Last() + fileReader.ReadStringUntil(":"));
+                    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
+                    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
 
                     //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
                     byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
@@ -56,12 +58,13 @@ namespace FilesEncryptor.helpers.huffman
 
                 //Obtengo la longitud en bits del texto codificado
                 uint encodedTextLength = uint.Parse(fileReader.ReadStringUntil(":"));
+                uint bytesLength = BitCode.BitsLengthToBytesLength(encodedTextLength);
                 DebugUtils.WriteLine(string.Format("Encoded file length is {0} bits ({1} bytes)", 
                     encodedTextLength, 
-                    BitCode.BitsLengthToBytesLength(encodedTextLength)));
+                    bytesLength));
 
                 //Leo el texto codificado
-                byte[] encodedTextBytes = fileReader.ReadBytes(encodedTextLength);
+                byte[] encodedTextBytes = fileReader.ReadBytes(bytesLength);
                 DebugUtils.WriteLine(string.Format("Encoded text bytes read: {0}", encodedTextBytes.Length));
 
                 //Convierto a BitCode el texto codificado

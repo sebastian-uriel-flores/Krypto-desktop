@@ -72,14 +72,14 @@ namespace FilesEncryptor.pages
                     await ShowProgressPanel();
                     HidePanels();
 
-                    //Leo todos los bytes del archivo y los convierto a string UTF8
-                    var enc = _fileOpener.GetEncoding();
+                    //Leo todos los bytes del archivo y los convierto a string UTF8                    
                     await _fileOpener.Finish();
-                    await _fileOpener.OpenFile(FileAccessMode.Read);
+                    await _fileOpener.OpenFile(FileAccessMode.Read, true);
 
+                    //_originalFileContent = _fileOpener.ReadString((uint)_fileOpener.FileEncoding.GetMaxCharCount((int)_fileOpener.FileSize));
                     byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);
                     
-                    _originalFileContent = enc.GetString(fileBytes);
+                    _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
 
                     //Cierro el archivo
                     await _fileOpener.Finish();

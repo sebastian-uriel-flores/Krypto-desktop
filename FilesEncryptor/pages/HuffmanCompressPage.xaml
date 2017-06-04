@@ -121,6 +121,7 @@
                     Background="WhiteSmoke"
                     Margin="0,5,0,0"
                     HorizontalAlignment="Left"
+                    TextAlignment="Left"
                     ScrollViewer.HorizontalScrollMode="Auto"
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
                     ScrollViewer.VerticalScrollMode="Enabled"

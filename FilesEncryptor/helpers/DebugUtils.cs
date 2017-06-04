@@ -61,7 +61,7 @@ namespace FilesEncryptor.helpers
             string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
             Debug.WriteLine(messageWithDate, category);
 
-            ConsoleWrited(messageWithDate, category);
+            ConsoleWrited?.Invoke(messageWithDate, category);
         }
         public static void Fail(object shortMessage, string detailedMessage = "")
         {

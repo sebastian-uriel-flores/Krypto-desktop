@@ -42,6 +42,7 @@ namespace FilesEncryptor.pages
         {
             this.InitializeComponent();
             _fileOpener = new FileHelper();
+            _fileHeader = new FileHeader();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -67,13 +68,13 @@ namespace FilesEncryptor.pages
             bool allOK = false;
             if (await _fileOpener.PickToOpen(new List<string>() { ".huf" }))
             {
-                if (await _fileOpener.OpenFile(FileAccessMode.Read))
+                if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
                 {
                     await ShowProgressPanel();
                     HidePanels();
 
                     //Leo el header del archivo
-                    FileHeader header = _fileOpener.ReadFileHeader();
+                    _fileHeader = _fileOpener.ReadFileHeader();
 
                     //Leo el archivo
                     _decoder = HuffmanDecoder.FromFile(_fileOpener); ;
@@ -126,7 +127,7 @@ namespace FilesEncryptor.pages
 
             if (decodeResult)
             {
-                await new MessageDialog("El archivo ha sido comprimido con exito").ShowAsync();
+                await new MessageDialog("El archivo ha sido descomprimido con exito").ShowAsync();
                 DebugUtils.WriteLine("Huffman decoding finished successfully");
             }
             else

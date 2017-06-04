@@ -34,7 +34,7 @@ namespace FilesEncryptor.helpers.huffman
 
             //Primero, obtengo las cantidades de cada caracter del texto
             DebugUtils.WriteLine("Scanning chars aparitions");
-
+            bool ignoreFirst = true;
             foreach (char c in _baseText)
             {
                 if (_charsProbabilities.ContainsKey(c))
@@ -43,7 +43,10 @@ namespace FilesEncryptor.helpers.huffman
                 }
                 else
                 {
-                    _charsProbabilities.Add(c, 1);
+                    if (ignoreFirst)
+                        ignoreFirst = false;
+                    else
+                        _charsProbabilities.Add(c, 1);
                 }
             }
 
