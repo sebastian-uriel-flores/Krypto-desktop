@@ -112,6 +112,9 @@ namespace FilesEncryptor.pages
                     //Decodifico el archivo
                     DebugUtils.WriteLine("Starting decoding process");
 
+                    //[IMPORTANTE]: Inicio un Thread para decodificar el archivo, dado que sino, se bloquea la UI
+                    //y, al decodificar archivos muy largos, 
+                    //implica que la interfaz permanezca bloqueada por mucho tiempo y el sistema finalice la app
                     await Task.Factory.StartNew(async () =>
                     {
                         string decoded = _decoder.Decode();

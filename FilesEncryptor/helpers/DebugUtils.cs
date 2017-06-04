@@ -33,7 +33,8 @@ namespace FilesEncryptor.helpers
                     Frame frame = new Frame();
                     frame.Navigate(typeof(DebugConsolePage), null);                                        
                     Window.Current.Content = frame;
-                // You have to activate the window in order to show it later.
+                    
+                    // You have to activate the window in order to show it later.
                     Window.Current.Activate();
                     Window.Current.Closed += Current_Closed;
                     newViewId = ApplicationView.GetForCurrentView().Id;
