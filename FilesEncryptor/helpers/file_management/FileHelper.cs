@@ -215,7 +215,6 @@ namespace FilesEncryptor.helpers
 
             if (_fileDataReader != null)
             {
-                //FIX ó 
                 if (_fileEncoding != null)
                 {
                     int bitsCount = _fileDataReader.UnicodeEncoding == Windows.Storage.Streams.UnicodeEncoding.Utf8 ? 8 : 16;
@@ -238,12 +237,12 @@ namespace FilesEncryptor.helpers
 
             if (_fileDataReader != null)
             {
-                string temp = _fileDataReader.ReadString(1);
+                string temp = ReadString(1);// _fileDataReader.ReadString(1);
                 result = "";
                 while (temp != finishMark)
                 {
                     result += temp;
-                    temp = _fileDataReader.ReadString(1);
+                    temp = ReadString(1);//_fileDataReader.ReadString(1);
                 }
             }
 

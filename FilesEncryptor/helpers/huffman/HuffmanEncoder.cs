@@ -12,6 +12,7 @@ namespace FilesEncryptor.helpers.huffman
 {
     public class HuffmanEncoder : BaseHuffmanCodifier
     {
+        private const char BOM = (char)65279;
         private string _baseText;
         private Dictionary<char, float> _charsProbabilities;
 
@@ -34,7 +35,6 @@ namespace FilesEncryptor.helpers.huffman
 
             //Primero, obtengo las cantidades de cada caracter del texto
             DebugUtils.WriteLine("Scanning chars aparitions");
-            bool ignoreFirst = true;
             foreach (char c in _baseText)
             {
                 if (_charsProbabilities.ContainsKey(c))
@@ -43,10 +43,10 @@ namespace FilesEncryptor.helpers.huffman
                 }
                 else
                 {
-                    if (ignoreFirst)
-                        ignoreFirst = false;
-                    else
-                        _charsProbabilities.Add(c, 1);
+                    //Si es el caracter de BOM, lo ignoro
+                    if (c == BOM)
+                        continue;
+                    _charsProbabilities.Add(c, 1);
                 }
             }
 
