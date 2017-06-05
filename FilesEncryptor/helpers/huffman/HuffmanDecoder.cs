@@ -91,6 +91,8 @@ namespace FilesEncryptor.helpers.huffman
                 int currentCodeLength = 0;
                 int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
                 bool analyzingTrashBits = false;
+                int lastCodeLength = remainingEncodedText.CodeLength;
+
 
                 do
                 {
@@ -149,6 +151,12 @@ namespace FilesEncryptor.helpers.huffman
                             analyzingTrashBits = true;
                             break;
                         }
+                    }
+
+                    if (remainingEncodedText.CodeLength <= lastCodeLength - 160)
+                    {
+                        DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                        lastCodeLength = remainingEncodedText.CodeLength;
                     }
                 }
                 while (currentByteIndex + currentCodeBytes.Count < _encoded.Code.Count && !analyzingTrashBits);

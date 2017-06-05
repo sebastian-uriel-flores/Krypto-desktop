@@ -9,6 +9,9 @@ namespace FilesEncryptor.helpers.huffman
 {
     public class BaseHuffmanCodifier
     {
+        public const string HUFFMAN_FILE_EXTENSION = ".huf";
+        public const string HUFFMAN_FILE_DISPLAY_TYPE = "Huffman encrypted file";
+        
         protected Dictionary<char, BitCode> _charsCodes;
 
         public BaseHuffmanCodifier()

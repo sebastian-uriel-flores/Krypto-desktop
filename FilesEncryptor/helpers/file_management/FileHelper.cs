@@ -38,6 +38,11 @@ namespace FilesEncryptor.helpers
         public string SelectedFileDisplayType => _selectedFile != null ? _selectedFile.DisplayType : "";
         public string SelectedFilePath => _selectedFile != null ? _selectedFile.Path : "";
 
+        public void SetFileEncoding(Encoding encoding)
+        {
+            _fileEncoding = encoding;
+        }
+
         #endregion
 
         public FileHelper(StorageFile selectedFile = null)

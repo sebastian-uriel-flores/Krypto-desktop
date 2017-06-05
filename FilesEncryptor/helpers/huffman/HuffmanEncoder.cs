@@ -12,7 +12,13 @@ namespace FilesEncryptor.helpers.huffman
 {
     public class HuffmanEncoder : BaseHuffmanCodifier
     {
-        private const char BOM = (char)65279;
+        /// <summary>
+        /// Referencias: 
+        ///       https://stackoverflow.com/questions/6784799/what-is-this-char-65279
+        ///       https://en.wikipedia.org/wiki/Byte_order_mark
+        ///       http://www.fileformat.info/info/unicode/char/feff/index.htm
+        /// </summary>
+        public const char BOM = (char)65279;
         private string _baseText;
         private Dictionary<char, float> _charsProbabilities;
 
@@ -43,7 +49,7 @@ namespace FilesEncryptor.helpers.huffman
                 }
                 else
                 {
-                    //Si es el caracter de BOM, lo ignoro
+                    //Si es el caracter de BOM, lo ignoro                   
                     if (c == BOM)
                         continue;
                     _charsProbabilities.Add(c, 1);
@@ -77,12 +83,17 @@ namespace FilesEncryptor.helpers.huffman
             try
             {
                 BitCode fullCode = BitCode.EMPTY;
-
+                
                 foreach (char c in _baseText)
                 {
                     //Obtengo el codigo Huffman para el caracter
                     fullCode.Append(GetCode(c));
                     counter++;
+
+                    if(counter % 50 == 0)
+                    {
+                        DebugUtils.WriteLine(string.Format("Encoded {0} chars of {1}", counter, _baseText.Length), "[PROGRESS]");
+                    }
                 }
 
                 encoded = new HuffmanEncodeResult(fullCode, CharsCodes);

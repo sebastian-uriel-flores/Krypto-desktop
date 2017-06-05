@@ -66,7 +66,7 @@ namespace FilesEncryptor.pages
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             bool allOK = false;
-            if (await _fileOpener.PickToOpen(new List<string>() { ".huf" }))
+            if (await _fileOpener.PickToOpen(new List<string>() { BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION }))
             {
                 if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
                 {
@@ -108,7 +108,7 @@ namespace FilesEncryptor.pages
                 if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
-
+                    
                     //Decodifico el archivo
                     DebugUtils.WriteLine("Starting decoding process");
 

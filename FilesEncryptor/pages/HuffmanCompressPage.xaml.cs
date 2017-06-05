@@ -65,7 +65,7 @@ namespace FilesEncryptor.pages
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             bool allOK = false;
-            if(await _fileOpener.PickToOpen(new List<string>() { ".txt" }))
+            if(await _fileOpener.PickToOpen(new List<string>() { ".txt", ".jpg", ".jpeg", ".pdf", ".docx" }))
             {
                 if (await _fileOpener.OpenFile(FileAccessMode.Read))
                 {
@@ -80,6 +80,12 @@ namespace FilesEncryptor.pages
                     byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);
                     
                     _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
+
+                    //Si el primer caracter es el BOM, lo elimino
+                    if(_originalFileContent.First() == HuffmanEncoder.BOM)
+                    {
+                        _originalFileContent = _originalFileContent.Remove(0, 1);
+                    }
 
                     //Cierro el archivo
                     await _fileOpener.Finish();
@@ -105,11 +111,13 @@ namespace FilesEncryptor.pages
             bool compressResult = false;
             FileHelper fileSaver = new FileHelper();
 
-            if (await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, "Huffman encrypted file", ".huf"))
+            if (await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, BaseHuffmanCodifier.HUFFMAN_FILE_DISPLAY_TYPE, BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION))
             {
                 if(await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
+
+                    //fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
                     //Creo el Huffman Encoder
                     DebugUtils.WriteLine("Creating Huffman Encoder");
