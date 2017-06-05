@@ -26,6 +26,22 @@ namespace FilesEncryptor.helpers.huffman
 
             try
             {
+                DebugUtils.WriteLine("Searching for original file text Encoding");
+                uint bomLen = uint.Parse(fileReader.ReadStringUntil(":"));
+
+                if (bomLen > 0)
+                {
+                    //Obtengo el BOM del texto original
+                    byte[] textBom = fileReader.ReadBytes(bomLen);
+                    fileReader.SetFileEncoding(FileHelper.GetEncoding(textBom));
+
+                    DebugUtils.WriteLine(string.Format("Original file encoding is {0}", fileReader.FileEncoding.EncodingName));
+                }
+                else
+                {
+                    DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
+                }
+
                 DebugUtils.WriteLine("Reading Probabilities Table");
 
                 //Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
@@ -55,6 +71,7 @@ namespace FilesEncryptor.helpers.huffman
                 }
 
                 DebugUtils.WriteLine("Reading Encoded bytes");
+
 
                 //Obtengo la longitud en bits del texto codificado
                 uint encodedTextLength = uint.Parse(fileReader.ReadStringUntil(":"));

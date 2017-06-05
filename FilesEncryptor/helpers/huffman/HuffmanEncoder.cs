@@ -11,16 +11,10 @@ using System.Threading.Tasks;
 namespace FilesEncryptor.helpers.huffman
 {
     public class HuffmanEncoder : BaseHuffmanCodifier
-    {
-        /// <summary>
-        /// Referencias: 
-        ///       https://stackoverflow.com/questions/6784799/what-is-this-char-65279
-        ///       https://en.wikipedia.org/wiki/Byte_order_mark
-        ///       http://www.fileformat.info/info/unicode/char/feff/index.htm
-        /// </summary>
-        public const char BOM = (char)65279;
+    {        
         private string _baseText;
         private Dictionary<char, float> _charsProbabilities;
+        private byte[] _fileBOM;
 
         public ReadOnlyDictionary<char, BitCode> CharsCodes => new ReadOnlyDictionary<char, BitCode>(_charsCodes);
 
@@ -29,9 +23,9 @@ namespace FilesEncryptor.helpers.huffman
             _charsProbabilities = new Dictionary<char, float>();
         }
 
-        public static HuffmanEncoder From(string text)
+        public static HuffmanEncoder From(string text, byte[] textBOM = null)
         {
-            return new HuffmanEncoder() { _baseText = text };
+            return new HuffmanEncoder() { _baseText = text, _fileBOM = textBOM };
         }
 
         public void Scan()
@@ -96,7 +90,7 @@ namespace FilesEncryptor.helpers.huffman
                     }
                 }
 
-                encoded = new HuffmanEncodeResult(fullCode, CharsCodes);
+                encoded = new HuffmanEncodeResult(fullCode, CharsCodes, _fileBOM);
             }
             catch (Exception ex)
             {
@@ -109,6 +103,18 @@ namespace FilesEncryptor.helpers.huffman
         public static bool WriteToFile(FileHelper fileHelper, HuffmanEncodeResult encodeResult)
         {
             bool writeResult = false;
+
+            if (encodeResult.OriginalFileBOM != null)
+            {
+                DebugUtils.WriteLine("Dumping original file encoding to file");
+                writeResult = fileHelper.WriteString(string.Format("{0}:", encodeResult.OriginalFileBOM.Length));
+                writeResult = fileHelper.WriteBytes(encodeResult.OriginalFileBOM);
+            }
+            else
+            {                
+                DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
+                writeResult = fileHelper.WriteString(string.Format("{0}:", 0));
+            }
 
             DebugUtils.WriteLine("Dumping probabilities table to file");
 

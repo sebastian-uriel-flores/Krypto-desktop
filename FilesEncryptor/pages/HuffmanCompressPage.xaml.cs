@@ -65,7 +65,7 @@ namespace FilesEncryptor.pages
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             bool allOK = false;
-            if(await _fileOpener.PickToOpen(new List<string>() { ".txt", ".jpg", ".jpeg", ".pdf", ".docx" }))
+            if(await _fileOpener.PickToOpen(new List<string>() { ".txt" }))
             {
                 if (await _fileOpener.OpenFile(FileAccessMode.Read))
                 {
@@ -121,7 +121,7 @@ namespace FilesEncryptor.pages
 
                     //Creo el Huffman Encoder
                     DebugUtils.WriteLine("Creating Huffman Encoder");
-                    HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent);
+                    HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent, _fileOpener.FileBOM);
 
                     //Creo la tabla de probabilidades                                        
                     encoder.Scan();
@@ -143,12 +143,14 @@ namespace FilesEncryptor.pages
                         };
 
                         DebugUtils.WriteLine(string.Format("File header: {0}", header.ToString()));
+                        
                         compressResult = fileSaver.WriteFileHeader(header);
 
                         if (compressResult)
                         {
                             //Escribo la tabla de probabilidades
                             DebugUtils.WriteLine(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
+                            fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
                             compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult);
                         }
                     }

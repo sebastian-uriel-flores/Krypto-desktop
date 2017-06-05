@@ -25,6 +25,7 @@ namespace FilesEncryptor.helpers
         private uint _fileSize;
         private FileAccessMode _fileAccessMode;
         private Encoding _fileEncoding;
+        private byte[] _fileBOM;
 
         #endregion
 
@@ -32,6 +33,7 @@ namespace FilesEncryptor.helpers
 
         public uint FileSize => _fileSize;
         public Encoding FileEncoding => _fileEncoding;
+        public byte[] FileBOM => _fileBOM;
         public string SelectedFileName => _selectedFile != null ? _selectedFile.Name : "";
         public string SelectedFileExtension => _selectedFile != null ? _selectedFile.FileType : "";
         public string SelectedFileDisplayName => _selectedFile != null ? _selectedFile.DisplayName : "";
@@ -40,6 +42,24 @@ namespace FilesEncryptor.helpers
 
         public void SetFileEncoding(Encoding encoding)
         {
+            if (encoding == Encoding.Unicode)
+            {
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
+            }
+            else if (encoding == Encoding.BigEndianUnicode)
+            {
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16BE;
+            }
+            else
+            {
+                _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+            }
+
+            if (_fileDataWriter != null)
+            {
+                _fileDataWriter.UnicodeEncoding = _fileDataReader.UnicodeEncoding;
+            }
+
             _fileEncoding = encoding;
         }
 
@@ -125,8 +145,6 @@ namespace FilesEncryptor.helpers
                 _fileInputStream = _fileStream.GetInputStreamAt(0);                
                 _fileDataReader = new DataReader(_fileInputStream);
 
-                Encoding fileEncoding = null;
-
                 //Si debo verificar la codificacion del archivo
                 if (takeEncoding)
                 {
@@ -134,9 +152,8 @@ namespace FilesEncryptor.helpers
                     _fileSize = await _fileDataReader.LoadAsync((uint)size);
 
                     //Leo los primeros 4 bytes y determino la codificacion del archivo
-                    byte[] firstBytes = ReadBytes(4);
-                    fileEncoding = GetEncoding(firstBytes);
-                    _fileSize -= 4;
+                    _fileBOM = ReadBytes(4);                     
+                    _fileSize -= 4; //ESTO DEBERIA HACERLO DESPUES?
 
                     //Dado que ya lei 4 bytes, vuelvo a cargar el Flujo de entrada, desde el primer bit
                     _fileInputStream = _fileStream.GetInputStreamAt(0);
@@ -152,28 +169,7 @@ namespace FilesEncryptor.helpers
 
                 //Si se indico verificar la codificacion del archivo,
                 //basandome en la codificacion, configuro el data DataReader y el DataWriter
-                if (fileEncoding != null)
-                {
-                    if(fileEncoding == Encoding.Unicode)
-                    {
-                        _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16LE;
-                    }
-                    else if(fileEncoding == Encoding.BigEndianUnicode)
-                    {
-                        _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf16BE;
-                    }
-                    else
-                    {
-                        _fileDataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
-                    }
-
-                    if (_fileDataWriter != null)
-                    {
-                        _fileDataWriter.UnicodeEncoding = _fileDataReader.UnicodeEncoding;
-                    }
-                }
-
-                _fileEncoding = fileEncoding;
+                SetFileEncoding(GetEncoding(_fileBOM));
                 
                 //Cargo en el buffer todos los bytes del archivo
                 _fileSize = await _fileDataReader.LoadAsync((uint)size);
@@ -280,28 +276,36 @@ namespace FilesEncryptor.helpers
             Encoding result = null;
 
             // Analyze the BOM
-            if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+            if (bom != null)
             {
-                result = Encoding.UTF7;
-            }
-            else if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
-            {
-                result = Encoding.UTF8;
-            }
-            else if (bom[0] == 0xff && bom[1] == 0xfe)
-            {
-                result = Encoding.Unicode; //UTF-16LE
-            }
-            else if (bom[0] == 0xfe && bom[1] == 0xff)
-            {
-                result = Encoding.BigEndianUnicode; //UTF-16BE
-            }
-            else if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
-            {
-                result = Encoding.UTF32;
+                if (bom[0] == 0x2b && bom[1] == 0x2f && bom[2] == 0x76)
+                {
+                    result = Encoding.UTF7;
+                }
+                else if (bom[0] == 0xef && bom[1] == 0xbb && bom[2] == 0xbf)
+                {
+                    result = Encoding.UTF8;
+                }
+                else if (bom[0] == 0xff && bom[1] == 0xfe)
+                {
+                    result = Encoding.Unicode; //UTF-16LE
+                }
+                else if (bom[0] == 0xfe && bom[1] == 0xff)
+                {
+                    result = Encoding.BigEndianUnicode; //UTF-16BE
+                }
+                else if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff)
+                {
+                    result = Encoding.UTF32;
+                }
             }
 
-            return Encoding.UTF8;
+            if(result == null)
+            {
+                result = Encoding.ASCII;
+            }
+
+            return result;
         }
 
         #endregion

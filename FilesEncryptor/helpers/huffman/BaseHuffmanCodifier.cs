@@ -9,6 +9,14 @@ namespace FilesEncryptor.helpers.huffman
 {
     public class BaseHuffmanCodifier
     {
+        /// <summary>
+        /// Referencias: 
+        ///       https://stackoverflow.com/questions/6784799/what-is-this-char-65279
+        ///       https://en.wikipedia.org/wiki/Byte_order_mark
+        ///       http://www.fileformat.info/info/unicode/char/feff/index.htm
+        /// </summary>
+        public const char BOM = (char)65279;
+
         public const string HUFFMAN_FILE_EXTENSION = ".huf";
         public const string HUFFMAN_FILE_DISPLAY_TYPE = "Huffman encrypted file";
         

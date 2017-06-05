@@ -119,6 +119,8 @@ namespace FilesEncryptor.pages
                     {
                         string decoded = _decoder.Decode();
 
+                        fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
+
                         //Si la decodificacion se realizo con exito, 
                         //escribo el texto decodificado en el archivo de salida
                         decodeResult = decoded != null && fileSaver.WriteString(decoded);
