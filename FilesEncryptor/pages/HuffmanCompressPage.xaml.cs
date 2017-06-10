@@ -1,5 +1,5 @@
 ﻿using FilesEncryptor.dto;
-using FilesEncryptor.dto.Huffman;
+using FilesEncryptor.dto.huffman;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.huffman;
 using System;
@@ -67,26 +67,17 @@ namespace FilesEncryptor.pages
             bool allOK = false;
             if(await _fileOpener.PickToOpen(new List<string>() { ".txt" }))
             {
-                if (await _fileOpener.OpenFile(FileAccessMode.Read))
+                if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
                 {
                     await ShowProgressPanel();
                     HidePanels();
 
-                    //Leo todos los bytes del archivo y los convierto a string UTF8                    
-                    await _fileOpener.Finish();
-                    await _fileOpener.OpenFile(FileAccessMode.Read, true);
+                    //Leo todos los bytes del texto
+                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);                    
 
-                    //_originalFileContent = _fileOpener.ReadString((uint)_fileOpener.FileEncoding.GetMaxCharCount((int)_fileOpener.FileSize));
-                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);
-                    
+                    //Obtengo el texto que sera mostrado en pantalla
                     _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
-
-                    //Si el primer caracter es el BOM, lo elimino
-                    if(_originalFileContent.First() == HuffmanEncoder.BOM)
-                    {
-                        _originalFileContent = _originalFileContent.Remove(0, 1);
-                    }
-
+                                      
                     //Cierro el archivo
                     await _fileOpener.Finish();
 
@@ -116,8 +107,6 @@ namespace FilesEncryptor.pages
                 if(await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
-
-                    //fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
                     //Creo el Huffman Encoder
                     DebugUtils.WriteLine("Creating Huffman Encoder");

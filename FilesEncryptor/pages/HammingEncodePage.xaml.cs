@@ -1,5 +1,5 @@
 ﻿using FilesEncryptor.dto;
-using FilesEncryptor.dto.Hamming;
+using FilesEncryptor.dto.hamming;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.hamming;
 using System;
