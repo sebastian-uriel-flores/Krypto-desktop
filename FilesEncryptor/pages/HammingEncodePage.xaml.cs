@@ -1,6 +1,7 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
+using FilesEncryptor.helpers.hamming;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

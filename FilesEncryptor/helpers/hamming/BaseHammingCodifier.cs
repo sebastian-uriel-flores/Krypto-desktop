@@ -12,7 +12,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media;
 
-namespace FilesEncryptor.helpers
+namespace FilesEncryptor.helpers.hamming
 {
     public class BaseHammingCodifier
     {
