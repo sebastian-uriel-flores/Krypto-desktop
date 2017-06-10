@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.helpers
+namespace FilesEncryptor.helpers.hamming
 {
     public class HammingDecoder : BaseHammingCodifier
     {
@@ -104,10 +104,6 @@ namespace FilesEncryptor.helpers
 
                     foreach (BitCode encoded in encodedWords)
                     {
-                        if(decodedWords.Count == encodedWords.Count - 1)
-                        {
-
-                        }
                         BitCode decoded = encoded.Copy();
 
                         uint currentExp = 0;
