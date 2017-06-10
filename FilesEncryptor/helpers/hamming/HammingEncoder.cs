@@ -12,8 +12,7 @@ namespace FilesEncryptor.helpers.hamming
     public class HammingEncoder : BaseHammingCodifier
     {
         private BitCode _baseCode;
-        public EventHandler<double> EncodingProgressChanged;
-        
+
         private HammingEncoder()
         {
 
@@ -64,6 +63,9 @@ namespace FilesEncryptor.helpers.hamming
                         List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
                         List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
 
+                        //Determino cada cuantas palabras se mostrará el progresso por consola
+                        int wordsDebugStep = (int)Math.Max(0.1 * outputBlocks.Count, 1000);
+
                         foreach (BitCode currentWord in dataBlocks)
                         {
                             int currentExp = 0;
@@ -104,7 +106,7 @@ namespace FilesEncryptor.helpers.hamming
                             //Agrego la palabra recién creada a la lista de palabras de salida
                             outputBlocks.Add(currentOutputWord);
 
-                            if (outputBlocks.Count % 10 == 0)
+                            if (outputBlocks.Count % wordsDebugStep  == 0)
                             {
                                 DebugUtils.WriteLine(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
                             }
