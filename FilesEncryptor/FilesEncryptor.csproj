@@ -96,10 +96,10 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="dto\Hamming\HammingCodeLength.cs" />
+    <Compile Include="dto\hamming\HammingCodeLength.cs" />
     <Compile Include="dto\FileHeader.cs" />
-    <Compile Include="dto\Hamming\HammingEncodeResult.cs" />
-    <Compile Include="dto\Hamming\HammingEncodeType.cs" />
+    <Compile Include="dto\hamming\HammingEncodeResult.cs" />
+    <Compile Include="dto\hamming\HammingEncodeType.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
@@ -127,7 +127,7 @@
     </Compile>
     <Compile Include="utils\BitOps.cs" />
     <Compile Include="dto\BitCode.cs" />
-    <Compile Include="dto\Huffman\HuffmanEncodeResult.cs" />
+    <Compile Include="dto\huffman\HuffmanEncodeResult.cs" />
     <Compile Include="helpers\huffman\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>

@@ -1,4 +1,4 @@
-﻿using FilesEncryptor.dto.Hamming;
+﻿using FilesEncryptor.dto.hamming;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.file_management;
 using FilesEncryptor.helpers.hamming;

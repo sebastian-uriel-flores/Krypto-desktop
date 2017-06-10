@@ -10,6 +10,11 @@ namespace FilesEncryptor.helpers.huffman
     public class HuffmanDecoder : BaseHuffmanCodifier
     {
         private BitCode _encoded;
+        private byte[] _fileBOM;
+        private string _fileBOMString;
+
+        public byte[] FileBOM => _fileBOM;
+        public string FileBOMString => _fileBOMString;
 
         private HuffmanDecoder() : base()
         {
@@ -34,6 +39,8 @@ namespace FilesEncryptor.helpers.huffman
                     //Obtengo el BOM del texto original
                     byte[] textBom = fileReader.ReadBytes(bomLen);
                     fileReader.SetFileEncoding(FileHelper.GetEncoding(textBom));
+                    decoder._fileBOM = textBom;
+                    decoder._fileBOMString = fileReader.FileEncoding.GetString(textBom);
 
                     DebugUtils.WriteLine(string.Format("Original file encoding is {0}", fileReader.FileEncoding.EncodingName));
                 }
@@ -52,8 +59,7 @@ namespace FilesEncryptor.helpers.huffman
                 {
                     //Obtengo el caracter del siguiente codigo de la tabla
                     char currentChar = endOfTableReader.First();
-
-
+                    
                     //Obtengo la longitud en bits del codigo indicado
                     uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
                     uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
@@ -98,7 +104,8 @@ namespace FilesEncryptor.helpers.huffman
 
         public string Decode()
         {
-            string result = "";
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string result = _fileBOMString ?? "";
 
             try
             {
@@ -109,7 +116,6 @@ namespace FilesEncryptor.helpers.huffman
                 int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
                 bool analyzingTrashBits = false;
                 int lastCodeLength = remainingEncodedText.CodeLength;
-
 
                 do
                 {

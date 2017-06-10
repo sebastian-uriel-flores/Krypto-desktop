@@ -68,7 +68,7 @@ namespace FilesEncryptor.pages
             bool allOK = false;
             if (await _fileOpener.PickToOpen(new List<string>() { BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION }))
             {
-                if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
+                if (await _fileOpener.OpenFile(FileAccessMode.Read))
                 {
                     await ShowProgressPanel();
                     HidePanels();
@@ -118,11 +118,10 @@ namespace FilesEncryptor.pages
                     await Task.Factory.StartNew(async () =>
                     {
                         string decoded = _decoder.Decode();
-
                         fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
-                        //Si la decodificacion se realizo con exito, 
-                        //escribo el texto decodificado en el archivo de salida
+                        //Si la decodificacion se realizo con exito,                         
+                        //Escribo el texto decodificado en el archivo de salida
                         decodeResult = decoded != null && fileSaver.WriteString(decoded);
 
                         //Cierro el archivo comprimido
