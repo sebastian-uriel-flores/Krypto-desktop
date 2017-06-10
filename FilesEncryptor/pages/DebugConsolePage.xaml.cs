@@ -130,9 +130,15 @@ namespace FilesEncryptor.pages
             listConsole.ScrollIntoView(listConsole.SelectedItem);
         }
 
-        private void AppBarToggleButton_Click(object sender, RoutedEventArgs e)
+        private void LockScroll_Click(object sender, RoutedEventArgs e)
         {
             _lockToBottom = !_lockToBottom;
         }
+
+        private void CleanConsole_Click(object sender, RoutedEventArgs e)
+        {
+            listConsole.Items.Clear();
+        }
+        
     }
 }

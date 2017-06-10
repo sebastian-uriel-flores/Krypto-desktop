@@ -110,6 +110,8 @@ namespace FilesEncryptor.pages
 
                     //Creo el Huffman Encoder
                     DebugUtils.WriteLine("Creating Huffman Encoder");
+                    DateTime startDate = DateTime.Now;
+
                     HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent, _fileOpener.FileBOM);
 
                     //Creo la tabla de probabilidades                                        
@@ -118,6 +120,10 @@ namespace FilesEncryptor.pages
                     //Comprimo el archivo
                     DebugUtils.WriteLine("Compressing file");
                     HuffmanEncodeResult encodeResult = encoder.Encode();
+
+                    //Imprimo la cantidad de tiempo que implico la codificacion
+                    TimeSpan totalTime = DateTime.Now.Subtract(startDate);
+                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
 
                     if (encodeResult != null)
                     {

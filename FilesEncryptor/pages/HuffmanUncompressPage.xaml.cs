@@ -111,6 +111,7 @@ namespace FilesEncryptor.pages
                     
                     //Decodifico el archivo
                     DebugUtils.WriteLine("Starting decoding process");
+                    DateTime startDate = DateTime.Now;
 
                     //[IMPORTANTE]: Inicio un Thread para decodificar el archivo, dado que sino, se bloquea la UI
                     //y, al decodificar archivos muy largos, 
@@ -123,6 +124,10 @@ namespace FilesEncryptor.pages
                         //Si la decodificacion se realizo con exito,                         
                         //Escribo el texto decodificado en el archivo de salida
                         decodeResult = decoded != null && fileSaver.WriteString(decoded);
+
+                        //Imprimo la cantidad de tiempo que implico la decodificacion
+                        TimeSpan totalTime = DateTime.Now.Subtract(startDate);
+                        DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
 
                         //Cierro el archivo comprimido
                         DebugUtils.WriteLine("Closing file");

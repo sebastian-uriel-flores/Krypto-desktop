@@ -155,9 +155,15 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
                     DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
 
+                    DateTime startDate = DateTime.Now;
+
                     //Codifico el archivo original
                     HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));                    
                     HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType);
+
+                    //Imprimo la cantidad de tiempo que implico la codificacion
+                    TimeSpan totalTime = DateTime.Now.Subtract(startDate);
+                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
 
                     //Si pudo encodearse el archivo
                     if (encodeResult != null)
