@@ -1,7 +1,6 @@
 ﻿using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.file_management;
-using FilesEncryptor.helpers.hamming;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,6 +70,8 @@ namespace FilesEncryptor.pages
                     titleBar.ForegroundColor = Colors.WhiteSmoke;
                 }
             }
+
+            DebugUtils.ShowConsoleInNewWindow();
         }
 
         private void BifurcatorPage_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -97,7 +98,7 @@ namespace FilesEncryptor.pages
             SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
         }
 
-        private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(HuffmanCompressPage));
+        private void CompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(CompressFilePage));
 
         private void UncompressFileBt_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(UncompressFilePage));
 
@@ -258,7 +259,7 @@ namespace FilesEncryptor.pages
                     
                     break;
                 case "compressFileItem":
-                    Frame.Navigate(typeof(HuffmanCompressPage));
+                    Frame.Navigate(typeof(CompressFilePage));
                     break;
                 case "uncompressFileItem":
                     Frame.Navigate(typeof(UncompressFilePage));
@@ -273,11 +274,6 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(IntroduceErrorsPage));
                     break;
             }            
-        }
-
-        private void ShowConsoleBt_Click(object sender, RoutedEventArgs e)
-        {
-            DebugUtils.ShowConsoleInNewWindow();
         }
     }
 }

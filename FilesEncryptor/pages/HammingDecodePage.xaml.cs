@@ -1,7 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.Hamming;
 using FilesEncryptor.helpers;
-using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -108,7 +107,7 @@ namespace FilesEncryptor.pages
         private bool ExtractFileProperties()
         {
             bool extractResult = false;
-            _fileHeader = _filesHelper.ReadFileHeader();
+            _fileHeader = _filesHelper.ExtractFileHeader();
 
             if (_fileHeader != null)
             {
