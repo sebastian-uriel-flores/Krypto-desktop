@@ -31,7 +31,15 @@ namespace FilesEncryptor.helpers
 
         #region PROPERTIES
 
+        /// <summary>
+        /// Devuelve el tamaño del archivo completo.
+        /// </summary>
         public uint FileSize => _fileSize;
+
+        /// <summary>
+        /// Devuelve el tamaño del contenido del archivo, es decir, del archivo sin incluir el FileBOM.
+        /// </summary>
+        public uint FileContentSize => _fileBOM != null? _fileSize - (uint)_fileBOM.Length : _fileSize;
         public Encoding FileEncoding => _fileEncoding;
         public byte[] FileBOM => _fileBOM;
         public string SelectedFileName => _selectedFile != null ? _selectedFile.Name : "";
@@ -186,8 +194,11 @@ namespace FilesEncryptor.helpers
                     //Si es una codificacion para la cual se inserta un BOM al principio del archivo
                     if (bomBytes > 0)
                     {
-                        _fileSize -= (uint)bomBytes;
+                        //_fileSize -= (uint)bomBytes;
                         _fileBOM = _fileBOM.ToList().GetRange(0, bomBytes).ToArray();
+
+                        //Salteo los bytes correspondientes al BOM, dado que no quiero leerlos de nuevo.
+                        ReadBytes((uint)bomBytes);
                     }
                     //Si se leyeron 4 bytes pero la codificacion no utiliza un BOM
                     else

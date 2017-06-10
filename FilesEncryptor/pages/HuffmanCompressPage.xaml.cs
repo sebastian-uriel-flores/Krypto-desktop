@@ -73,19 +73,11 @@ namespace FilesEncryptor.pages
                     HidePanels();
 
                     //Leo todos los bytes del texto
-                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);                    
+                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);                    
 
                     //Obtengo el texto que sera mostrado en pantalla
                     _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
-
-                    //Si el texto posee un BOM al principio, lo elimino,
-                    //dado que sino, el texto pierde el formato en el TextBox.
-                    if (_fileOpener.FileBOM != null)
-                    {
-                        string bom = _fileOpener.FileEncoding.GetString(_fileOpener.FileBOM);
-                        _originalFileContent = _originalFileContent.Remove(0, bom.Length);
-                    }
-
+                                      
                     //Cierro el archivo
                     await _fileOpener.Finish();
 
