@@ -114,21 +114,28 @@
                     Margin="0,30,0,0"
                     Style="{StaticResource SettingsHeaderStyle}"
                     />
-                <TextBox
-                    x:Name="fileContentBlock"
+                <ScrollViewer 
                     Width="610"
                     Height="140"
-                    FontSize="14"
                     Background="WhiteSmoke"
                     Margin="0,5,0,0"
                     HorizontalAlignment="Left"
-                    ScrollViewer.HorizontalScrollMode="Auto"
-                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                    ScrollViewer.VerticalScrollMode="Enabled"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto" 
-                    AcceptsReturn="True" 
-                    IsReadOnly="True"                    
-                    />
+                    HorizontalScrollMode="Auto"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollMode="Enabled"
+                    VerticalScrollBarVisibility="Auto"
+                    >
+                    <TextBlock
+                        x:Name="fileContentBlock"
+                        Text=""                    
+                        FontSize="14"
+                        TextWrapping="WrapWholeWords"
+                        
+                        Width="610"
+                        Margin="5,5,5,5"
+                        />
+                </ScrollViewer>
+
             </StackPanel>
 
             <Rectangle

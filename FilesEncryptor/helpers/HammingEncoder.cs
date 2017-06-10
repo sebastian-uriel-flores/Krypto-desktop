@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.helpers.hamming
+namespace FilesEncryptor.helpers
 {
     public class HammingEncoder : BaseHammingCodifier
     {
@@ -72,7 +72,12 @@ namespace FilesEncryptor.helpers.hamming
 
                             List<Tuple<int, int>> dataBlocksIndexes = new List<Tuple<int, int>>();
                             List<Tuple<int, int>> controlBlocksIndexes = new List<Tuple<int, int>>();
-                           
+
+                            if(outputBlocks.Count == dataBlocks.Count - 1)
+                            {
+
+                            }
+
                             foreach(uint index in controlBitsIndexes)
                             {
                                 var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1);

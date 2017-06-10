@@ -26,17 +26,15 @@ namespace FilesEncryptor.helpers
             if (_consoleWindowId == -1)
             {
                 _newView = CoreApplication.CreateNewView();
-                
                 int newViewId = 0;
                 await _newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
                     Frame frame = new Frame();
                     frame.Navigate(typeof(DebugConsolePage), null);                                        
                     Window.Current.Content = frame;
-                    
-                    // You have to activate the window in order to show it later.
-                    Window.Current.Activate();
-                    Window.Current.Closed += Current_Closed;
+                // You have to activate the window in order to show it later.
+                Window.Current.Activate();
+
                     newViewId = ApplicationView.GetForCurrentView().Id;
                 });
                 bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
@@ -47,32 +45,20 @@ namespace FilesEncryptor.helpers
                 }
             }
         }
-
-        private static void Current_Closed(object sender, CoreWindowEventArgs e)
-        {
-            _consoleWindowId = -1;
-        }
-
         public static void Write(object message, string category = "[INFO]")
         {
-            string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
-            Debug.Write(messageWithDate, category);
-
-            ConsoleWrited?.Invoke(messageWithDate, category);
+            Debug.Write(string.Format("({0}) - {1}", DateTime.Now, message), category);
         }
         public static void WriteLine(object message, string category = "[INFO]")
         {
             string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
             Debug.WriteLine(messageWithDate, category);
 
-            ConsoleWrited?.Invoke(messageWithDate, category);
+            ConsoleWrited(messageWithDate, category);
         }
         public static void Fail(object shortMessage, string detailedMessage = "")
         {
-            string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, shortMessage);
-            Debug.Fail(messageWithDate, detailedMessage);
-
-            ConsoleWrited?.Invoke(string.Format("{0}\r\n{1}",messageWithDate, detailedMessage), "[EXCEPTION]");
+            Debug.Fail(string.Format("({0}) - {1}", DateTime.Now, shortMessage), detailedMessage);
         }
     }
 }

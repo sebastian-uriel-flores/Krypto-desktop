@@ -13,12 +13,8 @@
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             Background="#FF9200"                
-            Height="250" VerticalAlignment="Top"
+            Height="250"
             >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
             <TextBlock 
                 Text="Files Encryptor" 
                 Margin="80,0,0,30" 
@@ -27,24 +23,6 @@
                 FontFamily="Segoe UI SemiLight" 
                 VerticalAlignment="Bottom" 
                 Foreground="White"
-                />
-
-            <Button
-                x:Name="showConsoleButton"
-                Grid.Column="1"                                                       
-                
-                Content="&#xe15e;"
-                BorderThickness="0"
-                Background="Transparent"
-                Foreground="White"
-                FontFamily="Segoe MDL2 Assets"                    
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Bottom"
-                Margin="10,0,10,30"
-                FontSize="40"
-                ToolTipService.Placement="Bottom"                
-                ToolTipService.ToolTip="Mostrar consola"
-                Click="ShowConsoleBt_Click"
                 />
         </Grid>
         
