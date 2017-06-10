@@ -67,24 +67,23 @@ namespace FilesEncryptor.pages
             bool allOK = false;
             if(await _fileOpener.PickToOpen(new List<string>() { ".txt" }))
             {
-                if (await _fileOpener.OpenFile(FileAccessMode.Read))
+                if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
                 {
                     await ShowProgressPanel();
                     HidePanels();
 
-                    //Leo todos los bytes del archivo y los convierto a string UTF8                    
-                    await _fileOpener.Finish();
-                    await _fileOpener.OpenFile(FileAccessMode.Read, true);
+                    //Leo todos los bytes del texto
+                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);                    
 
-                    //_originalFileContent = _fileOpener.ReadString((uint)_fileOpener.FileEncoding.GetMaxCharCount((int)_fileOpener.FileSize));
-                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize);
-                    
+                    //Obtengo el texto que sera mostrado en pantalla
                     _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
 
-                    //Si el primer caracter es el BOM, lo elimino
-                    if(_originalFileContent.First() == HuffmanEncoder.BOM)
+                    //Si el texto posee un BOM al principio, lo elimino,
+                    //dado que sino, el texto pierde el formato en el TextBox.
+                    if (_fileOpener.FileBOM != null)
                     {
-                        _originalFileContent = _originalFileContent.Remove(0, 1);
+                        string bom = _fileOpener.FileEncoding.GetString(_fileOpener.FileBOM);
+                        _originalFileContent = _originalFileContent.Remove(0, bom.Length);
                     }
 
                     //Cierro el archivo

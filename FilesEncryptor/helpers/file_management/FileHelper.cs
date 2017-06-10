@@ -182,8 +182,18 @@ namespace FilesEncryptor.helpers
                 if (_fileBOM != null)
                 {
                     int bomBytes = GetBOMBytesLen(fileEncoding);
-                    _fileSize -= (uint)bomBytes;
-                    _fileBOM = _fileBOM.ToList().GetRange(0, bomBytes).ToArray();
+
+                    //Si es una codificacion para la cual se inserta un BOM al principio del archivo
+                    if (bomBytes > 0)
+                    {
+                        _fileSize -= (uint)bomBytes;
+                        _fileBOM = _fileBOM.ToList().GetRange(0, bomBytes).ToArray();
+                    }
+                    //Si se leyeron 4 bytes pero la codificacion no utiliza un BOM
+                    else
+                    {
+                        _fileBOM = null;
+                    }
                 }
 
                 result = true;
