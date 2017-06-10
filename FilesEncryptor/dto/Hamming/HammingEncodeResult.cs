@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FilesEncryptor.dto.Hamming
 {
-    public class HammingEncodeResult : IEncodeResult
+    public class HammingEncodeResult
     {
         public BitCode Encoded { get; set; }
 
