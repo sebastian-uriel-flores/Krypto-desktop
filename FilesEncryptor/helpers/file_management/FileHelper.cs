@@ -153,8 +153,7 @@ namespace FilesEncryptor.helpers
 
                     //Leo los primeros 4 bytes y determino la codificacion del archivo
                     _fileBOM = ReadBytes(4);                     
-                    _fileSize -= 4; //ESTO DEBERIA HACERLO DESPUES?
-
+                    
                     //Dado que ya lei 4 bytes, vuelvo a cargar el Flujo de entrada, desde el primer bit
                     _fileInputStream = _fileStream.GetInputStreamAt(0);
                     _fileDataReader = new DataReader(_fileInputStream);                    
@@ -169,11 +168,24 @@ namespace FilesEncryptor.helpers
 
                 //Si se indico verificar la codificacion del archivo,
                 //basandome en la codificacion, configuro el data DataReader y el DataWriter
-                SetFileEncoding(GetEncoding(_fileBOM));
-                
+                //Si no se habia indicado, entonces seteo una configuracion por defecto
+                Encoding fileEncoding = GetEncoding(_fileBOM);
+                SetFileEncoding(fileEncoding);
+
                 //Cargo en el buffer todos los bytes del archivo
                 _fileSize = await _fileDataReader.LoadAsync((uint)size);
-                
+
+                //Si se indico verificar la codificacion del archivo,
+                //Dado que siempre leo 4 bytes para el BOM, y segun la codificacion, el BOM podria ser de 2, 3 o 4 bytes,
+                //podria tener en el arreglo algunos bytes correspondientes al BOM y otros correspondientes al texto.
+                //Elimino esos bytes extra, correspondientes al texto.
+                if (_fileBOM != null)
+                {
+                    int bomBytes = GetBOMBytesLen(fileEncoding);
+                    _fileSize -= (uint)bomBytes;
+                    _fileBOM = _fileBOM.ToList().GetRange(0, bomBytes).ToArray();
+                }
+
                 result = true;
             }
 
@@ -305,6 +317,32 @@ namespace FilesEncryptor.helpers
                 result = Encoding.ASCII;
             }
 
+            return result;
+        }
+
+        /// <summary>
+        /// Determines a text file's encoding by analyzing its byte order mark (BOM).
+        /// Defaults to ASCII when detection of the text file's endianness fails.
+        /// </summary>
+        /// <param name="filename">The text file to analyze.</param>
+        /// <returns>The detected encoding.</returns>
+        public static int GetBOMBytesLen(Encoding enc)
+        {
+            int result = 0;
+
+            if(enc == Encoding.UTF32)
+            {
+                result = 4;
+            }
+            else if(enc == Encoding.UTF8 || enc == Encoding.UTF7)
+            {
+                result = 3;
+            }
+            else if(enc == Encoding.Unicode || enc == Encoding.BigEndianUnicode)
+            {
+                result = 2;
+            }
+            
             return result;
         }
 

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesEncryptor.dto.Huffman
+namespace FilesEncryptor.dto.huffman
 {
     public class HuffmanEncodeResult
     {

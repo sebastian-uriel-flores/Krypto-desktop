@@ -1,5 +1,5 @@
 ﻿using FilesEncryptor.dto;
-using FilesEncryptor.dto.Huffman;
+using FilesEncryptor.dto.huffman;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.huffman;
 using System;
@@ -116,8 +116,6 @@ namespace FilesEncryptor.pages
                 if(await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                 {
                     await ShowProgressPanel();
-
-                    //fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
                     //Creo el Huffman Encoder
                     DebugUtils.WriteLine("Creating Huffman Encoder");
