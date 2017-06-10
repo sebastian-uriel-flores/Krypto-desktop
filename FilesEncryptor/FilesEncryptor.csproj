@@ -110,6 +110,7 @@
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
+    <Compile Include="helpers\VisualTreeHelperExtensions.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
     </Compile>

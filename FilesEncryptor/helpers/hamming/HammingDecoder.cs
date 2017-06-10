@@ -102,6 +102,9 @@ namespace FilesEncryptor.helpers.hamming
                     List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
                     List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
 
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Max(0.1 * encodedWords.Count, 1000);
+
                     foreach (BitCode encoded in encodedWords)
                     {
                         BitCode decoded = encoded.Copy();
@@ -119,7 +122,7 @@ namespace FilesEncryptor.helpers.hamming
 
                         decodedWords.Add(decoded);
 
-                        if (decodedWords.Count % 10 == 0)
+                        if (decodedWords.Count % wordsDebugStep == 0)
                         {
                             DebugUtils.WriteLine(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
                         }

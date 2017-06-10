@@ -78,13 +78,16 @@ namespace FilesEncryptor.helpers.huffman
             {
                 BitCode fullCode = BitCode.EMPTY;
                 
+                //Determino cada cuantas palabras se mostrará el progresso por consola
+                int wordsDebugStep = (int)Math.Max(0.1 * _baseText.Length, 1000);
+
                 foreach (char c in _baseText)
                 {
                     //Obtengo el codigo Huffman para el caracter
                     fullCode.Append(GetCode(c));
                     counter++;
 
-                    if(counter % 50 == 0)
+                    if(counter % wordsDebugStep == 0)
                     {
                         DebugUtils.WriteLine(string.Format("Encoded {0} chars of {1}", counter, _baseText.Length), "[PROGRESS]");
                     }

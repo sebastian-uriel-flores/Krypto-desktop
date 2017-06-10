@@ -117,6 +117,9 @@ namespace FilesEncryptor.helpers.huffman
                 bool analyzingTrashBits = false;
                 int lastCodeLength = remainingEncodedText.CodeLength;
 
+                //Determino cada cuantas palabras se mostrará el progresso por consola
+                int wordsDebugStep = (int)Math.Max(0.03 * remainingEncodedText.CodeLength, 1000);
+
                 do
                 {
                     byte currentByte = remainingEncodedText.Code[currentByteIndex];
@@ -176,10 +179,10 @@ namespace FilesEncryptor.helpers.huffman
                         }
                     }
 
-                    if (remainingEncodedText.CodeLength <= lastCodeLength - 160)
+                    if (lastCodeLength - remainingEncodedText.CodeLength >= wordsDebugStep)
                     {
-                        DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
                         lastCodeLength = remainingEncodedText.CodeLength;
+                        DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");                        
                     }
                 }
                 while (currentByteIndex + currentCodeBytes.Count < _encoded.Code.Count && !analyzingTrashBits);
