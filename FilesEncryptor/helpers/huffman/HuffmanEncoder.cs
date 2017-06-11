@@ -14,7 +14,6 @@ namespace FilesEncryptor.helpers.huffman
     {        
         private string _baseText;
         private Dictionary<char, float> _charsProbabilities;
-        private byte[] _fileBOM;
 
         public ReadOnlyDictionary<char, BitCode> CharsCodes => new ReadOnlyDictionary<char, BitCode>(_charsCodes);
 
@@ -23,9 +22,9 @@ namespace FilesEncryptor.helpers.huffman
             _charsProbabilities = new Dictionary<char, float>();
         }
 
-        public static HuffmanEncoder From(string text, byte[] textBOM = null)
+        public static HuffmanEncoder From(string text)
         {
-            return new HuffmanEncoder() { _baseText = text, _fileBOM = textBOM };
+            return new HuffmanEncoder() { _baseText = text };
         }
 
         public void Scan()
@@ -93,7 +92,7 @@ namespace FilesEncryptor.helpers.huffman
                     }
                 }
 
-                encoded = new HuffmanEncodeResult(fullCode, CharsCodes, _fileBOM);
+                encoded = new HuffmanEncodeResult(fullCode, CharsCodes);
             }
             catch (Exception ex)
             {
@@ -103,15 +102,16 @@ namespace FilesEncryptor.helpers.huffman
             return encoded;
         }
 
-        public static bool WriteToFile(FileHelper fileHelper, HuffmanEncodeResult encodeResult)
+        public static bool WriteToFile(FileHelper fileHelper, HuffmanEncodeResult encodeResult, Encoding baseFileEncoding, byte[] baseFileBOM = null)
         {
             bool writeResult = false;
 
-            if (encodeResult.OriginalFileBOM != null)
+            //Escribo el BOM del archivo original
+            if (baseFileBOM != null)
             {
-                DebugUtils.WriteLine("Dumping original file encoding to file");
-                writeResult = fileHelper.WriteString(string.Format("{0}:", encodeResult.OriginalFileBOM.Length));
-                writeResult = fileHelper.WriteBytes(encodeResult.OriginalFileBOM);
+                DebugUtils.WriteLine("Dumping original file BOM to file");
+                writeResult = fileHelper.WriteString(string.Format("{0}:", baseFileBOM.Length));
+                writeResult = fileHelper.WriteBytes(baseFileBOM);
             }
             else
             {                
@@ -119,6 +119,11 @@ namespace FilesEncryptor.helpers.huffman
                 writeResult = fileHelper.WriteString(string.Format("{0}:", 0));
             }
 
+            //Escribo la codificacion usada para leer el archivo original
+            DebugUtils.WriteLine("Dumping original file encoding to file");
+            writeResult = fileHelper.WriteString(string.Format("{0}:{1}", baseFileEncoding.CodePage.ToString().Length, baseFileEncoding.CodePage));
+
+            //Escribo la tabla de probabilidades
             DebugUtils.WriteLine("Dumping probabilities table to file");
 
             foreach (var element in encodeResult.ProbabilitiesTable)

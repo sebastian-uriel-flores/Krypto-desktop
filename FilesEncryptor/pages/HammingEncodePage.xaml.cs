@@ -163,7 +163,7 @@ namespace FilesEncryptor.pages
 
                     //Imprimo la cantidad de tiempo que implico la codificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
+                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
 
                     //Si pudo encodearse el archivo
                     if (encodeResult != null)

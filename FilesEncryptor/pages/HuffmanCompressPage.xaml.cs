@@ -72,20 +72,27 @@ namespace FilesEncryptor.pages
                     await ShowProgressPanel();
                     HidePanels();
 
-                    //Leo todos los bytes del texto
-                    byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);                    
+                    if(_fileOpener.FileBOM == null)
+                    {
+                        await ShowEncodingPickPrompt();
+                    }
+                    else
+                    {
+                        //Leo todos los bytes del texto
+                        byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);
 
-                    //Obtengo el texto que sera mostrado en pantalla
-                    _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
-                                      
-                    //Cierro el archivo
-                    await _fileOpener.Finish();
+                        //Obtengo el texto que sera mostrado en pantalla
+                        _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
 
-                    //Muestro la informacion del archivo
-                    await ShowFileInformation();
+                        //Cierro el archivo
+                        await _fileOpener.Finish();
 
-                    ShowPanels();
-                    HideProgressPanel();
+                        //Muestro la informacion del archivo
+                        await ShowFileInformation();
+
+                        ShowPanels();
+                        HideProgressPanel();
+                    }                    
 
                     allOK = true;
                 }
@@ -112,7 +119,7 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine("Creating Huffman Encoder");
                     DateTime startDate = DateTime.Now;
 
-                    HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent, _fileOpener.FileBOM);
+                    HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent);
 
                     //Creo la tabla de probabilidades                                        
                     encoder.Scan();
@@ -123,7 +130,7 @@ namespace FilesEncryptor.pages
 
                     //Imprimo la cantidad de tiempo que implico la codificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
+                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
 
                     if (encodeResult != null)
                     {
@@ -146,7 +153,7 @@ namespace FilesEncryptor.pages
                             //Escribo la tabla de probabilidades
                             DebugUtils.WriteLine(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
                             fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
-                            compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult);
+                            compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult, _fileOpener.FileEncoding, _fileOpener.FileBOM);
                         }
                     }
 
@@ -172,11 +179,32 @@ namespace FilesEncryptor.pages
 
         private async Task ShowProgressPanel()
         {
-            progressPanel.Visibility = Visibility.Visible;
+            hidePagePanel.Visibility = Visibility.Visible;
+            progressRing.Visibility = Visibility.Visible;
             await Task.Delay(200);
         }
 
-        private void HideProgressPanel() => progressPanel.Visibility = Visibility.Collapsed;
+        private void HideProgressPanel()
+        {
+            progressRing.Visibility = Visibility.Collapsed;
+            hidePagePanel.Visibility = Visibility.Collapsed;
+        }
+
+        private async Task ShowEncodingPickPrompt()
+        {
+            hidePagePanel.Visibility = Visibility.Visible;
+            progressRing.Visibility = Visibility.Collapsed;
+            encodingPrompt.Visibility = Visibility.Visible;
+            encodingPicker.SelectedIndex = 2;
+
+            await Task.Delay(200);
+        }
+
+        private void HideEncodingPickPrompt()
+        {
+            encodingPrompt.Visibility = Visibility.Collapsed;
+            hidePagePanel.Visibility = Visibility.Collapsed;
+        }
 
         private void ShowPanels()
         {
@@ -203,5 +231,60 @@ namespace FilesEncryptor.pages
                 fileContentBlock.Text = _originalFileContent;
             });            
         }
+
+        private async void ConfirmEncodingPick_Click(object sender, RoutedEventArgs e)
+        {
+            HideEncodingPickPrompt();
+            await ShowProgressPanel();
+
+            switch (encodingPicker.SelectedIndex)
+            {
+                //ASCII
+                case 0:
+                    _fileOpener.SetFileEncoding(Encoding.ASCII);
+                    break;
+                //UTF-7
+                case 1:
+                    _fileOpener.SetFileEncoding(Encoding.UTF7);
+                    break;
+                //UTF-8
+                case 2:
+                    _fileOpener.SetFileEncoding(Encoding.UTF8);
+                    break;
+                //UTF-16LE
+                case 3:
+                    _fileOpener.SetFileEncoding(Encoding.Unicode);
+                    break;
+                //UTF-16BE
+                case 4:
+                    _fileOpener.SetFileEncoding(Encoding.BigEndianUnicode);
+                    break;
+                //UTF-32
+                case 5:
+                    _fileOpener.SetFileEncoding(Encoding.UTF32);
+                    break;
+            }
+
+            //Leo todos los bytes del texto
+            byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);
+
+            //Obtengo el texto que sera mostrado en pantalla
+            _originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
+
+            //Cierro el archivo
+            await _fileOpener.Finish();
+
+            //Muestro la informacion del archivo
+            await ShowFileInformation();
+
+            ShowPanels();
+            HideProgressPanel();
+        }
+
+        private async void CloseEncodingPickPrompt_Click(object sender, RoutedEventArgs e)
+        {
+            HideEncodingPickPrompt();
+            await _fileOpener.Finish();
+        }        
     }
 }

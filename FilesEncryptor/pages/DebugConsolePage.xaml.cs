@@ -29,6 +29,7 @@ namespace FilesEncryptor.pages
     public sealed partial class DebugConsolePage : Page
     {
         private bool _lockToBottom;
+
         public DebugConsolePage()
         {
             InitializeComponent();
@@ -42,24 +43,27 @@ namespace FilesEncryptor.pages
         private void DebugConsolePage_Loaded(object sender, RoutedEventArgs e)
         {
             //PC customization
+            var view = SystemNavigationManager.GetForCurrentView();
+            view.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
+            //view.BackRequested += View_BackRequested;
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
             {
-                ApplicationView.GetForCurrentView().Title = "Teoría de la información";
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
                 if (titleBar != null)
                 {
-                    Color orange = new Color() { R = 251, G = 131, B = 0 };
+                    var mainOrange = GetSolidColorBrush("#FFFB8300").Color;
+                    var secondOrange = GetSolidColorBrush("#FFCD3927").Color;
 
-                    titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonBackgroundColor = orange;
-                    titleBar.ButtonPressedBackgroundColor = orange;
-                    titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.InactiveBackgroundColor = orange;
-                    titleBar.ButtonInactiveBackgroundColor = orange;
-                    titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.BackgroundColor = orange;
-                    titleBar.ForegroundColor = Colors.WhiteSmoke;
+                    titleBar.ButtonBackgroundColor = mainOrange;
+                    titleBar.ButtonForegroundColor = Colors.White;
+                    titleBar.ButtonHoverBackgroundColor = secondOrange;
+                    titleBar.ButtonInactiveBackgroundColor = mainOrange;
+                    titleBar.ButtonInactiveForegroundColor = Colors.White;
+
+                    titleBar.BackgroundColor = mainOrange;
+                    titleBar.ForegroundColor = Colors.White;
+                    titleBar.InactiveBackgroundColor = mainOrange;
+                    titleBar.InactiveForegroundColor = Colors.White;
                 }
             }
         }
@@ -72,6 +76,16 @@ namespace FilesEncryptor.pages
 
             if (verticalBar != null)
                 verticalBar.Scroll += BarScroll;*/
+        }
+
+        private void LockScroll_Click(object sender, RoutedEventArgs e)
+        {
+            _lockToBottom = !_lockToBottom;
+        }
+
+        private void CleanConsole_Click(object sender, RoutedEventArgs e)
+        {
+            listConsole.Items.Clear();
         }
 
         private async void DebugUtils_ConsoleWrited(string text, string label)
@@ -130,15 +144,20 @@ namespace FilesEncryptor.pages
             listConsole.ScrollIntoView(listConsole.SelectedItem);
         }
 
-        private void LockScroll_Click(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// Function to convert Hex to Color
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
+        public SolidColorBrush GetSolidColorBrush(string hex)
         {
-            _lockToBottom = !_lockToBottom;
+            hex = hex.Replace("#", string.Empty);
+            byte a = (byte)(Convert.ToUInt32(hex.Substring(0, 2), 16));
+            byte r = (byte)(Convert.ToUInt32(hex.Substring(2, 2), 16));
+            byte g = (byte)(Convert.ToUInt32(hex.Substring(4, 2), 16));
+            byte b = (byte)(Convert.ToUInt32(hex.Substring(6, 2), 16));
+            SolidColorBrush myBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(a, r, g, b));
+            return myBrush;
         }
-
-        private void CleanConsole_Click(object sender, RoutedEventArgs e)
-        {
-            listConsole.Items.Clear();
-        }
-        
     }
 }

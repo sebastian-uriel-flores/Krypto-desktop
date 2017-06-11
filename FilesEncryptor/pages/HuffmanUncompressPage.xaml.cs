@@ -29,9 +29,6 @@ using Windows.UI.Xaml.Navigation;
 
 namespace FilesEncryptor.pages
 {
-    /// <summary>
-    /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
-    /// </summary>
     public sealed partial class UncompressFilePage : Page
     {
         private FileHelper _fileOpener;
@@ -77,7 +74,7 @@ namespace FilesEncryptor.pages
                     _fileHeader = _fileOpener.ReadFileHeader();
 
                     //Leo el archivo
-                    _decoder = HuffmanDecoder.FromFile(_fileOpener); ;
+                    _decoder = HuffmanDecoder.FromFile(_fileOpener);
 
                     //Cierro el archivo
                     await _fileOpener.Finish();
@@ -127,7 +124,7 @@ namespace FilesEncryptor.pages
 
                         //Imprimo la cantidad de tiempo que implico la decodificacion
                         TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                        DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}:{1}:{2}:{3}", totalTime.Hours, totalTime.Milliseconds, totalTime.Seconds, totalTime.Milliseconds));
+                        DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}", totalTime.ToString()));
 
                         //Cierro el archivo comprimido
                         DebugUtils.WriteLine("Closing file");
