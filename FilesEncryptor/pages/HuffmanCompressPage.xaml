@@ -16,6 +16,8 @@
             <Setter Property="TextAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="20,0,0,0"/>
+            <Setter Property="RelativePanel.AlignVerticalCenterWithPanel" Value="True"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
         </Style>
         <Style x:Name="PanelDividerStyle" TargetType="Rectangle">
             <Setter Property="Height" Value="1"/>
@@ -32,37 +34,59 @@
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
             >
-            <Grid 
-                x:Name="pageHeader"
-                Height="48"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="48"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock                    
-                    Text="Codificar con Huffman"
-                    Style="{StaticResource PanelHeaderStyle}"
-                    />
+            <RelativePanel
+                        x:Name="pageHeader"
+                RelativePanel.AlignTopWithPanel="True"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        RelativePanel.AlignRightWithPanel="True"
+                        Height="50">
 
                 <Button
+                            x:Name="backBt"
+                            RelativePanel.AlignLeftWithPanel="True"
+                            Height="50"
+                            Width="60"
+                            Content="&#xe0a6;"
+                            BorderBrush="#ff9200"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="#FF525151"
+                            FontFamily="Segoe MDL2 Assets"                    
+                            FontWeight="SemiLight"
+                            FontSize="20"
+                            Click="BackBt_Click"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"                    
+                            />
+                <TextBlock                       
+                    x:Name="headerContent"
+                            Text="Codificar con Huffman"                            
+                            RelativePanel.RightOf="backBt"
+                    RelativePanel.LeftOf="selectFileButton"
+                            Style="{StaticResource PanelHeaderStyle}"
+                    
+                            />
+                <Button
                     x:Name="selectFileButton"
-                    Grid.Column="1"                                                       
-                    Height="35"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="50"
+                    Width="60"
                     Content="&#xe1a5;"
                     BorderBrush="#ff9200"
                     BorderThickness="0"
                     Background="Transparent"
                     Foreground="#ff9200"
-                    FontFamily="Segoe MDL2 Assets"                    
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
+                    FontFamily="Segoe MDL2 Assets"             
+                    FontWeight="SemiLight"
                     FontSize="20"
                     Click="SelectFileBt_Click"
+                    VerticalContentAlignment="Center"
+                    HorizontalContentAlignment="Center"
                     />
-            </Grid>
+            </RelativePanel>
+
+           
             <Rectangle
                 x:Name="pageHeaderDivider"
                 RelativePanel.Below="pageHeader"
@@ -211,7 +235,7 @@
 
                         <Button
                             x:Name="closePromptBt"
-                            RelativePanel.AlignLeftWithPanel="True"
+                            RelativePanel.AlignRightWithPanel="True"
                             Height="50"
                             Width="60"
                             Content="&#xe106;"
@@ -228,11 +252,10 @@
                             />
                         <TextBlock                                            
                             Text="Seleccione una codificación"
-                            RelativePanel.AlignVerticalCenterWithPanel="True"
-                            RelativePanel.AlignRightWithPanel="True"
-                            RelativePanel.RightOf="closePromptBt"
+                            RelativePanel.AlignLeftWithPanel="True"
+                            RelativePanel.LeftOf="closePromptBt"
                             Style="{StaticResource PanelHeaderStyle}"
-                            Margin="0,0,0,5"
+                            Margin="20,0,0,5"
                             />
                     </RelativePanel>
                     

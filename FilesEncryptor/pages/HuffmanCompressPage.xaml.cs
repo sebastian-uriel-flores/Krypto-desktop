@@ -24,6 +24,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // La plantilla de elemento Página en blanco está documentada en https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0xc0a
@@ -230,6 +231,12 @@ namespace FilesEncryptor.pages
             {
                 fileContentBlock.Text = _originalFileContent;
             });            
+        }
+
+        private void BackBt_Click(object sender, RoutedEventArgs e)
+        {
+            if(Frame.CanGoBack)
+                Frame.GoBack(new SlideNavigationTransitionInfo());
         }
 
         private async void ConfirmEncodingPick_Click(object sender, RoutedEventArgs e)
