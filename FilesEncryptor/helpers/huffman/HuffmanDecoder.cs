@@ -96,30 +96,52 @@ namespace FilesEncryptor.helpers.huffman
 
                 DebugUtils.WriteLine("Reading Probabilities Table");
 
-                //Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
-                string endOfTableReader = fileReader.ReadString(2);
 
-                //Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
-                while (endOfTableReader != "..")
+                string endOfTable = fileReader.ReadString(1);
+
+                while(endOfTable != ".")
                 {
-                    //Obtengo el caracter del siguiente codigo de la tabla
-                    char currentChar = endOfTableReader.First();
-                    
-                    //Obtengo la longitud en bits del codigo indicado
-                    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
-                    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
+                    //Leo la longitud en bytes de la clave y la longitud en bits del codigo del primer caracter de la tabla
+                    uint keyLen = uint.Parse(endOfTable + fileReader.ReadStringUntil(","));
+                    uint codeLen = uint.Parse(fileReader.ReadStringUntil(":"));
+                    uint codeBytesLen = BitCode.BitsLengthToBytesLength(codeLen);
 
-                    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
-                    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
+                    //Leo el caracter clave y el codigo
+                    byte[] keyBytes = fileReader.ReadBytes(keyLen);
+                    char key = fileEncoding.GetString(keyBytes).First();
+                    byte[] codeBytes = fileReader.ReadBytes(codeBytesLen);
 
-                    //Agrego el codigo leido a la tabla de probabilidades del decodificador
-                    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
+                    //Agrego el par a la tabla
+                    decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
 
-                    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
-                    endOfTableReader = fileReader.ReadString(2);
-
+                    endOfTable = fileReader.ReadString(1);
                     counter++;
                 }
+
+                ////Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
+                //string endOfTableReader = fileReader.ReadString(2);
+
+                ////Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
+                //while (endOfTableReader != "..")
+                //{
+                //    //Obtengo el caracter del siguiente codigo de la tabla
+                //    char currentChar = endOfTableReader.First();
+                    
+                //    //Obtengo la longitud en bits del codigo indicado
+                //    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
+                //    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
+
+                //    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
+                //    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
+
+                //    //Agrego el codigo leido a la tabla de probabilidades del decodificador
+                //    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
+
+                //    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
+                //    endOfTableReader = fileReader.ReadString(2);
+
+                //    counter++;
+                //}
 
                 #endregion
 
@@ -177,7 +199,7 @@ namespace FilesEncryptor.helpers.huffman
                 int lastCodeLength = remainingEncodedText.CodeLength;
 
                 //Determino cada cuantas palabras se mostrará el progresso por consola
-                int wordsDebugStep = (int)Math.Max(0.03 * remainingEncodedText.CodeLength, 1000);
+                int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
 
                 do
                 {

@@ -128,13 +128,17 @@ namespace FilesEncryptor.helpers.huffman
 
             foreach (var element in encodeResult.ProbabilitiesTable)
             {
-                writeResult = fileHelper.WriteString(string.Format("{0}{1}:", element.Key, element.Value.CodeLength));
-                writeResult = fileHelper.WriteBytes(element.Value.Code.ToArray());
+                //Escribo la clave como bytes, dado que hay caracteres que ocupan mas de 1 byte
+                //Luego escribo todos los bytes del codigo asociado a la clave
+                byte[] keyBytes = baseFileEncoding.GetBytes(element.Key.ToString());
+                writeResult = fileHelper.WriteString(string.Format("{0},{1}:", keyBytes.Length, element.Value.CodeLength));
+                writeResult = fileHelper.WriteBytes(keyBytes);
+                writeResult = fileHelper.WriteBytes(element.Value.Code.ToArray());                
             }
 
             //Escribo el texto comprimido
             DebugUtils.WriteLine("Dumping compressed bytes to file");
-            writeResult = fileHelper.WriteString(string.Format("..{0}:", encodeResult.Encoded.CodeLength));
+            writeResult = fileHelper.WriteString(string.Format(".{0}:", encodeResult.Encoded.CodeLength));
             writeResult = fileHelper.WriteBytes(encodeResult.Encoded.Code.ToArray());
 
             return writeResult;
