@@ -9,20 +9,36 @@ namespace FilesEncryptor.helpers.huffman
 {
     public class HuffmanDecoder : BaseHuffmanCodifier
     {
+        #region VARIABLES
+
         private BitCode _encoded;
         private byte[] _fileBOM;
         private string _fileBOMString;
 
+        #endregion
+
+        #region PROPERTIES
+
         public byte[] FileBOM => _fileBOM;
         public string FileBOMString => _fileBOMString;
+
+        #endregion 
+
+        #region BUILDERS
 
         private HuffmanDecoder() : base()
         {
 
         }
 
-        public static HuffmanDecoder FromEncoded(BitCode encoded, Dictionary<char,BitCode> probabilitiesTable) 
-            => new HuffmanDecoder() { _encoded = encoded, _charsCodes = probabilitiesTable };
+        public static HuffmanDecoder FromEncoded(BitCode encoded, Dictionary<char,BitCode> probabilitiesTable, byte[] bom = null) 
+            => new HuffmanDecoder()
+            {
+                _encoded = encoded,
+                _charsCodes = probabilitiesTable,
+                _fileBOM = bom,
+                _fileBOMString = bom?.Length > 0 ? FileHelper.GetEncoding(bom).GetString(bom) : null
+            };
 
         public static HuffmanDecoder FromFile(FileHelper fileReader)
         {
@@ -31,16 +47,30 @@ namespace FilesEncryptor.helpers.huffman
 
             try
             {
-                DebugUtils.WriteLine("Searching for original file text Encoding");
+                /**- El formato del encabezado de un archivo Huffman es:
+                 *   header = [encodingStringLen]:[encodingCodePage][bomBytesLen]:[bomBytes]
+                 * - El formato de la tabla de probabilidades es
+                 *   probTable = ([char][charBitsLen]:[charCode])+
+                 * - El formato del codigo es:
+                 *   code = [codeBitsLen]:[code]
+                 *   
+                 * - El formato completo es:
+                 *   [header][probTable]..[code] 
+                 */
+
+                #region HUFFMAN_HEADER
+                
+                //Obtengo el BOM del archivo original
+                DebugUtils.WriteLine("Searching for original file BOM");
                 uint bomLen = uint.Parse(fileReader.ReadStringUntil(":"));
 
                 if (bomLen > 0)
                 {
                     //Obtengo el BOM del texto original
-                    byte[] textBom = fileReader.ReadBytes(bomLen);
-                    fileReader.SetFileEncoding(FileHelper.GetEncoding(textBom));
+                    byte[] textBom = fileReader.ReadBytes(bomLen);                    
+
                     decoder._fileBOM = textBom;
-                    decoder._fileBOMString = fileReader.FileEncoding.GetString(textBom);
+                    decoder._fileBOMString = FileHelper.GetEncoding(textBom).GetString(textBom);
 
                     DebugUtils.WriteLine(string.Format("Original file encoding is {0}", fileReader.FileEncoding.EncodingName));
                 }
@@ -49,39 +79,81 @@ namespace FilesEncryptor.helpers.huffman
                     DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
                 }
 
+                //Obtengo el Encoding usado para leer el archivo original
+                DebugUtils.WriteLine("Reading original file Encoding");
+
+                uint encodingStrLen = uint.Parse(fileReader.ReadStringUntil(":"));
+                int fileEncodingCodePage = int.Parse(fileReader.ReadString(encodingStrLen));
+
+                Encoding fileEncoding = Encoding.GetEncoding(fileEncodingCodePage);
+
+                //Seteo el Encoding en el fileReader, para poder leer los caracteres de la tabla de probabilidades
+                fileReader.SetFileEncoding(fileEncoding);
+
+                #endregion
+
+                #region HUFFMAN_PROBABILITIES_TABLE
+
                 DebugUtils.WriteLine("Reading Probabilities Table");
 
-                //Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
-                string endOfTableReader = fileReader.ReadString(2);
 
-                //Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
-                while (endOfTableReader != "..")
+                string endOfTable = fileReader.ReadString(1);
+
+                while(endOfTable != ".")
                 {
-                    //Obtengo el caracter del siguiente codigo de la tabla
-                    char currentChar = endOfTableReader.First();
-                    
-                    //Obtengo la longitud en bits del codigo indicado
-                    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
-                    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
+                    //Leo la longitud en bytes de la clave y la longitud en bits del codigo del primer caracter de la tabla
+                    uint keyLen = uint.Parse(endOfTable + fileReader.ReadStringUntil(","));
+                    uint codeLen = uint.Parse(fileReader.ReadStringUntil(":"));
+                    uint codeBytesLen = BitCode.BitsLengthToBytesLength(codeLen);
 
-                    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
-                    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
+                    //Leo el caracter clave y el codigo
+                    byte[] keyBytes = fileReader.ReadBytes(keyLen);
+                    char key = fileEncoding.GetString(keyBytes).First();
+                    byte[] codeBytes = fileReader.ReadBytes(codeBytesLen);
 
-                    //Agrego el codigo leido a la tabla de probabilidades del decodificador
-                    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
+                    //Agrego el par a la tabla
+                    decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
 
-                    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
-                    endOfTableReader = fileReader.ReadString(2);
-
+                    endOfTable = fileReader.ReadString(1);
                     counter++;
                 }
 
+                ////Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
+                //string endOfTableReader = fileReader.ReadString(2);
+
+                ////Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
+                //while (endOfTableReader != "..")
+                //{
+                //    //Obtengo el caracter del siguiente codigo de la tabla
+                //    char currentChar = endOfTableReader.First();
+                    
+                //    //Obtengo la longitud en bits del codigo indicado
+                //    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
+                //    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
+
+                //    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
+                //    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
+
+                //    //Agrego el codigo leido a la tabla de probabilidades del decodificador
+                //    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
+
+                //    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
+                //    endOfTableReader = fileReader.ReadString(2);
+
+                //    counter++;
+                //}
+
+                #endregion
+
+                #region HUFFMAN_CODE
+
                 DebugUtils.WriteLine("Reading Encoded bytes");
-
-
+                
                 //Obtengo la longitud en bits del texto codificado
+                //Luego, la convierto a bytes
                 uint encodedTextLength = uint.Parse(fileReader.ReadStringUntil(":"));
                 uint bytesLength = BitCode.BitsLengthToBytesLength(encodedTextLength);
+
                 DebugUtils.WriteLine(string.Format("Encoded file length is {0} bits ({1} bytes)", 
                     encodedTextLength, 
                     bytesLength));
@@ -89,6 +161,8 @@ namespace FilesEncryptor.helpers.huffman
                 //Leo el texto codificado
                 byte[] encodedTextBytes = fileReader.ReadBytes(bytesLength);
                 DebugUtils.WriteLine(string.Format("Encoded text bytes read: {0}", encodedTextBytes.Length));
+
+                #endregion
 
                 //Convierto a BitCode el texto codificado
                 decoder._encoded = new BitCode(new List<byte>(encodedTextBytes), (int)encodedTextLength);
@@ -101,6 +175,10 @@ namespace FilesEncryptor.helpers.huffman
 
             return decoder;
         }
+
+        #endregion
+
+        #region INSTANCE_METHODS
 
         public string Decode()
         {
@@ -115,10 +193,13 @@ namespace FilesEncryptor.helpers.huffman
                 int currentCodeLength = 0;
                 int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
                 bool analyzingTrashBits = false;
+
+                //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                //con el fin de mostrar estadísticas por consola
                 int lastCodeLength = remainingEncodedText.CodeLength;
 
                 //Determino cada cuantas palabras se mostrará el progresso por consola
-                int wordsDebugStep = (int)Math.Max(0.03 * remainingEncodedText.CodeLength, 1000);
+                int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
 
                 do
                 {
@@ -156,6 +237,7 @@ namespace FilesEncryptor.helpers.huffman
                                 currentByteIndex = 0;
                                 break;
                             }
+
                             //Si los primeros '8 - i' bits del codigo, con i > 0, no representan a ningun caracter, 
                             //remuevo el ultimo codigo agregado a la lista y paso a la siguiente iteracion,
                             //para decrementar i
@@ -195,5 +277,7 @@ namespace FilesEncryptor.helpers.huffman
 
             return result;
         }
+
+        #endregion
     }
 }

@@ -135,8 +135,14 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
                     DebugUtils.WriteLine("Starting Hamming Decoding");
 
+                    DateTime startDate = DateTime.Now;
+
                     //Codifico el archivo original
                     BitCode result = await _decoder.Decode();
+
+                    //Imprimo la cantidad de tiempo que implico la decodificacion
+                    TimeSpan totalTime = DateTime.Now.Subtract(startDate);
+                    DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}", totalTime.ToString()));
 
                     if (result != null)
                     {

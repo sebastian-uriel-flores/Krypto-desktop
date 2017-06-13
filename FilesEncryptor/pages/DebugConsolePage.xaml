@@ -9,10 +9,11 @@
 
     <Page.TopAppBar>
         <CommandBar Background="#FF9200" Foreground="White">
-            <AppBarToggleButton Icon="Priority" Label="Auto scroll" Click="AppBarToggleButton_Click" IsChecked="True" Foreground="White"/>
-
+            <AppBarToggleButton Icon="Priority" Label="Scroll automático" Click="LockScroll_Click" IsChecked="True" Foreground="White"/>
+            <AppBarButton Icon="ClearSelection" Label="Limpiar consola" Click="CleanConsole_Click" Foreground="White"/>            
+            
             <CommandBar.Content>
-                <TextBlock Text="Mensajes" Margin="12,14"/>
+                <TextBlock Text="Consola de mensajes" Margin="12,14"/>
             </CommandBar.Content>
         </CommandBar>
     </Page.TopAppBar>
