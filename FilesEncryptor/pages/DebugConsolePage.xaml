@@ -9,7 +9,7 @@
 
     <Page.TopAppBar>
         <CommandBar Background="#FF9200" Foreground="White">
-            <AppBarToggleButton Icon="Priority" Label="Scroll automático" Click="LockScroll_Click" IsChecked="True" Foreground="White"/>
+            <AppBarToggleButton Icon="Priority" Label="Scroll automático" Click="LockScroll_Click" IsChecked="True" Foreground="White" Style="{StaticResource CustomAppBarToggleButtonStyle}"/>
             <AppBarButton Icon="ClearSelection" Label="Limpiar consola" Click="CleanConsole_Click" Foreground="White"/>            
             
             <CommandBar.Content>
