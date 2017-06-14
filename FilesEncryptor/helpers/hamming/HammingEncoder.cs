@@ -64,7 +64,7 @@ namespace FilesEncryptor.helpers.hamming
                         List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
 
                         //Determino cada cuantas palabras se mostrará el progresso por consola
-                        int wordsDebugStep = (int)Math.Max(0.1 * outputBlocks.Count, 1000);
+                        int wordsDebugStep = (int)Math.Min(0.1 * outputBlocks.Count, 1000);
 
                         foreach (BitCode currentWord in dataBlocks)
                         {
