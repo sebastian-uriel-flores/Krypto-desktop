@@ -78,7 +78,7 @@ namespace FilesEncryptor.helpers.huffman
                 BitCode fullCode = BitCode.EMPTY;
                 
                 //Determino cada cuantas palabras se mostrará el progresso por consola
-                int wordsDebugStep = (int)Math.Max(0.1 * _baseText.Length, 1000);
+                int wordsDebugStep = (int)Math.Min(0.1 * _baseText.Length, 1000);
 
                 foreach (char c in _baseText)
                 {
