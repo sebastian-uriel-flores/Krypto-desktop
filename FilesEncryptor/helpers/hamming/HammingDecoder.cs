@@ -72,7 +72,7 @@ namespace FilesEncryptor.helpers.hamming
                     uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
                     DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
-                    List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false).Item1;
+                    List<BitCode> encodedWords = _fullCode.Explode2(encodedWordSize, false, true).Item1;
 
                     DebugUtils.WriteLine(string.Format("Extracted {0} encoded words", encodedWords.Count));
                     DebugUtils.WriteLine("Checking words parity");
@@ -112,7 +112,7 @@ namespace FilesEncryptor.helpers.hamming
                         uint currentExp = 0;
                         foreach(uint index in controlBitsIndexes)
                         {
-                            decoded = decoded.ReplaceAt(index - currentExp, BitCode.EMPTY);
+                            decoded = decoded.ReplaceAt2(index - currentExp, BitCode.EMPTY);
                             currentExp++;
                         }
                         /*foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
@@ -137,7 +137,7 @@ namespace FilesEncryptor.helpers.hamming
                     result = BitOps.Join(decodedWords);
 
                     //Remuevo los bits de redundancia
-                    result = result.GetRange(0, (uint)result.CodeLength - _redundanceBitsCount);
+                    result = result.GetRange2(0, (uint)result.CodeLength - _redundanceBitsCount);
 
                     BitCodePresenter.From(new List<BitCode>() { result }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
                 });
