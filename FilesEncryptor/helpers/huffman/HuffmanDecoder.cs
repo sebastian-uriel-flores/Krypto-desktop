@@ -15,12 +15,17 @@ namespace FilesEncryptor.helpers.huffman
         private byte[] _fileBOM;
         private string _fileBOMString;
 
+        private BinaryTree<string> _codesTree;
+
         #endregion
 
         #region PROPERTIES
 
         public byte[] FileBOM => _fileBOM;
+
         public string FileBOMString => _fileBOMString;
+
+        public BinaryTree<string> CodesTree => _codesTree;
 
         #endregion 
 
@@ -28,7 +33,7 @@ namespace FilesEncryptor.helpers.huffman
 
         private HuffmanDecoder() : base()
         {
-
+            _codesTree = BinaryTree<string>.EMPTY;
         }
 
         public static HuffmanDecoder FromEncoded(BitCode encoded, Dictionary<char,BitCode> probabilitiesTable, byte[] bom = null) 
@@ -113,6 +118,7 @@ namespace FilesEncryptor.helpers.huffman
 
                     //Agrego el par a la tabla
                     decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
+                    decoder._codesTree.Add(new BitCode(codeBytes.ToList(), (int)codeLen), key.ToString());
 
                     endOfTable = fileReader.ReadString(1);
                     counter++;
@@ -227,6 +233,109 @@ namespace FilesEncryptor.helpers.huffman
                                 {
                                     //Lo decodifico y agrego al string decodificado
                                     result += GetChar(currentCode);
+
+                                    //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
+                                    //para eliminar el codigo que acabo de agregar y continuar con el siguiente
+                                    remainingEncodedText.ReplaceCode(
+                                        BitCode.LeftShifting(remainingEncodedText.Code, currentCodeLength),
+                                        remainingEncodedText.CodeLength - currentCodeLength);
+
+                                    currentCodeBytes = new List<byte>();
+                                    currentCodeLength = 0;
+                                    currentByteIndex = 0;
+                                    break;
+                                }
+
+                                //Si los primeros '8 - i' bits del codigo, con i > 0, no representan a ningun caracter, 
+                                //remuevo el ultimo codigo agregado a la lista y paso a la siguiente iteracion,
+                                //para decrementar i
+                                else if (i > 0)
+                                {
+                                    currentCodeBytes.Remove(currentByte);
+                                    currentCodeLength -= diff;
+                                }
+                                //Si el byte completo junto con los bytes ya agregados no representa a ningun codigo, entonces paso al siguiente byte.
+                                //La idea es realizar el mismo procedimiento, pero esta vez evaluando en todos los bytes ya agregados,
+                                //sumando de a 1 bit del byte nuevo.
+                                else
+                                {
+                                    currentByteIndex++;
+                                }
+                            }
+                            else
+                            {
+                                analyzingTrashBits = true;
+                                break;
+                            }
+                        }
+
+                        if (lastCodeLength - remainingEncodedText.CodeLength >= wordsDebugStep)
+                        {
+                            lastCodeLength = remainingEncodedText.CodeLength;
+                            DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                        }
+                    }
+                    while (currentByteIndex + currentCodeBytes.Count < _encoded.Code.Count && !analyzingTrashBits);
+                }
+                catch (Exception ex)
+                {
+                    result = null;
+                    DebugUtils.Fail("Exception decoding huffman file", ex.Message);
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<string> DecodeWithTree()
+        {
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string result = _fileBOMString ?? "";
+
+            await Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    BitCode remainingEncodedText = _encoded.Copy();
+
+                    List<byte> currentCodeBytes = new List<byte>();
+                    int currentCodeLength = 0;
+                    int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
+                    bool analyzingTrashBits = false;
+
+                    //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                    //con el fin de mostrar estadísticas por consola
+                    int lastCodeLength = remainingEncodedText.CodeLength;
+
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
+
+                    do
+                    {
+                        byte currentByte = remainingEncodedText.Code[currentByteIndex];
+
+                        //Hago desplazamientos a derecha, yendo desde 7 desplazamientos a 0
+                        for (int i = 7; i >= 0; i--)
+                        {
+                            //Me quedo con los primeros ´8 - i´ bits de la izquierda
+                            byte possibleCode = (byte)((currentByte >> i) << i);
+                            int diff = 8 - i;
+
+                            currentCodeBytes.Add(currentByte);
+                            currentCodeLength += diff;
+
+                            //Si no estoy agregando bits basura que exceden la longitud del texto codificado
+                            if (remainingEncodedText.CodeLength - currentCodeLength >= 0)
+                            {
+                                BitCode currentCode = new BitCode(currentCodeBytes, currentCodeLength);
+
+                                string value = _codesTree.Get(currentCode);
+
+                                //Si el codigo formado al realizar los 'i' desplazamientos es un codigo valido
+                                if (value != default(string))
+                                {
+                                    //Lo decodifico y agrego al string decodificado
+                                    result += value;
 
                                     //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
                                     //para eliminar el codigo que acabo de agregar y continuar con el siguiente
