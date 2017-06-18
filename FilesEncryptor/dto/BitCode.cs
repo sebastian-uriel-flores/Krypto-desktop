@@ -241,7 +241,7 @@ namespace FilesEncryptor.dto
             if (bitsCount > 0 && Code.Count > 0)
             {
                 BitCode workCopy = Copy();
-
+                
                 //Obtengo la posicion de byte inicial
                 uint startBytePos = BitPositionToBytePosition(startBitPos);
                 uint endBytePos = BitPositionToBytePosition(startBitPos + bitsCount - 1);
@@ -559,7 +559,7 @@ namespace FilesEncryptor.dto
 
         public static uint BitsLengthToBytesLength(uint bitsLength) => (uint)Math.Ceiling((float)bitsLength / 8.0);
 
-        public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
+        public static uint BitPositionToBytePosition(uint bitsLength) => bitsLength / 8;
 
         public static uint GlobalBitPositionToLocal(uint bitPosition) => bitPosition % 8;
 
