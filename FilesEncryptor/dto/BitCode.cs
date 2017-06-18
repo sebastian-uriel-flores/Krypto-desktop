@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FilesEncryptor.utils;
 using System.Collections;
+using FilesEncryptor.helpers;
 
 namespace FilesEncryptor.dto
 {
@@ -336,7 +337,7 @@ namespace FilesEncryptor.dto
             return new Tuple<List<BitCode>, int>(blocks, addedZeros);
         }
 
-        public Tuple<List<BitCode>, int> Explode2(uint blockBitsSize, bool fillRemainingWithZeros = true)
+        public Tuple<List<BitCode>, int> Explode2(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false)
         {
             BitCode copy = Copy();
             int addedZeros = 0;
@@ -365,6 +366,14 @@ namespace FilesEncryptor.dto
                         copy.Append(Zeros((uint)addedZeros));
                     }
                 }
+            }
+
+            uint wordsCount = (uint)copy.CodeLength / blockBitsSize;
+            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 1000);
+
+            if (printInDebugConsole)
+            {
+                DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", wordsCount));
             }
 
             //Construyo la lista de bloques
@@ -404,6 +413,11 @@ namespace FilesEncryptor.dto
                     : blockBitsSize;*/
 
                 blocks.Add(copy.GetRange2(i, bitsToObtain));
+
+                if (printInDebugConsole && blocks.Count % wordsDebugStep == 0)
+                {
+                    DebugUtils.WriteLine(string.Format("Extracted {0} words of {1}", blocks.Count, wordsCount), "[PROGRESS]");
+                }
             }
 
             return new Tuple<List<BitCode>, int>(blocks, addedZeros);

@@ -39,7 +39,7 @@ namespace FilesEncryptor.helpers.hamming
                         DebugUtils.WriteLine(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
 
                         //Obtengo todos los bloques de informacion o palabras
-                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode2(encodeType.WordBitsSize);
+                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode2(encodeType.WordBitsSize, true, true);
                         List<BitCode> dataBlocks = exploded.Item1;
 
                         DebugUtils.WriteLine(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));

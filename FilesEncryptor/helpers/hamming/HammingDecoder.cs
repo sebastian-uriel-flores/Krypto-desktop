@@ -72,7 +72,7 @@ namespace FilesEncryptor.helpers.hamming
                     uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
                     DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
-                    List<BitCode> encodedWords = _fullCode.Explode2(encodedWordSize, false).Item1;
+                    List<BitCode> encodedWords = _fullCode.Explode2(encodedWordSize, false, true).Item1;
 
                     DebugUtils.WriteLine(string.Format("Extracted {0} encoded words", encodedWords.Count));
                     DebugUtils.WriteLine("Checking words parity");
