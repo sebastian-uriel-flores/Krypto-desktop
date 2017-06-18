@@ -1,6 +1,7 @@
 ﻿using FilesEncryptor.dto;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,22 +15,27 @@ namespace FilesEncryptor.helpers.huffman
         private BinaryTree<T> _leftSon;
         private BinaryTree<T> _rightSon;
 
+        private List<uint> _terminalCodesLenghts;
+
         public T Value => _value;
 
         public BinaryTree<T> LeftSon => _leftSon;
 
         public BinaryTree<T> RightSon => _rightSon;
 
+        public ReadOnlyCollection<uint> TerminalCodesLengths => new ReadOnlyCollection<uint>(_terminalCodesLenghts);
+
         public BinaryTree()
         {
             _value = default(T);
-            _leftSon = EMPTY;
-            _rightSon = EMPTY;
+            _leftSon = null;
+            _rightSon = null;
+            _terminalCodesLenghts = new List<uint>();
         }
 
         public bool Contains(BitCode position)
         {
-            List<BitCode> bits = position.Explode(1, false).Item1;
+            List<BitCode> bits = position.Explode2(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
             
@@ -38,11 +44,11 @@ namespace FilesEncryptor.helpers.huffman
                 if (lastSon == null)
                     break;
 
-                if(bit == BitCode.ZERO)
+                if(bit.Equals(BitCode.ZERO))
                 {
                     lastSon = lastSon.LeftSon;
                 }
-                else if(bit == BitCode.ONE)
+                else if(bit.Equals(BitCode.ONE))
                 {
                     lastSon = lastSon.RightSon;
                 }
@@ -59,7 +65,7 @@ namespace FilesEncryptor.helpers.huffman
         {
             T value = default(T);
 
-            List<BitCode> bits = position.Explode(1, false).Item1;
+            List<BitCode> bits = position.Explode2(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
 
@@ -68,11 +74,11 @@ namespace FilesEncryptor.helpers.huffman
                 if (lastSon == null)
                     break;
 
-                if (bit == BitCode.ZERO)
+                if (bit.Equals(BitCode.ZERO))
                 {
                     lastSon = lastSon.LeftSon;
                 }
-                else if (bit == BitCode.ONE)
+                else if (bit.Equals(BitCode.ONE))
                 {
                     lastSon = lastSon.RightSon;
                 }
@@ -92,7 +98,7 @@ namespace FilesEncryptor.helpers.huffman
 
         public void Add(BitCode position, T value)
         {
-            List<BitCode> bits = position.Explode(1, false).Item1;
+            List<BitCode> bits = position.Explode2(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
 
@@ -100,7 +106,7 @@ namespace FilesEncryptor.helpers.huffman
             {
                 BinaryTree<T> newSon = EMPTY;
 
-                if (bit == BitCode.ZERO)
+                if (bit.Equals(BitCode.ZERO))
                 {
                     if (lastSon.LeftSon == null)
                     {
@@ -109,7 +115,7 @@ namespace FilesEncryptor.helpers.huffman
 
                     newSon = lastSon.LeftSon;
                 }
-                else if (bit == BitCode.ONE)
+                else if (bit.Equals(BitCode.ONE))
                 {
                     if (lastSon.RightSon == null)
                     {
@@ -122,6 +128,12 @@ namespace FilesEncryptor.helpers.huffman
             }
 
             lastSon._value = value;
+
+            if(!_terminalCodesLenghts.Contains((uint)position.CodeLength))
+            {
+                _terminalCodesLenghts.Add((uint)position.CodeLength);
+                _terminalCodesLenghts.Sort((x, y) => x < y ? 1 : -1);
+            }
         }
 
         public void Remove(BitCode position)

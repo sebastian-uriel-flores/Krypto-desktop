@@ -321,7 +321,7 @@ namespace FilesEncryptor.helpers.huffman
                             byte possibleCode = (byte)((currentByte >> i) << i);
                             int diff = 8 - i;
 
-                            currentCodeBytes.Add(currentByte);
+                            currentCodeBytes.Add(possibleCode);
                             currentCodeLength += diff;
 
                             //Si no estoy agregando bits basura que exceden la longitud del texto codificado
@@ -354,7 +354,7 @@ namespace FilesEncryptor.helpers.huffman
                                 //para decrementar i
                                 else if (i > 0)
                                 {
-                                    currentCodeBytes.Remove(currentByte);
+                                    currentCodeBytes.Remove(possibleCode);
                                     currentCodeLength -= diff;
                                 }
                                 //Si el byte completo junto con los bytes ya agregados no representa a ningun codigo, entonces paso al siguiente byte.
@@ -379,6 +379,58 @@ namespace FilesEncryptor.helpers.huffman
                         }
                     }
                     while (currentByteIndex + currentCodeBytes.Count < _encoded.Code.Count && !analyzingTrashBits);
+                }
+                catch (Exception ex)
+                {
+                    result = null;
+                    DebugUtils.Fail("Exception decoding huffman file", ex.Message);
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<string> DecodeWithTree2()
+        {
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string result = _fileBOMString ?? "";
+
+            await Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    BitCode remainingEncodedText = _encoded.Copy();
+
+                    //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                    //con el fin de mostrar estadísticas por consola
+                    uint lastCodeLength = (uint)remainingEncodedText.CodeLength;
+
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
+
+                    uint baseIndex = 0;
+                    do
+                    {
+                        foreach(uint codeLength in _codesTree.TerminalCodesLengths)
+                        {
+                            BitCode range = remainingEncodedText.GetRange2(baseIndex, codeLength);
+                            string value = _codesTree.Get(range);
+
+                            if(value != default(string))
+                            {
+                                result += value;
+                                baseIndex += codeLength;
+                                break;
+                            }
+                        }
+
+                        if (lastCodeLength - ((uint)remainingEncodedText.CodeLength - baseIndex) >= wordsDebugStep)
+                        {
+                            lastCodeLength = (uint)remainingEncodedText.CodeLength - baseIndex;
+                            DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                        }
+                    }
+                    while (baseIndex < remainingEncodedText.CodeLength);
                 }
                 catch (Exception ex)
                 {
