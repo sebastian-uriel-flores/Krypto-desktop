@@ -75,26 +75,6 @@ namespace FilesEncryptor.helpers.hamming
                     List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false, true).Item1;
 
                     DebugUtils.WriteLine(string.Format("Extracted {0} encoded words", encodedWords.Count));
-                    DebugUtils.WriteLine("Checking words parity");
-
-                    //TODO:Chequeo la paridad en cada una de las palabras, utilizando la matriz de control de paridad
-                    for (int encodedWordIndex = 0; encodedWordIndex < encodedWords.Count; encodedWordIndex++)
-                    {
-                        /*int errorPosition = CheckParity(parityControlMatrix, encodedWords[encodedWordIndex]);
-
-                        //Si encuentra un error en la palabra
-                        if(errorPosition > - 1)
-                        {                        
-                            //TODO: Fix error
-                            /*encodedWords[encodedWordIndex] = encodedWords[encodedWordIndex].ReplaceAt(
-                                (uint)errorPosition, 
-                                encodedWords[encodedWordIndex].ElementAt((uint)errorPosition).Negate());
-                                */
-                        /*  DebugUtils.WriteLine(string.Format("Fixed error in word {0} at bit {1}", encodedWordIndex, errorPosition));
-                      }*/
-                    }
-
-                    DebugUtils.WriteLine("Parity check OK");
 
                     //Decodifico cada una de las palabras
                     DebugUtils.WriteLine(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
@@ -109,16 +89,23 @@ namespace FilesEncryptor.helpers.hamming
                     {
                         BitCode decoded = encoded.Copy();
 
+                        //Chequeo si algún bit de la palabra actual es erróneo
+                        int errorPosition = CheckParity(parityControlMatrix, decoded);
+
+                        //Si hay un error
+                        if(errorPosition >= 0)
+                        {
+                            //Fixeo el error en el bit correspondiente
+                            BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);
+                            decoded = decoded.ReplaceAt((uint)errorPosition, erroneousBit.Negate());
+                        }
+
                         uint currentExp = 0;
                         foreach(uint index in controlBitsIndexes)
                         {
                             decoded = decoded.ReplaceAt(index - currentExp, BitCode.EMPTY);
                             currentExp++;
                         }
-                        /*foreach (uint index in GetDataBitsIndexes((uint)encoded.CodeLength, controlBitsIndexes))
-                        {
-                            decoded.Append(encoded.ElementAt(index));
-                        }*/
 
                         decodedWords.Add(decoded);
 
@@ -151,22 +138,22 @@ namespace FilesEncryptor.helpers.hamming
 
         private int CheckParity(List<BitCode> parityControlMatrix, BitCode codeToCheck)
         {
-            List<int> syndrome = new List<int>();
+            BitCode syndrome = BitCode.EMPTY;
 
             for (int columnIndex = 0; columnIndex < parityControlMatrix.Count; columnIndex++)
             {
-                syndrome.Add(BitOps.Xor(BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] }).Explode(1, false).Item1).ToIntList().First());                
+                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] }).Explode(1, false).Item1);
+                syndrome.Append(code);
             }
 
-            int errorPosition = -1;
-
+            int errorPosition = 0;
             //Ahora, convierto el sindrome a entero para ver si hay errores
-            for (int i = 0; i <syndrome.Count; i++)
+            for (int i = 0; i < syndrome.CodeLength; i++)
             {
-                errorPosition += (int)Math.Pow(2, i) * syndrome[i];
+                errorPosition += (int)Math.Pow(2, i) * syndrome.ElementAt((uint)i).Code.First();
             }
-            
-            return errorPosition;
+
+            return errorPosition - 1;
         }
     }
 }

@@ -83,7 +83,7 @@ namespace FilesEncryptor.helpers.hamming
 
             //La matriz de control de paridad tendrá tantas columnas como bits de control sean necesarios
             List<BitCode> parContMatrix = new List<BitCode>((int)controlBitsCount);
-
+            
             //Completo la matriz de control de paridad
             for (uint columnIndex = 0; columnIndex < controlBitsCount; columnIndex++)
             {
@@ -115,7 +115,7 @@ namespace FilesEncryptor.helpers.hamming
                 parContMatrix.Add(currentColumn);
             }
 
-            BitCodePresenter.From(parContMatrix).Print(BitCodePresenter.LinesDisposition.Column, "Parity control matrix");
+            BitCodePresenter.From(parContMatrix).Print(BitCodePresenter.LinesDisposition.Column, "Parity control matrix", 4, true);
 
             return parContMatrix;
         }

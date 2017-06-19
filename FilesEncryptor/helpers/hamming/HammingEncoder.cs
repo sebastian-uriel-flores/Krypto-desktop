@@ -69,12 +69,12 @@ namespace FilesEncryptor.helpers.hamming
                         foreach (BitCode currentWord in dataBlocks)
                         {
                             int currentExp = 0;
-                            int currentDataBit = 0;
                             BitCode currentOutputWord = currentWord.Copy();
 
                             List<Tuple<int, int>> dataBlocksIndexes = new List<Tuple<int, int>>();
                             List<Tuple<int, int>> controlBlocksIndexes = new List<Tuple<int, int>>();
                            
+                            //Calculo los valores que iran en cada bit de control
                             foreach(uint index in controlBitsIndexes)
                             {
                                 var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1);
@@ -82,27 +82,6 @@ namespace FilesEncryptor.helpers.hamming
                                 currentExp++;
                             }
                             
-                            /*for (int i = 0; i < outWordSize; i++)
-                            {
-                                //Si es un bit de control, calculo su valor, basandome en la matriz generadora
-                                if (i + 1 == Math.Pow(2, currentExp))
-                                {
-                                    controlBlocksIndexes.Add(new Tuple<int, int>(i, currentExp));
-                                    //Al realizar un and, estoy haciendo la multiplicacion bit a bit
-                                    //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
-                                    //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                    currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
-                                    currentExp++;
-                                }
-                                //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
-                                else
-                                {
-                                    dataBlocksIndexes.Add(new Tuple<int, int>(i, currentDataBit));
-                                    currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
-                                    currentDataBit++;
-                                }
-                            }*/
-
                             //Agrego la palabra recién creada a la lista de palabras de salida
                             outputBlocks.Add(currentOutputWord);
 

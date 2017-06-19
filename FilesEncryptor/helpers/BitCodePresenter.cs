@@ -36,9 +36,9 @@ namespace FilesEncryptor.helpers
             _codes.AddRange(codes);
         }
 
-        public void Print(LinesDisposition disposition, string codeName, int interSpacing = 4)
+        public void Print(LinesDisposition disposition, string codeName, int interSpacing = 4, bool forceShow = false)
         {
-            if (ENABLED)
+            if (ENABLED || forceShow)
             {
                 List<string> lines = new List<string>();
                 int rowsCount = 0;
