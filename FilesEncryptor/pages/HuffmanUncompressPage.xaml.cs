@@ -29,9 +29,6 @@ using Windows.UI.Xaml.Navigation;
 
 namespace FilesEncryptor.pages
 {
-    /// <summary>
-    /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
-    /// </summary>
     public sealed partial class UncompressFilePage : Page
     {
         private FileHelper _fileOpener;
@@ -77,7 +74,7 @@ namespace FilesEncryptor.pages
                     _fileHeader = _fileOpener.ReadFileHeader();
 
                     //Leo el archivo
-                    _decoder = HuffmanDecoder.FromFile(_fileOpener); ;
+                    _decoder = HuffmanDecoder.FromFile(_fileOpener);
 
                     //Cierro el archivo
                     await _fileOpener.Finish();
@@ -111,24 +108,27 @@ namespace FilesEncryptor.pages
                     
                     //Decodifico el archivo
                     DebugUtils.WriteLine("Starting decoding process");
+                    DateTime startDate = DateTime.Now;
 
                     //[IMPORTANTE]: Inicio un Thread para decodificar el archivo, dado que sino, se bloquea la UI
                     //y, al decodificar archivos muy largos, 
-                    //implica que la interfaz permanezca bloqueada por mucho tiempo y el sistema finalice la app
-                    await Task.Factory.StartNew(async () =>
-                    {
-                        string decoded = _decoder.Decode();
-                        fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
+                    //implica que la interfaz permanezca bloqueada por mucho tiempo y el sistema finalice la app                    
+                    string decoded = await _decoder.DecodeWithTreeMultithreaded();
+                    fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
-                        //Si la decodificacion se realizo con exito,                         
-                        //Escribo el texto decodificado en el archivo de salida
-                        decodeResult = decoded != null && fileSaver.WriteString(decoded);
+                    //Si la decodificacion se realizo con exito,                         
+                    //Escribo el texto decodificado en el archivo de salida
+                    decodeResult = decoded != null && fileSaver.WriteString(decoded);
 
-                        //Cierro el archivo comprimido
-                        DebugUtils.WriteLine("Closing file");
-                        await fileSaver.Finish();
-                        DebugUtils.WriteLine("File closed");
-                    });
+                    //Imprimo la cantidad de tiempo que implico la decodificacion
+                    TimeSpan totalTime = DateTime.Now.Subtract(startDate);
+                    DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}", totalTime.ToString()));
+
+                    //Cierro el archivo descomprimido
+                    DebugUtils.WriteLine("Closing file");
+                    await fileSaver.Finish();
+                    DebugUtils.WriteLine("File closed");
+                    
                     HideProgressPanel();
                 }
             }

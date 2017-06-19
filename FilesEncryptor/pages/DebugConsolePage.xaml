@@ -7,19 +7,33 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <RelativePanel Background="#FFF9CD9F">
-        <TextBlock 
-            x:Name="titleBlock"
-            Text="Consola" 
-            FontSize="24"
+    <Page.TopAppBar>
+        <CommandBar Background="#FF9200" Foreground="White">
+            <AppBarToggleButton Icon="Priority" Label="Scroll automático" Click="LockScroll_Click" IsChecked="True" Foreground="White" Style="{StaticResource CustomAppBarToggleButtonStyle}"/>
+            <AppBarButton Icon="ClearSelection" Label="Limpiar consola" Click="CleanConsole_Click" Foreground="White"/>            
+            
+            <CommandBar.Content>
+                <TextBlock Text="Consola de mensajes" Margin="12,14"/>
+            </CommandBar.Content>
+        </CommandBar>
+    </Page.TopAppBar>
+
+    <RelativePanel Background="#FFF9CD9F">        
+        <ListView
+            x:Name="listConsole"
+            Background="WhiteSmoke"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
-            Margin="10,0"
+            RelativePanel.AlignTopWithPanel="True"
+            RelativePanel.AlignBottomWithPanel="True"
+            ScrollViewer.HorizontalScrollMode="Auto"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            Margin="10"
             />
         <TextBox
+            Visibility="Collapsed"
             x:Name="console"
             AcceptsReturn="True"
-            RelativePanel.Below="titleBlock"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignBottomWithPanel="True"

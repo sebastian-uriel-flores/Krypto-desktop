@@ -11,15 +11,15 @@ namespace FilesEncryptor.dto.huffman
     {
         public BitCode Encoded { get; set; }
 
-        public byte[] OriginalFileBOM { get; set; }
-
         public ReadOnlyDictionary<char, BitCode> ProbabilitiesTable { get; set; }
 
-        public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable, byte[] originalFileBOM)
+        public List<uint> CodePartsLengths { get; set; }
+
+        public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable, List<uint> codePartsLengths)
         {
             Encoded = encoded;
             ProbabilitiesTable = probabilitiesTable;
-            OriginalFileBOM = originalFileBOM;
+            CodePartsLengths = codePartsLengths;
         }
     }
 }

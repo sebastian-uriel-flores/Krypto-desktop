@@ -8,7 +8,10 @@ using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Foundation.Metadata;
+using Windows.UI;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -50,12 +53,54 @@ namespace FilesEncryptor
         }
 
         /// <summary>
+        /// Function to convert Hex to Color
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
+        public SolidColorBrush GetSolidColorBrush(string hex)
+        {
+            hex = hex.Replace("#", string.Empty);
+            byte a = (byte)(Convert.ToUInt32(hex.Substring(0, 2), 16));
+            byte r = (byte)(Convert.ToUInt32(hex.Substring(2, 2), 16));
+            byte g = (byte)(Convert.ToUInt32(hex.Substring(4, 2), 16));
+            byte b = (byte)(Convert.ToUInt32(hex.Substring(6, 2), 16));
+            SolidColorBrush myBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(a, r, g, b));
+            return myBrush;
+        }
+
+        /// <summary>
         /// Se invoca cuando el usuario final inicia la aplicación normalmente. Se usarán otros puntos
         /// de entrada cuando la aplicación se inicie para abrir un archivo específico, por ejemplo.
         /// </summary>
         /// <param name="e">Información detallada acerca de la solicitud y el proceso de inicio.</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            var view = SystemNavigationManager.GetForCurrentView();
+            view.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
+            //view.BackRequested += View_BackRequested;
+            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
+            {
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                if (titleBar != null)
+                {
+                    var mainOrange = GetSolidColorBrush("#FFFB8300").Color;
+                    var secondOrange = GetSolidColorBrush("#FFCD3927").Color;
+
+                    titleBar.ButtonBackgroundColor = mainOrange;
+                    titleBar.ButtonForegroundColor = Colors.White;
+                    titleBar.ButtonHoverBackgroundColor = secondOrange;
+                    titleBar.ButtonInactiveBackgroundColor = mainOrange;
+                    titleBar.ButtonInactiveForegroundColor = Colors.White;
+                    
+                    titleBar.BackgroundColor = mainOrange;
+                    titleBar.ForegroundColor = Colors.White;
+                    titleBar.InactiveBackgroundColor = mainOrange;
+                    titleBar.InactiveForegroundColor = Colors.White;
+                }
+            }
+
+
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // No repetir la inicialización de la aplicación si la ventana tiene contenido todavía,

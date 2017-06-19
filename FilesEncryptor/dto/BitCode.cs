@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FilesEncryptor.utils;
 using System.Collections;
+using FilesEncryptor.helpers;
 
 namespace FilesEncryptor.dto
 {
@@ -129,6 +130,16 @@ namespace FilesEncryptor.dto
             return concatenated;
         }
 
+        public BitCode Insert2(uint bitPosition, BitCode encoded)
+        {
+            BitCode concatenated = GetRange2(0, bitPosition);
+            concatenated.Append(encoded);
+            concatenated.Append(GetRange2(bitPosition, (uint)CodeLength - bitPosition));
+            //ReplaceCode(concatenated.Code, concatenated.CodeLength);
+
+            return concatenated;
+        }
+
         public BitCode ElementAt(uint bitPosition)
         {
             int bytePosition = (int)BitPositionToBytePosition(bitPosition);
@@ -163,6 +174,19 @@ namespace FilesEncryptor.dto
             return firstHalf;
         }
 
+        public BitCode ReplaceAt2(uint bitPosition, BitCode replacement)
+        {
+            BitCode firstHalf = GetRange2(0, bitPosition);
+
+            BitCode secondHalf = bitPosition + 1 >= CodeLength
+                ? EMPTY
+                : GetRange2(bitPosition + 1, (uint)CodeLength - bitPosition - 1);
+
+            firstHalf.Append(replacement);
+            firstHalf.Append(secondHalf);
+            return firstHalf;
+        }
+
         public BitCode GetRange(uint startBitPos, uint bitsCount)
         {
             BitCode result = EMPTY;
@@ -176,18 +200,10 @@ namespace FilesEncryptor.dto
                 uint startBytePos = BitPositionToBytePosition(startBitPos);
 
                 List<byte> bytesRange = new List<byte>();
-                try
-                {
-                    bytesRange = Code.GetRange((int)startBytePos, (int)bytesLength);
-                }
-                catch(Exception ex)
-                {
-
-                }
+                bytesRange = Code.GetRange((int)startBytePos, (int)bytesLength);
 
                 if (bytesRange.Count > 0)
-                {
-                    
+                {                    
                     //Calculo la cantidad de bits usados en el ultimo byte
                     int leftBits = (int)GlobalBitPositionToLocal(startBitPos + bitsCount);
 
@@ -216,6 +232,44 @@ namespace FilesEncryptor.dto
             }
 
             return result;
+        }
+
+        public BitCode GetRange2(uint startBitPos, uint bitsCount)
+        {
+            BitCode range = EMPTY;
+
+            if (bitsCount > 0 && Code.Count > 0)
+            {
+                BitCode workCopy = Copy();
+                
+                //Obtengo la posicion de byte inicial
+                uint startBytePos = BitPositionToBytePosition(startBitPos);
+                uint endBytePos = BitPositionToBytePosition(startBitPos + bitsCount - 1);
+
+                //Obtengo el rango de bytes
+                List<byte> bytesRange = workCopy.Code.GetRange((int)startBytePos, (int)(endBytePos - startBytePos) + 1);
+
+                //Ahora, remuevo los bits a la izquierda que esten de mas
+                uint localStartBitPos = GlobalBitPositionToLocal(startBitPos);
+                List<byte> leftDispBytesRange = LeftShifting(bytesRange, (int)localStartBitPos);
+
+                //A continuacion, remuevo los bytes a la derecha que esten de mas
+                uint endBitPos = bitsCount - 1;
+                endBytePos = BitPositionToBytePosition(endBitPos);
+
+                List<byte> rightDispBytesRange = leftDispBytesRange.GetRange(0, (int)endBytePos + 1);
+
+                //Por ultimo, pongo en cero los bits a la derecha que esten de mas
+                uint localEndBitPos = GlobalBitPositionToLocal(endBitPos);
+                byte masked = MaskLeft(rightDispBytesRange.Last(), (int)localEndBitPos + 1);
+
+                rightDispBytesRange[rightDispBytesRange.Count - 1] = masked;
+
+                //Creo el BitCode para los bytes resultantes
+                range = new BitCode(rightDispBytesRange, (int)bitsCount);
+            }
+
+            return range;
         }
 
         public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true)
@@ -278,6 +332,92 @@ namespace FilesEncryptor.dto
                     : blockBitsSize;*/
 
                 blocks.Add(copy.GetRange(i, bitsToObtain));
+            }
+
+            return new Tuple<List<BitCode>, int>(blocks, addedZeros);
+        }
+
+        public Tuple<List<BitCode>, int> Explode2(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false)
+        {
+            BitCode copy = Copy();
+            int addedZeros = 0;
+
+            if (fillRemainingWithZeros)
+            {
+                //Si los bloques en los que debo explotar al BitCode son mas grandes que el tamaño del BitCode
+                if (blockBitsSize > (uint)copy.CodeLength)
+                {
+                    addedZeros = (int)blockBitsSize - copy.CodeLength;
+
+                    //Agrego Ceros al BitCode para rellenar
+                    copy.Append(Zeros((uint)addedZeros));
+                }
+                //Si el BitCode es más grande que el tamaño de los bloques en los que debo explotarlo
+                else if ((uint)copy.CodeLength > blockBitsSize)
+                {
+                    uint mod = (uint)copy.CodeLength % blockBitsSize;
+
+                    //Si el tamaño del BitCode no es múltiplo del tamaño de bloque
+                    if (mod != 0)
+                    {
+                        //Agrego tantos ceros cómo sea necesario, 
+                        //hasta que el tamaño del BitCode sea múltiplo del tamaño de bloque
+                        addedZeros = (int)(Math.Ceiling((float)copy.CodeLength / blockBitsSize) * blockBitsSize - copy.CodeLength);
+                        copy.Append(Zeros((uint)addedZeros));
+                    }
+                }
+            }
+
+            uint wordsCount = (uint)copy.CodeLength / blockBitsSize;
+            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 1000);
+
+            if (printInDebugConsole)
+            {
+                DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", wordsCount));
+            }
+
+            //Construyo la lista de bloques
+            List<BitCode> blocks = new List<BitCode>();
+
+            for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
+            {
+                if (i >= copy.CodeLength - blockBitsSize - 1)
+                {
+
+                }
+
+                //Si la siguiente palabra es mas chica, es decir,
+                //quedan menos bits que 'blockBitsSize', 
+                //entonces solo devuelvo los bits restantes
+
+                uint bitsToObtain = blockBitsSize;
+                uint endBit = i + blockBitsSize;
+                
+                if(endBit + 1 > copy.CodeLength)
+                {
+                    bitsToObtain = (uint)copy.CodeLength - i;
+                }
+
+
+
+                /*if (i + blockBitsSize >= copy.CodeLength)
+                {
+                    uint localStartBitPos = GlobalBitPositionToLocal(i);
+                    uint startBytePos = BitPositionToBytePosition(i);
+                    uint bytesCountExceptFirst = (uint)copy.Code.Count - startBytePos - 1;
+                    bitsToObtain = bytesCountExceptFirst * 8 + (8 - localStartBitPos);
+                }*/
+
+                /*uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
+                    ? (uint)copy.CodeLength - i
+                    : blockBitsSize;*/
+
+                blocks.Add(copy.GetRange2(i, bitsToObtain));
+
+                if (printInDebugConsole && blocks.Count % wordsDebugStep == 0)
+                {
+                    DebugUtils.WriteLine(string.Format("Extracted {0} words of {1}", blocks.Count, wordsCount), "[PROGRESS]");
+                }
             }
 
             return new Tuple<List<BitCode>, int>(blocks, addedZeros);
@@ -419,7 +559,7 @@ namespace FilesEncryptor.dto
 
         public static uint BitsLengthToBytesLength(uint bitsLength) => (uint)Math.Ceiling((float)bitsLength / 8.0);
 
-        public static uint BitPositionToBytePosition(uint bitsLength) => (uint)Math.Floor((float)bitsLength / 8.0);
+        public static uint BitPositionToBytePosition(uint bitsLength) => bitsLength / 8;
 
         public static uint GlobalBitPositionToLocal(uint bitPosition) => bitPosition % 8;
 

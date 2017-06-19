@@ -44,35 +44,8 @@ namespace FilesEncryptor.pages
                     (item as FrameworkElement).PointerExited += BifurcatorPage_PointerExited;
                 }
             });
-
-            Loaded += BifurcatorPage_Loaded;
         }
-
-        private void BifurcatorPage_Loaded(object sender, RoutedEventArgs e)
-        {
-            //PC customization
-            if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
-            {
-                ApplicationView.GetForCurrentView().Title = "Teoría de la información";
-                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
-                if (titleBar != null)
-                {
-                    Color orange = new Color() { R = 251, G = 131, B = 0 };
-
-                    titleBar.ButtonForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonPressedForegroundColor = Colors.WhiteSmoke;
-                    titleBar.ButtonBackgroundColor = orange;
-                    titleBar.ButtonPressedBackgroundColor = orange;                    
-                    titleBar.InactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.InactiveBackgroundColor = orange;
-                    titleBar.ButtonInactiveBackgroundColor = orange;
-                    titleBar.ButtonInactiveForegroundColor = Colors.WhiteSmoke;
-                    titleBar.BackgroundColor = orange;
-                    titleBar.ForegroundColor = Colors.WhiteSmoke;
-                }
-            }
-        }
-
+      
         private void BifurcatorPage_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Mouse)

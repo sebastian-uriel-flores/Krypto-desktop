@@ -7,7 +7,25 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     RequestedTheme="Dark">
-
+    <Page.Resources>
+        <Style x:Name="PanelHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiLight"/>
+            <Setter Property="Foreground" Value="#FF525151"/>
+            <Setter Property="TextAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="20,0,0,0"/>
+            <Setter Property="RelativePanel.AlignVerticalCenterWithPanel" Value="True"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+        <Style x:Name="PanelDividerStyle" TargetType="Rectangle">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="StrokeThickness" Value="0"/>
+            <Setter Property="Fill" Value="#FFEEEEEE"/>            
+        </Style>
+    </Page.Resources>
+    
     <Grid Background="#FFF9CD9F" RequestedTheme="Light">
         <RelativePanel
             Width="650"
@@ -16,50 +34,65 @@
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
             >
-            <Grid 
-                x:Name="pageHeader"
-                Height="48"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="48"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    TextAlignment="Left"
-                    Text="Codificar con Huffman"
-                    VerticalAlignment="Center"
-                    Margin="20,0,0,0"
-                    FontSize="20"
-                    FontFamily="Segoe UI Light"
-                    FontWeight="SemiLight"
-                    Foreground="#FF525151"/>
+            <RelativePanel
+                        x:Name="pageHeader"
+                RelativePanel.AlignTopWithPanel="True"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        RelativePanel.AlignRightWithPanel="True"
+                        Height="50">
 
                 <Button
+                            x:Name="backBt"
+                            RelativePanel.AlignLeftWithPanel="True"
+                            Height="50"
+                            Width="60"
+                            Content="&#xe0a6;"
+                            BorderBrush="#ff9200"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="#FF525151"
+                            FontFamily="Segoe MDL2 Assets"                    
+                            FontWeight="SemiLight"
+                            FontSize="20"
+                            Click="BackBt_Click"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"                    
+                            />
+                <TextBlock                       
+                    x:Name="headerContent"
+                            Text="Codificar con Huffman"                            
+                            RelativePanel.RightOf="backBt"
+                    RelativePanel.LeftOf="selectFileButton"
+                            Style="{StaticResource PanelHeaderStyle}"
+                    
+                            />
+                <Button
                     x:Name="selectFileButton"
-                    Grid.Column="1"                                                       
-                    Height="35"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="50"
+                    Width="60"
                     Content="&#xe1a5;"
                     BorderBrush="#ff9200"
                     BorderThickness="0"
                     Background="Transparent"
                     Foreground="#ff9200"
-                    FontFamily="Segoe MDL2 Assets"                    
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
+                    FontFamily="Segoe MDL2 Assets"             
+                    FontWeight="SemiLight"
                     FontSize="20"
                     Click="SelectFileBt_Click"
+                    VerticalContentAlignment="Center"
+                    HorizontalContentAlignment="Center"
                     />
-            </Grid>
+            </RelativePanel>
+
+           
             <Rectangle
                 x:Name="pageHeaderDivider"
                 RelativePanel.Below="pageHeader"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
-                Height="1"
-                StrokeThickness="0"
-                Fill="#FFEEEEEE"
+                Style="{StaticResource PanelDividerStyle}"                
                 />
 
             <StackPanel
@@ -167,7 +200,7 @@
             </Grid>
 
             <RelativePanel
-                x:Name="progressPanel"
+                x:Name="hidePagePanel"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"                
                 RelativePanel.AlignTopWithPanel="True"
@@ -176,13 +209,110 @@
                 Visibility="Collapsed"
                 >
                 <ProgressRing
+                    x:Name="progressRing"
                     RelativePanel.AlignHorizontalCenterWithPanel="True"
                     RelativePanel.AlignVerticalCenterWithPanel="True"
                     Height="60"
                     Width="60"
                     Foreground="#ff9200"
                     IsActive="True"
+                    Visibility="Collapsed"
                     />
+                <RelativePanel
+                    x:Name="encodingPrompt"
+                    Background="White"
+                    Height="135"
+                    Width="400"
+                    RelativePanel.AlignHorizontalCenterWithPanel="True"
+                    RelativePanel.AlignVerticalCenterWithPanel="True"
+                    Visibility="Collapsed"
+                    >
+                    <RelativePanel
+                        x:Name="promptHeader"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        RelativePanel.AlignRightWithPanel="True"
+                        Height="50">
+
+                        <Button
+                            x:Name="closePromptBt"
+                            RelativePanel.AlignRightWithPanel="True"
+                            Height="50"
+                            Width="60"
+                            Content="&#xe106;"
+                            BorderBrush="#ff9200"
+                            BorderThickness="0"
+                            Background="Transparent"
+                            Foreground="#FF525151"
+                            FontFamily="Segoe MDL2 Assets"                    
+                            FontWeight="SemiLight"
+                            FontSize="20"
+                            Click="CloseEncodingPickPrompt_Click"
+                            VerticalContentAlignment="Center"
+                            HorizontalContentAlignment="Center"
+                            />
+                        <TextBlock                                            
+                            Text="Seleccione una codificación"
+                            RelativePanel.AlignLeftWithPanel="True"
+                            RelativePanel.LeftOf="closePromptBt"
+                            Style="{StaticResource PanelHeaderStyle}"
+                            Margin="20,0,0,5"
+                            />
+                    </RelativePanel>
+                    
+                    <Rectangle
+                        x:Name="encodinPromptHeaderDivider"
+                        RelativePanel.Below="promptHeader"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        RelativePanel.AlignRightWithPanel="True"
+                        Style="{StaticResource PanelDividerStyle}"                
+                        Margin="0,0"
+                        />
+                    <ComboBox 
+                        x:Name="encodingPicker"
+                        RelativePanel.Below="encodinPromptHeaderDivider"
+                        RelativePanel.AlignLeftWithPanel="True"
+                        Height="40"                         
+                        Width="300"
+                        Margin="20,20,0,0"
+                        BorderThickness="2"
+                        Background="WhiteSmoke"
+                        BorderBrush="WhiteSmoke"                    
+                        >
+                        <ComboBox.Resources>
+                            <Style x:Name="ComboBoxItemsStyle" TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#99000000"/>
+                                <Setter Property="FontFamily" Value="Segoe UI"/>
+                                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </ComboBox.Resources>
+                        <ComboBox.Items>
+                            <TextBlock Tag="0" Text="ASCII" Style="{StaticResource ComboBoxItemsStyle}"/>
+                            <TextBlock Tag="1" Text="UTF-7" Style="{StaticResource ComboBoxItemsStyle}"/>
+                            <TextBlock Tag="2" Text="UTF-8 (Recomendado)" Style="{StaticResource ComboBoxItemsStyle}"/>
+                            <TextBlock Tag="3" Text="UTF-16 Low Endian (Unicode LE)" Style="{StaticResource ComboBoxItemsStyle}"/>
+                            <TextBlock Tag="4" Text="UTF-16 Big Endian (Unicode BE)" Style="{StaticResource ComboBoxItemsStyle}"/>
+                            <TextBlock Tag="5" Text="UTF-32" Style="{StaticResource ComboBoxItemsStyle}"/>
+                        </ComboBox.Items>
+                    </ComboBox>
+
+                    <Button
+                        x:Name="confirmEncodingPickBt"
+                        RelativePanel.Below="encodinPromptHeaderDivider"                        
+                        RelativePanel.AlignRightWithPanel="True"
+                        Height="40"
+                        Width="40"
+                        Margin="0,20,20,0"
+                        Content="&#xe008;"
+                        BorderBrush="#ff9200"
+                        BorderThickness="0"
+                        Background="#ff9200"
+                        Foreground="WhiteSmoke"
+                        FontFamily="Segoe MDL2 Assets"                    
+                        FontSize="20"
+                        Click="ConfirmEncodingPick_Click"
+                        />
+                </RelativePanel>
             </RelativePanel>
         </RelativePanel>
 

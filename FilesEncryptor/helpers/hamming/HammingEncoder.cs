@@ -12,8 +12,7 @@ namespace FilesEncryptor.helpers.hamming
     public class HammingEncoder : BaseHammingCodifier
     {
         private BitCode _baseCode;
-        public EventHandler<double> EncodingProgressChanged;
-        
+
         private HammingEncoder()
         {
 
@@ -40,7 +39,7 @@ namespace FilesEncryptor.helpers.hamming
                         DebugUtils.WriteLine(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
 
                         //Obtengo todos los bloques de informacion o palabras
-                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode(encodeType.WordBitsSize);
+                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode2(encodeType.WordBitsSize, true, true);
                         List<BitCode> dataBlocks = exploded.Item1;
 
                         DebugUtils.WriteLine(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));
@@ -64,6 +63,9 @@ namespace FilesEncryptor.helpers.hamming
                         List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
                         List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
 
+                        //Determino cada cuantas palabras se mostrará el progresso por consola
+                        int wordsDebugStep = (int)Math.Min(0.1 * dataBlocks.Count, 1000);
+
                         foreach (BitCode currentWord in dataBlocks)
                         {
                             int currentExp = 0;
@@ -75,8 +77,8 @@ namespace FilesEncryptor.helpers.hamming
                            
                             foreach(uint index in controlBitsIndexes)
                             {
-                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1);
-                                currentOutputWord = currentOutputWord.Insert(index, code);
+                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode2(1, false).Item1);
+                                currentOutputWord = currentOutputWord.Insert2(index, code);
                                 currentExp++;
                             }
                             
@@ -104,7 +106,7 @@ namespace FilesEncryptor.helpers.hamming
                             //Agrego la palabra recién creada a la lista de palabras de salida
                             outputBlocks.Add(currentOutputWord);
 
-                            if (outputBlocks.Count % 10 == 0)
+                            if (outputBlocks.Count % wordsDebugStep  == 0)
                             {
                                 DebugUtils.WriteLine(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
                             }
