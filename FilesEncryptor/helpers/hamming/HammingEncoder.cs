@@ -39,7 +39,7 @@ namespace FilesEncryptor.helpers.hamming
                         DebugUtils.WriteLine(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
 
                         //Obtengo todos los bloques de informacion o palabras
-                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode2(encodeType.WordBitsSize, true, true);
+                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode(encodeType.WordBitsSize, true, true);
                         List<BitCode> dataBlocks = exploded.Item1;
 
                         DebugUtils.WriteLine(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));
@@ -77,8 +77,8 @@ namespace FilesEncryptor.helpers.hamming
                            
                             foreach(uint index in controlBitsIndexes)
                             {
-                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode2(1, false).Item1);
-                                currentOutputWord = currentOutputWord.Insert2(index, code);
+                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1);
+                                currentOutputWord = currentOutputWord.Insert(index, code);
                                 currentExp++;
                             }
                             
@@ -139,13 +139,7 @@ namespace FilesEncryptor.helpers.hamming
 
             return result;
         }
-
-        private async Task<bool> Verify(HammingEncodeResult encodeResult)
-        {
-            var decoded = await HammingDecoder.FromEncoded(encodeResult).Decode();                        
-            return decoded != null && (BitOps.And(BitOps.Xor(new List<BitCode>() { _baseCode, decoded }).Explode(1, false).Item1).Code[0] == 0);
-        }
-
+        
         public static bool WriteEncodedToFile(HammingEncodeResult encodeResult, FileHelper fileHelper)
         {
             bool result = false;

@@ -432,7 +432,7 @@ namespace FilesEncryptor.helpers.huffman
                     {
                         foreach (uint codeLength in _codesTree.TerminalCodesLengths)
                         {
-                            BitCode range = remainingEncodedText.GetRange2(baseIndex, codeLength);
+                            BitCode range = remainingEncodedText.GetRange(baseIndex, codeLength);
                             string value = _codesTree.Get(range);
 
                             if (value != default(string))
@@ -523,7 +523,7 @@ namespace FilesEncryptor.helpers.huffman
                     int currentTaskId = (int)Task.CurrentId;
                     try
                     {
-                        BitCode remainingEncodedText = _encoded.GetRange2(baseIndex, count);
+                        BitCode remainingEncodedText = _encoded.GetRange(baseIndex, count);
                         baseIndex = 0;
 
                         //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
@@ -540,7 +540,7 @@ namespace FilesEncryptor.helpers.huffman
                                 BitCode range = BitCode.EMPTY;
                                 try
                                 {
-                                    range = remainingEncodedText.GetRange2(baseIndex, codeLength);
+                                    range = remainingEncodedText.GetRange(baseIndex, codeLength);
                                 }
                                 catch (Exception ex)
                                 {
