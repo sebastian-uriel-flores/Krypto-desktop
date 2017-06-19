@@ -127,7 +127,7 @@ namespace FilesEncryptor.pages
                     
                     //Comprimo el archivo
                     DebugUtils.WriteLine("Compressing file");
-                    HuffmanEncodeResult encodeResult = encoder.Encode();
+                    HuffmanEncodeResult encodeResult = await encoder.Encode();
 
                     //Imprimo la cantidad de tiempo que implico la codificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);

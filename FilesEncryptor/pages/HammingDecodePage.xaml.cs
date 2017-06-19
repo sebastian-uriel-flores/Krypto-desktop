@@ -197,7 +197,7 @@ namespace FilesEncryptor.pages
 
                                 //Creo el decodificador de Huffman
                                 HuffmanDecoder huffDecoder = HuffmanDecoder.FromFile(tempHufFileHelper);
-                                string huffDecoded = await huffDecoder.Decode();
+                                string huffDecoded = await huffDecoder.DecodeWithTreeMultithreaded();
 
                                 //Imprimo la cantidad de tiempo que implico la decodificacion
                                 TimeSpan huffmanDecodingTime = DateTime.Now.Subtract(huffmanDecodingStart);

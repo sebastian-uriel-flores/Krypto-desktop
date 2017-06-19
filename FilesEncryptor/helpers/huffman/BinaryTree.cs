@@ -132,7 +132,7 @@ namespace FilesEncryptor.helpers.huffman
             if(!_terminalCodesLenghts.Contains((uint)position.CodeLength))
             {
                 _terminalCodesLenghts.Add((uint)position.CodeLength);
-                _terminalCodesLenghts.Sort((x, y) => x < y ? 1 : -1);
+                _terminalCodesLenghts.Sort((x, y) => x < y ? -1 : 1);
             }
         }
 

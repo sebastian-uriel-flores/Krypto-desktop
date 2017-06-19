@@ -13,10 +13,13 @@ namespace FilesEncryptor.dto.huffman
 
         public ReadOnlyDictionary<char, BitCode> ProbabilitiesTable { get; set; }
 
-        public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable)
+        public List<uint> CodePartsLengths { get; set; }
+
+        public HuffmanEncodeResult(BitCode encoded, ReadOnlyDictionary<char, BitCode> probabilitiesTable, List<uint> codePartsLengths)
         {
             Encoded = encoded;
             ProbabilitiesTable = probabilitiesTable;
+            CodePartsLengths = codePartsLengths;
         }
     }
 }
