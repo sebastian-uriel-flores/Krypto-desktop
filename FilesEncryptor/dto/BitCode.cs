@@ -393,7 +393,7 @@ namespace FilesEncryptor.dto
                 uint bitsToObtain = blockBitsSize;
                 uint endBit = i + blockBitsSize;
                 
-                if(endBit + 1 >= copy.CodeLength)
+                if(endBit + 1 > copy.CodeLength)
                 {
                     bitsToObtain = (uint)copy.CodeLength - i;
                 }

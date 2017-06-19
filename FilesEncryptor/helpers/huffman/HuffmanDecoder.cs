@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FilesEncryptor.helpers.huffman
@@ -14,13 +15,20 @@ namespace FilesEncryptor.helpers.huffman
         private BitCode _encoded;
         private byte[] _fileBOM;
         private string _fileBOMString;
+        private List<uint> _encodedPartsLengths;
+        private Dictionary<int, uint> _tasksProgress;
+
+        private BinaryTree<string> _codesTree;
 
         #endregion
 
         #region PROPERTIES
 
         public byte[] FileBOM => _fileBOM;
+
         public string FileBOMString => _fileBOMString;
+
+        public BinaryTree<string> CodesTree => _codesTree;
 
         #endregion 
 
@@ -28,7 +36,7 @@ namespace FilesEncryptor.helpers.huffman
 
         private HuffmanDecoder() : base()
         {
-
+            _codesTree = BinaryTree<string>.EMPTY;
         }
 
         public static HuffmanDecoder FromEncoded(BitCode encoded, Dictionary<char,BitCode> probabilitiesTable, byte[] bom = null) 
@@ -52,10 +60,10 @@ namespace FilesEncryptor.helpers.huffman
                  * - El formato de la tabla de probabilidades es
                  *   probTable = ([char][charBitsLen]:[charCode])+
                  * - El formato del codigo es:
-                 *   code = [codeBitsLen]:[code]
+                 *   code = [codeBitsLen][,codeBitsLen]+:[code]
                  *   
                  * - El formato completo es:
-                 *   [header][probTable]..[code] 
+                 *   [header][probTable].[code] 
                  */
 
                 #region HUFFMAN_HEADER
@@ -113,6 +121,7 @@ namespace FilesEncryptor.helpers.huffman
 
                     //Agrego el par a la tabla
                     decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
+                    decoder._codesTree.Add(new BitCode(codeBytes.ToList(), (int)codeLen), key.ToString());
 
                     endOfTable = fileReader.ReadString(1);
                     counter++;
@@ -148,10 +157,25 @@ namespace FilesEncryptor.helpers.huffman
                 #region HUFFMAN_CODE
 
                 DebugUtils.WriteLine("Reading Encoded bytes");
-                
-                //Obtengo la longitud en bits del texto codificado
-                //Luego, la convierto a bytes
-                uint encodedTextLength = uint.Parse(fileReader.ReadStringUntil(":"));
+
+                //Obtengo el fragmento del header que indica la longitud del archivo codificado
+                string rawCodeLen = fileReader.ReadStringUntil(":");
+
+                //Creo una lista con las longitudes de cada fragmento del archivo codificado
+                //y calculo la longitud total del mismo
+                string[] codePartsLenghts = rawCodeLen.Split(',');
+
+                decoder._encodedPartsLengths = new List<uint>();
+                uint encodedTextLength = 0;
+
+                foreach (string codePartLenStr in codePartsLenghts)
+                {
+                    uint codePartLen = uint.Parse(codePartLenStr);
+                    decoder._encodedPartsLengths.Add(codePartLen);
+                    encodedTextLength += codePartLen;
+                }
+
+                //Calculo la longitud en bytes de todo el archivo codificado
                 uint bytesLength = BitCode.BitsLengthToBytesLength(encodedTextLength);
 
                 DebugUtils.WriteLine(string.Format("Encoded file length is {0} bits ({1} bytes)", 
@@ -180,7 +204,7 @@ namespace FilesEncryptor.helpers.huffman
 
         #region INSTANCE_METHODS
 
-        public async Task<string> Decode()
+        public async Task<string> DecodeWithBruteForce()
         {
             //Si poseo un BOM, lo incluyo al principio del texto decodificado.
             string result = _fileBOMString ?? "";
@@ -279,6 +303,276 @@ namespace FilesEncryptor.helpers.huffman
             });
 
             return result;
+        }
+
+        public async Task<string> DecodeWithTreeSlow()
+        {
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string result = _fileBOMString ?? "";
+
+            await Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    BitCode remainingEncodedText = _encoded.Copy();
+
+                    List<byte> currentCodeBytes = new List<byte>();
+                    int currentCodeLength = 0;
+                    int currentByteIndex = 0; //Arranco analizando el primer byte del codigo completo
+                    bool analyzingTrashBits = false;
+
+                    //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                    //con el fin de mostrar estadísticas por consola
+                    int lastCodeLength = remainingEncodedText.CodeLength;
+
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
+
+                    do
+                    {
+                        byte currentByte = remainingEncodedText.Code[currentByteIndex];
+
+                        //Hago desplazamientos a derecha, yendo desde 7 desplazamientos a 0
+                        for (int i = 7; i >= 0; i--)
+                        {
+                            //Me quedo con los primeros ´8 - i´ bits de la izquierda
+                            byte possibleCode = (byte)((currentByte >> i) << i);
+                            int diff = 8 - i;
+
+                            currentCodeBytes.Add(possibleCode);
+                            currentCodeLength += diff;
+
+                            //Si no estoy agregando bits basura que exceden la longitud del texto codificado
+                            if (remainingEncodedText.CodeLength - currentCodeLength >= 0)
+                            {
+                                BitCode currentCode = new BitCode(currentCodeBytes, currentCodeLength);
+
+                                string value = _codesTree.Get(currentCode);
+
+                                //Si el codigo formado al realizar los 'i' desplazamientos es un codigo valido
+                                if (value != default(string))
+                                {
+                                    //Lo decodifico y agrego al string decodificado
+                                    result += value;
+
+                                    //Ahora, desplazo el codigo original hacia la izquierda, tantos bits como sea necesario,
+                                    //para eliminar el codigo que acabo de agregar y continuar con el siguiente
+                                    remainingEncodedText.ReplaceCode(
+                                        BitCode.LeftShifting(remainingEncodedText.Code, currentCodeLength),
+                                        remainingEncodedText.CodeLength - currentCodeLength);
+
+                                    currentCodeBytes = new List<byte>();
+                                    currentCodeLength = 0;
+                                    currentByteIndex = 0;
+                                    break;
+                                }
+
+                                //Si los primeros '8 - i' bits del codigo, con i > 0, no representan a ningun caracter, 
+                                //remuevo el ultimo codigo agregado a la lista y paso a la siguiente iteracion,
+                                //para decrementar i
+                                else if (i > 0)
+                                {
+                                    currentCodeBytes.Remove(possibleCode);
+                                    currentCodeLength -= diff;
+                                }
+                                //Si el byte completo junto con los bytes ya agregados no representa a ningun codigo, entonces paso al siguiente byte.
+                                //La idea es realizar el mismo procedimiento, pero esta vez evaluando en todos los bytes ya agregados,
+                                //sumando de a 1 bit del byte nuevo.
+                                else
+                                {
+                                    currentByteIndex++;
+                                }
+                            }
+                            else
+                            {
+                                analyzingTrashBits = true;
+                                break;
+                            }
+                        }
+
+                        if (lastCodeLength - remainingEncodedText.CodeLength >= wordsDebugStep)
+                        {
+                            lastCodeLength = remainingEncodedText.CodeLength;
+                            DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                        }
+                    }
+                    while (currentByteIndex + currentCodeBytes.Count < _encoded.Code.Count && !analyzingTrashBits);
+                }
+                catch (Exception ex)
+                {
+                    result = null;
+                    DebugUtils.Fail("Exception decoding huffman file", ex.Message);
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<string> DecodeWithTreeFast()
+        {
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string result = _fileBOMString ?? "";
+
+            await Task.Factory.StartNew(() =>
+            {
+                try
+                {   
+                    BitCode remainingEncodedText = _encoded.Copy();
+
+                    uint baseIndex = 0;
+
+                    //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                    //con el fin de mostrar estadísticas por consola
+                    uint lastCodeLength = (uint)remainingEncodedText.CodeLength;
+
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
+
+                    do
+                    {
+                        foreach (uint codeLength in _codesTree.TerminalCodesLengths)
+                        {
+                            BitCode range = remainingEncodedText.GetRange2(baseIndex, codeLength);
+                            string value = _codesTree.Get(range);
+
+                            if (value != default(string))
+                            {
+                                result += value;
+                                baseIndex += codeLength;
+                                break;
+                            }
+                        }
+
+                        if (lastCodeLength - ((uint)remainingEncodedText.CodeLength - baseIndex) >= wordsDebugStep)
+                        {
+                            lastCodeLength = (uint)remainingEncodedText.CodeLength - baseIndex;
+                            DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                        }
+                    }
+                    while (baseIndex < remainingEncodedText.CodeLength);
+                }
+                catch (Exception ex)
+                {
+                    result = null;
+                    DebugUtils.Fail("Exception decoding huffman file", ex.Message);
+                }
+            });
+
+            return result;
+        }
+        
+        /// <summary>
+        /// Decodifica el arbol utilizando varios Threads en simultaneo.
+        /// Luego, espera a que finalicen todos utilizando el metodo Task.WhenAll.
+        /// Mas informacion en el link https://msdn.microsoft.com/en-us/library/hh194874(v=vs.110).aspx
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> DecodeWithTreeMultithreaded()
+        {
+            //Si poseo un BOM, lo incluyo al principio del texto decodificado.
+            string decoded = _fileBOMString ?? "";
+
+            //Creo tantas Task como partes tenga el documento            
+            Task<string>[] tasks = new Task<string>[_encodedPartsLengths.Count];
+
+            //Creo un diccionario en el cual almacenare el progreso de cada tarea, 
+            //para poder imprimir por consola las estadisticas
+            _tasksProgress = new Dictionary<int, uint>();
+
+            uint baseIndex = 0;
+            for(int i = 0; i < _encodedPartsLengths.Count; i++)
+            {
+                tasks[i] = DecodeWithTreeTask(baseIndex, _encodedPartsLengths[i]);
+                baseIndex += _encodedPartsLengths[i];
+                _tasksProgress.Add(tasks[i].Id, 0);
+            }
+
+            Timer timer = new Timer(
+                (optionalParam) =>
+                {
+                    uint totalProgress = 0;
+
+                    foreach (uint progress in _tasksProgress.Values.ToList())
+                    {
+                        totalProgress += progress;
+                    }
+
+                    DebugUtils.WriteLine(string.Format("Decoded {0} bits of {1}", totalProgress, _encoded.CodeLength), "[PROGRESS]");
+                    },
+                null, 0, 4000);
+
+            //Las partes decodificadas se encontraran en el mismo orden en que se iniciaron las Task,
+            //por lo que simplemente hay que concatenarlas.
+            string[] decodedParts = await Task.WhenAll(tasks);
+
+            timer.Dispose();
+
+            decoded += string.Join("", decodedParts);
+            
+            return decoded;
+        }
+
+        private Task<string> DecodeWithTreeTask(uint baseIndex, uint count)
+        {
+            return Task.Run(() =>
+            {
+                string result = "";
+
+                if (Task.CurrentId != null)
+                {
+                    int currentTaskId = (int)Task.CurrentId;
+                    try
+                    {
+                        BitCode remainingEncodedText = _encoded.GetRange2(baseIndex, count);
+                        baseIndex = 0;
+
+                        //Esta variable la uso para ir contando la cantidad del código completo que ha sido decodificada,
+                        //con el fin de mostrar estadísticas por consola
+                        uint lastCodeLength = (uint)remainingEncodedText.CodeLength;
+
+                        //Determino cada cuantas palabras se mostrará el progresso por consola
+                        int wordsDebugStep = (int)Math.Min(0.03 * remainingEncodedText.CodeLength, 1000);
+
+                        do
+                        {
+                            foreach (uint codeLength in _codesTree.TerminalCodesLengths)
+                            {
+                                BitCode range = BitCode.EMPTY;
+                                try
+                                {
+                                    range = remainingEncodedText.GetRange2(baseIndex, codeLength);
+                                }
+                                catch (Exception ex)
+                                {
+
+                                }
+                                string value = _codesTree.Get(range);
+
+                                if (value != default(string))
+                                {
+                                    result += value;
+                                    baseIndex += codeLength;
+                                    _tasksProgress[currentTaskId] = (uint)remainingEncodedText.CodeLength - baseIndex;
+                                    break;
+                                }
+                            }
+                        }
+                        while (baseIndex < remainingEncodedText.CodeLength);
+                    }
+                    catch (Exception ex)
+                    {
+                        result = null;
+                        DebugUtils.Fail("Exception decoding huffman file", ex.Message);
+                    }
+                }
+                else
+                {
+                    result = null;
+                    DebugUtils.Fail("Exception decoding huffman file", "Task ID is null");
+                }
+
+                return result;
+            });
         }
 
         #endregion

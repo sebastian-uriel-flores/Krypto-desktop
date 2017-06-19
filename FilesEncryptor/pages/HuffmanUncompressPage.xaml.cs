@@ -113,7 +113,7 @@ namespace FilesEncryptor.pages
                     //[IMPORTANTE]: Inicio un Thread para decodificar el archivo, dado que sino, se bloquea la UI
                     //y, al decodificar archivos muy largos, 
                     //implica que la interfaz permanezca bloqueada por mucho tiempo y el sistema finalice la app                    
-                    string decoded = await _decoder.Decode();
+                    string decoded = await _decoder.DecodeWithTreeMultithreaded();
                     fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
 
                     //Si la decodificacion se realizo con exito,                         

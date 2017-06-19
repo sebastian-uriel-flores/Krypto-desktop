@@ -108,6 +108,7 @@
     <Compile Include="helpers\hamming\HammingDecoder.cs" />
     <Compile Include="helpers\hamming\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
+    <Compile Include="helpers\huffman\BinaryTree.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
     <Compile Include="helpers\VisualTreeHelperExtensions.cs" />
