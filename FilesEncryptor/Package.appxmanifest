@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="0c39d2a8-c9aa-4a8e-a129-c675dde54860" Publisher="CN=Sebastian Flores" Version="1.0.0.0" />
-  <mp:PhoneIdentity PhoneProductId="0c39d2a8-c9aa-4a8e-a129-c675dde54860" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Identity Name="SebastianFlores.FilesEncryptor" Publisher="CN=117BBCF7-BEB8-4B33-9B09-A0CCAB17ADA9" Version="1.1.0.0" />
+  <mp:PhoneIdentity PhoneProductId="b1e459b4-8ff1-42a9-97a2-eaed355d5ea2" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>FilesEncryptor</DisplayName>
+    <DisplayName>Files Encryptor</DisplayName>
     <PublisherDisplayName>Sebastian Flores</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -15,14 +15,11 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="FilesEncryptor.App">
-      <uap:VisualElements DisplayName="FilesEncryptor" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="FilesEncryptor" BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png">
+      <uap:VisualElements DisplayName="Files Encryptor" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="FilesEncryptor" BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" ShortName="Files Encryptor">
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#FF9200" />
       </uap:VisualElements>
     </Application>
   </Applications>
-  <Capabilities>
-    <Capability Name="internetClient" />
-  </Capabilities>
 </Package>
