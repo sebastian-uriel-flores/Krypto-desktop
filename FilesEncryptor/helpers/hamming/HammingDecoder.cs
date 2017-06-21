@@ -90,7 +90,7 @@ namespace FilesEncryptor.helpers.hamming
                         BitCode decoded = encoded.Copy();
 
                         //Chequeo si algún bit de la palabra actual es erróneo
-                        int errorPosition = CheckParity(parityControlMatrix, decoded);
+                        /*int errorPosition = CheckParity(parityControlMatrix, decoded);
 
                         //Si hay un error
                         if(errorPosition >= 0)
@@ -98,7 +98,7 @@ namespace FilesEncryptor.helpers.hamming
                             //Fixeo el error en el bit correspondiente
                             BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);
                             decoded = decoded.ReplaceAt((uint)errorPosition, erroneousBit.Negate());
-                        }
+                        }*/
 
                         uint currentExp = 0;
                         foreach(uint index in controlBitsIndexes)

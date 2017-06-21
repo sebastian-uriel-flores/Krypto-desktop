@@ -48,156 +48,159 @@ namespace FilesEncryptor.helpers.huffman
                 _fileBOMString = bom?.Length > 0 ? FileHelper.GetEncoding(bom).GetString(bom) : null
             };
 
-        public static HuffmanDecoder FromFile(FileHelper fileReader)
+        public static Task<HuffmanDecoder> FromFile(FileHelper fileReader)
         {
-            HuffmanDecoder decoder = new HuffmanDecoder();
-            int counter = 0;
-
-            try
+            return Task.Run(() =>
             {
-                /**- El formato del encabezado de un archivo Huffman es:
-                 *   header = [encodingStringLen]:[encodingCodePage][bomBytesLen]:[bomBytes]
-                 * - El formato de la tabla de probabilidades es
-                 *   probTable = ([char][charBitsLen]:[charCode])+
-                 * - El formato del codigo es:
-                 *   code = [codeBitsLen][,codeBitsLen]+:[code]
-                 *   
-                 * - El formato completo es:
-                 *   [header][probTable].[code] 
-                 */
+                HuffmanDecoder decoder = new HuffmanDecoder();
+                int counter = 0;
 
-                #region HUFFMAN_HEADER
-                
-                //Obtengo el BOM del archivo original
-                DebugUtils.WriteLine("Searching for original file BOM");
-                uint bomLen = uint.Parse(fileReader.ReadStringUntil(":"));
-
-                if (bomLen > 0)
+                try
                 {
-                    //Obtengo el BOM del texto original
-                    byte[] textBom = fileReader.ReadBytes(bomLen);                    
+                    /**- El formato del encabezado de un archivo Huffman es:
+                     *   header = [encodingStringLen]:[encodingCodePage][bomBytesLen]:[bomBytes]
+                     * - El formato de la tabla de probabilidades es
+                     *   probTable = ([char][charBitsLen]:[charCode])+
+                     * - El formato del codigo es:
+                     *   code = [codeBitsLen][,codeBitsLen]+:[code]
+                     *   
+                     * - El formato completo es:
+                     *   [header][probTable].[code] 
+                     */
 
-                    decoder._fileBOM = textBom;
-                    decoder._fileBOMString = FileHelper.GetEncoding(textBom).GetString(textBom);
+                    #region HUFFMAN_HEADER
 
-                    DebugUtils.WriteLine(string.Format("Original file encoding is {0}", fileReader.FileEncoding.EncodingName));
+                    //Obtengo el BOM del archivo original
+                    DebugUtils.WriteLine("Searching for original file BOM");
+                    uint bomLen = uint.Parse(fileReader.ReadStringUntil(":"));
+
+                    if (bomLen > 0)
+                    {
+                        //Obtengo el BOM del texto original
+                        byte[] textBom = fileReader.ReadBytes(bomLen);
+
+                        decoder._fileBOM = textBom;
+                        decoder._fileBOMString = FileHelper.GetEncoding(textBom).GetString(textBom);
+
+                        DebugUtils.WriteLine(string.Format("Original file encoding is {0}", fileReader.FileEncoding.EncodingName));
+                    }
+                    else
+                    {
+                        DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
+                    }
+
+                    //Obtengo el Encoding usado para leer el archivo original
+                    DebugUtils.WriteLine("Reading original file Encoding");
+
+                    uint encodingStrLen = uint.Parse(fileReader.ReadStringUntil(":"));
+                    int fileEncodingCodePage = int.Parse(fileReader.ReadString(encodingStrLen));
+
+                    Encoding fileEncoding = Encoding.GetEncoding(fileEncodingCodePage);
+
+                    //Seteo el Encoding en el fileReader, para poder leer los caracteres de la tabla de probabilidades
+                    fileReader.SetFileEncoding(fileEncoding);
+
+                    #endregion
+
+                    #region HUFFMAN_PROBABILITIES_TABLE
+
+                    DebugUtils.WriteLine("Reading Probabilities Table");
+
+
+                    string endOfTable = fileReader.ReadString(1);
+
+                    while (endOfTable != ".")
+                    {
+                        //Leo la longitud en bytes de la clave y la longitud en bits del codigo del primer caracter de la tabla
+                        uint keyLen = uint.Parse(endOfTable + fileReader.ReadStringUntil(","));
+                        uint codeLen = uint.Parse(fileReader.ReadStringUntil(":"));
+                        uint codeBytesLen = BitCode.BitsLengthToBytesLength(codeLen);
+
+                        //Leo el caracter clave y el codigo
+                        byte[] keyBytes = fileReader.ReadBytes(keyLen);
+                        char key = fileEncoding.GetString(keyBytes).First();
+                        byte[] codeBytes = fileReader.ReadBytes(codeBytesLen);
+
+                        //Agrego el par a la tabla
+                        decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
+                        decoder._codesTree.Add(new BitCode(codeBytes.ToList(), (int)codeLen), key.ToString());
+
+                        endOfTable = fileReader.ReadString(1);
+                        counter++;
+                    }
+
+                    ////Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
+                    //string endOfTableReader = fileReader.ReadString(2);
+
+                    ////Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
+                    //while (endOfTableReader != "..")
+                    //{
+                    //    //Obtengo el caracter del siguiente codigo de la tabla
+                    //    char currentChar = endOfTableReader.First();
+
+                    //    //Obtengo la longitud en bits del codigo indicado
+                    //    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
+                    //    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
+
+                    //    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
+                    //    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
+
+                    //    //Agrego el codigo leido a la tabla de probabilidades del decodificador
+                    //    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
+
+                    //    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
+                    //    endOfTableReader = fileReader.ReadString(2);
+
+                    //    counter++;
+                    //}
+
+                    #endregion
+
+                    #region HUFFMAN_CODE
+
+                    DebugUtils.WriteLine("Reading Encoded bytes");
+
+                    //Obtengo el fragmento del header que indica la longitud del archivo codificado
+                    string rawCodeLen = fileReader.ReadStringUntil(":");
+
+                    //Creo una lista con las longitudes de cada fragmento del archivo codificado
+                    //y calculo la longitud total del mismo
+                    string[] codePartsLenghts = rawCodeLen.Split(',');
+
+                    decoder._encodedPartsLengths = new List<uint>();
+                    uint encodedTextLength = 0;
+
+                    foreach (string codePartLenStr in codePartsLenghts)
+                    {
+                        uint codePartLen = uint.Parse(codePartLenStr);
+                        decoder._encodedPartsLengths.Add(codePartLen);
+                        encodedTextLength += codePartLen;
+                    }
+
+                    //Calculo la longitud en bytes de todo el archivo codificado
+                    uint bytesLength = BitCode.BitsLengthToBytesLength(encodedTextLength);
+
+                    DebugUtils.WriteLine(string.Format("Encoded file length is {0} bits ({1} bytes)",
+                        encodedTextLength,
+                        bytesLength));
+
+                    //Leo el texto codificado
+                    byte[] encodedTextBytes = fileReader.ReadBytes(bytesLength);
+                    DebugUtils.WriteLine(string.Format("Encoded text bytes read: {0}", encodedTextBytes.Length));
+
+                    #endregion
+
+                    //Convierto a BitCode el texto codificado
+                    decoder._encoded = new BitCode(new List<byte>(encodedTextBytes), (int)encodedTextLength);
                 }
-                else
+                catch (Exception ex)
                 {
-                    DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
+                    decoder = null;
+                    DebugUtils.Fail(string.Format("Exception loading huffman encoded file. Counter = {0}", counter), ex.Message);
                 }
 
-                //Obtengo el Encoding usado para leer el archivo original
-                DebugUtils.WriteLine("Reading original file Encoding");
-
-                uint encodingStrLen = uint.Parse(fileReader.ReadStringUntil(":"));
-                int fileEncodingCodePage = int.Parse(fileReader.ReadString(encodingStrLen));
-
-                Encoding fileEncoding = Encoding.GetEncoding(fileEncodingCodePage);
-
-                //Seteo el Encoding en el fileReader, para poder leer los caracteres de la tabla de probabilidades
-                fileReader.SetFileEncoding(fileEncoding);
-
-                #endregion
-
-                #region HUFFMAN_PROBABILITIES_TABLE
-
-                DebugUtils.WriteLine("Reading Probabilities Table");
-
-
-                string endOfTable = fileReader.ReadString(1);
-
-                while(endOfTable != ".")
-                {
-                    //Leo la longitud en bytes de la clave y la longitud en bits del codigo del primer caracter de la tabla
-                    uint keyLen = uint.Parse(endOfTable + fileReader.ReadStringUntil(","));
-                    uint codeLen = uint.Parse(fileReader.ReadStringUntil(":"));
-                    uint codeBytesLen = BitCode.BitsLengthToBytesLength(codeLen);
-
-                    //Leo el caracter clave y el codigo
-                    byte[] keyBytes = fileReader.ReadBytes(keyLen);
-                    char key = fileEncoding.GetString(keyBytes).First();
-                    byte[] codeBytes = fileReader.ReadBytes(codeBytesLen);
-
-                    //Agrego el par a la tabla
-                    decoder._charsCodes.Add(key, new BitCode(codeBytes.ToList(), (int)codeLen));
-                    decoder._codesTree.Add(new BitCode(codeBytes.ToList(), (int)codeLen), key.ToString());
-
-                    endOfTable = fileReader.ReadString(1);
-                    counter++;
-                }
-
-                ////Leo los 2 primeros caracteres del texto correspondiente a la tabla de probabilidades
-                //string endOfTableReader = fileReader.ReadString(2);
-
-                ////Cuando el primer caracter sea un . entonces habre leido toda la tabla de probabilidades
-                //while (endOfTableReader != "..")
-                //{
-                //    //Obtengo el caracter del siguiente codigo de la tabla
-                //    char currentChar = endOfTableReader.First();
-                    
-                //    //Obtengo la longitud en bits del codigo indicado
-                //    uint.TryParse(endOfTableReader.Last().ToString(), out uint keyLen);
-                //    uint currentCodeLength = uint.Parse(keyLen + fileReader.ReadStringUntil(":"));
-
-                //    //Convierto la longitud del codigo de bits a bytes y luego, leo el codigo
-                //    byte[] currentCodeBytes = fileReader.ReadBytes(BitCode.BitsLengthToBytesLength(currentCodeLength));
-
-                //    //Agrego el codigo leido a la tabla de probabilidades del decodificador
-                //    decoder._charsCodes.Add(currentChar, new BitCode(currentCodeBytes.ToList(), (int)currentCodeLength));
-
-                //    //Leo los 2 ultimos caracteres para verificar si llegue o no al final de la tabla de probabilidades
-                //    endOfTableReader = fileReader.ReadString(2);
-
-                //    counter++;
-                //}
-
-                #endregion
-
-                #region HUFFMAN_CODE
-
-                DebugUtils.WriteLine("Reading Encoded bytes");
-
-                //Obtengo el fragmento del header que indica la longitud del archivo codificado
-                string rawCodeLen = fileReader.ReadStringUntil(":");
-
-                //Creo una lista con las longitudes de cada fragmento del archivo codificado
-                //y calculo la longitud total del mismo
-                string[] codePartsLenghts = rawCodeLen.Split(',');
-
-                decoder._encodedPartsLengths = new List<uint>();
-                uint encodedTextLength = 0;
-
-                foreach (string codePartLenStr in codePartsLenghts)
-                {
-                    uint codePartLen = uint.Parse(codePartLenStr);
-                    decoder._encodedPartsLengths.Add(codePartLen);
-                    encodedTextLength += codePartLen;
-                }
-
-                //Calculo la longitud en bytes de todo el archivo codificado
-                uint bytesLength = BitCode.BitsLengthToBytesLength(encodedTextLength);
-
-                DebugUtils.WriteLine(string.Format("Encoded file length is {0} bits ({1} bytes)", 
-                    encodedTextLength, 
-                    bytesLength));
-
-                //Leo el texto codificado
-                byte[] encodedTextBytes = fileReader.ReadBytes(bytesLength);
-                DebugUtils.WriteLine(string.Format("Encoded text bytes read: {0}", encodedTextBytes.Length));
-
-                #endregion
-
-                //Convierto a BitCode el texto codificado
-                decoder._encoded = new BitCode(new List<byte>(encodedTextBytes), (int)encodedTextLength);
-            }
-            catch(Exception ex)
-            {
-                decoder = null;
-                DebugUtils.Fail(string.Format("Exception loading huffman encoded file. Counter = {0}", counter), ex.Message);
-            }
-
-            return decoder;
+                return decoder;
+            });
         }
 
         #endregion

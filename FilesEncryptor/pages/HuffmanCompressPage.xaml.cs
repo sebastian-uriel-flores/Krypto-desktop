@@ -123,7 +123,7 @@ namespace FilesEncryptor.pages
                     HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent);
 
                     //Creo la tabla de probabilidades                                        
-                    encoder.Scan();
+                    await encoder.Scan();
                     
                     //Comprimo el archivo
                     DebugUtils.WriteLine("Compressing file");

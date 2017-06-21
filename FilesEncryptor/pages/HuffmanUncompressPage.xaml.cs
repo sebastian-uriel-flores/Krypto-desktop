@@ -74,7 +74,7 @@ namespace FilesEncryptor.pages
                     _fileHeader = _fileOpener.ReadFileHeader();
 
                     //Leo el archivo
-                    _decoder = HuffmanDecoder.FromFile(_fileOpener);
+                    _decoder = await HuffmanDecoder.FromFile(_fileOpener);
 
                     //Cierro el archivo
                     await _fileOpener.Finish();

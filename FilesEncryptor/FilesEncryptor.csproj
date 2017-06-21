@@ -109,7 +109,7 @@
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
     <Compile Include="helpers\hamming\BaseHammingCodifier.cs" />
-    <Compile Include="helpers\file_management\FilesComparer.cs" />
+    <Compile Include="helpers\FilesComparer.cs" />
     <Compile Include="helpers\hamming\HammingDecoder.cs" />
     <Compile Include="helpers\hamming\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />

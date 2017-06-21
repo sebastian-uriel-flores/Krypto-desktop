@@ -129,6 +129,9 @@ namespace FilesEncryptor.pages
         {
             //Si el archivo original es un .huf, 
             //entonces pregunto al usuario si desea descomprimirlo luego de decodificarlo
+
+            #region ASK_UNCOMPRESS_HUF
+
             bool uncompressHuff = false;
 
             if (_fileHeader.FileExtension == BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION)
@@ -152,6 +155,8 @@ namespace FilesEncryptor.pages
                     DebugUtils.WriteLine("User decided to maintain Huffman format next to Hamming decoding", "[WARN]");
                 }
             }
+
+            #endregion
 
             //Inicio la decodificacion en Hamming
             await ShowProgressPanel();
@@ -191,12 +196,12 @@ namespace FilesEncryptor.pages
                             {
                                 DebugUtils.WriteLine($"Dumping hamming decoded bytes to temp file: \"{tempHufFileHelper.SelectedFilePath}\"");
 
-                                _fileHeader = tempHufFileHelper.ReadFileHeader();
+                                FileHeader internalFileHeader = tempHufFileHelper.ReadFileHeader();
 
                                 DateTime huffmanDecodingStart = DateTime.Now;
 
                                 //Creo el decodificador de Huffman
-                                HuffmanDecoder huffDecoder = HuffmanDecoder.FromFile(tempHufFileHelper);
+                                HuffmanDecoder huffDecoder = await HuffmanDecoder.FromFile(tempHufFileHelper);
                                 string huffDecoded = await huffDecoder.DecodeWithTreeMultithreaded();
 
                                 //Imprimo la cantidad de tiempo que implico la decodificacion
@@ -209,7 +214,7 @@ namespace FilesEncryptor.pages
                                     FileHelper fileSaver = new FileHelper();
 
                                     //Solicito al usuario que seleccione la carpeta en la que se almacenara el archivo decodificado
-                                    if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
+                                    if (await fileSaver.PickToSave(internalFileHeader.FileName, internalFileHeader.FileDisplayType, internalFileHeader.FileExtension))
                                     {
                                         DebugUtils.WriteLine($"Output file: \"{fileSaver.SelectedFilePath}\"");
 
