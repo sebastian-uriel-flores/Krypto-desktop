@@ -90,10 +90,10 @@ namespace FilesEncryptor.helpers.hamming
                         BitCode decoded = encoded.Copy();
 
                         //Chequeo si algún bit de la palabra actual es erróneo
-                        /*int errorPosition = CheckParity(parityControlMatrix, decoded);
+                        int errorPosition = CheckParity(parityControlMatrix, decoded);
 
                         //Si hay un error
-                        if(errorPosition >= 0)
+                       /* if(errorPosition >= 0)
                         {
                             //Fixeo el error en el bit correspondiente
                             BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);
@@ -142,8 +142,10 @@ namespace FilesEncryptor.helpers.hamming
 
             for (int columnIndex = 0; columnIndex < parityControlMatrix.Count; columnIndex++)
             {
-                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] }).Explode(1, false).Item1);
-                syndrome.Append(code);
+                var and = BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] });
+                var exploded = and.Explode(1, false).Item1;
+                var xor = BitOps.Xor(exploded);
+                syndrome.Append(xor);
             }
 
             int errorPosition = 0;

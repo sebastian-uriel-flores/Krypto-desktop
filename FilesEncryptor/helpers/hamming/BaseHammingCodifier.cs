@@ -88,26 +88,15 @@ namespace FilesEncryptor.helpers.hamming
             for (uint columnIndex = 0; columnIndex < controlBitsCount; columnIndex++)
             {
                 //Cada columna poseera un total de bits igual al tamaño de palabra de salida
-                BitCode currentColumn = BitCode.EMPTY;
+                BitCode currentColumn = BitCode.Zeros(outWordSize);
 
-                //Recorro del final hacia el principio bit a bit 
-                //y reemplazo con 1 en las posiciones correspondientes
                 uint bitsStep = (uint)Math.Pow(2, columnIndex);
-                bool insertOnes = true;
 
-                for(uint i = 0; i < outWordSize; i++) 
+                for (uint rowIndex = bitsStep - 1; rowIndex < outWordSize; rowIndex += 2 * bitsStep)
                 {
-                    //Hago esto para pushear en lugar de appendear
-                    BitCode tempCode = insertOnes ? BitCode.ONE : BitCode.ZERO;
-
-                    tempCode.Append(currentColumn);
-                    currentColumn = tempCode;
-
-                    //Reviso el paso para ver si debo cambiar de insertar ceros a unos o de unos a ceros,
-                    //o no debo cambiar
-                    if ((i + 1) % bitsStep == 0)
+                    for(uint i=rowIndex; i < rowIndex+bitsStep; i++)
                     {
-                        insertOnes = !insertOnes;
+                        currentColumn = currentColumn.ReplaceAt(i, BitCode.ONE);
                     }
                 }
 
