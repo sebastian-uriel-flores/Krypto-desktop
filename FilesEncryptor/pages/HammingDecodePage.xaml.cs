@@ -27,6 +27,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using static FilesEncryptor.helpers.DebugUtils;
 
 // La plantilla de elemento Página en blanco está documentada en https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -85,7 +86,7 @@ namespace FilesEncryptor.pages
                 //Si el archivo pudo ser abierto
                 if(await _fileOpener.OpenFile(FileAccessMode.Read))
                 {
-                    DebugUtils.WriteLine($"Selected file: {_fileOpener.SelectedFilePath} with size of { _fileOpener.FileSize} bytes");
+                    ConsoleWL($"Selected file: {_fileOpener.SelectedFilePath} with size of { _fileOpener.FileSize} bytes");
 
                     ShowFileInformation();
                     ShowPanels();
@@ -93,30 +94,30 @@ namespace FilesEncryptor.pages
 
                     if (_fileHeader != null)
                     {
-                        DebugUtils.WriteLine("File bytes extracted properly");
+                        ConsoleWL("File bytes extracted properly");
                         _decoder = HammingDecoder.FromFile(_fileOpener, BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension));
 
                         if (_fileHeader.FileExtension == BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION)
                         {
-                            DebugUtils.WriteLine("The original file is compressed with Huffman", "[WARN]");
+                            ConsoleWL("The original file is compressed with Huffman", "[WARN]");
                         }
                     }
                     else
                     {
-                        DebugUtils.WriteLine("File header is corrupt", "[FAIL]");
+                        ConsoleWL("File header is corrupt", "[FAIL]");
 
                         MessageDialog dialog = new MessageDialog("El archivo está dañado", "Ha ocurrido un error");
                         await dialog.ShowAsync();
                     }
 
-                    DebugUtils.WriteLine("Closing file");
+                    ConsoleWL("Closing file");
                     await _fileOpener.Finish();
-                    DebugUtils.WriteLine("File closed");
+                    ConsoleWL("File closed");
                 }
                 //Si el archivo no pudo ser abierto
                 else
                 {
-                    DebugUtils.WriteLine("File could not be opened to Read", "[FAIL]");
+                    ConsoleWL("File could not be opened to Read", "[FAIL]");
 
                     MessageDialog dialog = new MessageDialog("El archivo no pudo ser cargado", "Ha ocurrido un error");
                     await dialog.ShowAsync();
@@ -147,12 +148,12 @@ namespace FilesEncryptor.pages
 
                 if ((int)promptRes.Id == 0)
                 {
-                    DebugUtils.WriteLine("User decided to uncompress Huffman format next to Hamming decoding", "[WARN]");
+                    ConsoleWL("User decided to uncompress Huffman format next to Hamming decoding", "[WARN]");
                     uncompressHuff = true;
                 }
                 else
                 {
-                    DebugUtils.WriteLine("User decided to maintain Huffman format next to Hamming decoding", "[WARN]");
+                    ConsoleWL("User decided to maintain Huffman format next to Hamming decoding", "[WARN]");
                 }
             }
 
@@ -160,7 +161,7 @@ namespace FilesEncryptor.pages
 
             //Inicio la decodificacion en Hamming
             await ShowProgressPanel();
-            DebugUtils.WriteLine("Starting Hamming Decoding");
+            ConsoleWL("Starting Hamming Decoding");
 
             DateTime startDate = DateTime.Now;
 
@@ -170,7 +171,7 @@ namespace FilesEncryptor.pages
 
             //Imprimo la cantidad de tiempo que implico la decodificacion
             TimeSpan hammingDecodingTime = DateTime.Now.Subtract(startDate);
-            DebugUtils.WriteLine($"Hamming decoding process finished in a time of {hammingDecodingTime}");
+            ConsoleWL($"Hamming decoding process finished in a time of {hammingDecodingTime}");
 
             //Si el archivo pudo ser decodificado con Hamming
             if (result != null)
@@ -194,7 +195,7 @@ namespace FilesEncryptor.pages
 
                             if(await tempHufFileHelper.OpenFile(FileAccessMode.Read))
                             {
-                                DebugUtils.WriteLine($"Dumping hamming decoded bytes to temp file: \"{tempHufFileHelper.SelectedFilePath}\"");
+                                ConsoleWL($"Dumping hamming decoded bytes to temp file: \"{tempHufFileHelper.SelectedFilePath}\"");
 
                                 FileHeader internalFileHeader = tempHufFileHelper.ReadFileHeader();
 
@@ -206,7 +207,7 @@ namespace FilesEncryptor.pages
 
                                 //Imprimo la cantidad de tiempo que implico la decodificacion
                                 TimeSpan huffmanDecodingTime = DateTime.Now.Subtract(huffmanDecodingStart);
-                                DebugUtils.WriteLine($"Huffman decoding process finished in a time of {huffmanDecodingTime}");
+                                ConsoleWL($"Huffman decoding process finished in a time of {huffmanDecodingTime}");
 
                                 //Si la decodificacion finalizo correctamente
                                 if (huffDecoded != null)
@@ -216,7 +217,7 @@ namespace FilesEncryptor.pages
                                     //Solicito al usuario que seleccione la carpeta en la que se almacenara el archivo decodificado
                                     if (await fileSaver.PickToSave(internalFileHeader.FileName, internalFileHeader.FileDisplayType, internalFileHeader.FileExtension))
                                     {
-                                        DebugUtils.WriteLine($"Output file: \"{fileSaver.SelectedFilePath}\"");
+                                        ConsoleWL($"Output file: \"{fileSaver.SelectedFilePath}\"");
 
                                         //Si el archivo pudo abrirse
                                         if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
@@ -228,14 +229,14 @@ namespace FilesEncryptor.pages
                                             fileSaver.WriteString(huffDecoded);
 
                                             //Cierro el archivo descomprimido
-                                            DebugUtils.WriteLine("Closing file");
+                                            ConsoleWL("Closing file");
                                             await fileSaver.Finish();
-                                            DebugUtils.WriteLine("File closed");
+                                            ConsoleWL("File closed");
                                         }
                                         //Si el archivo no pudo ser abierto
                                         else
                                         {
-                                            DebugUtils.WriteLine("File could not be opened to ReadWrite", "[FAIL]");                                            
+                                            ConsoleWL("File could not be opened to ReadWrite", "[FAIL]");                                            
 
                                             MessageDialog dialog = new MessageDialog("El archivo no pudo ser creado correctamente", "Ha ocurrido un error");
                                             await dialog.ShowAsync();
@@ -244,13 +245,13 @@ namespace FilesEncryptor.pages
                                     //Si el usuario no selecciono ningun archivo
                                     else
                                     {
-                                        DebugUtils.WriteLine("User cancel file selection");
+                                        ConsoleWL("User cancel file selection");
                                     }
                                 }
                                 //Si no se pudo decodificar
                                 else
                                 {
-                                    DebugUtils.WriteLine("File could not be decoded with Huffman", "[FAIL]");
+                                    ConsoleWL("File could not be decoded with Huffman", "[FAIL]");
 
                                     MessageDialog dialog = new MessageDialog("El archivo no pudo ser decodificado", "Ha ocurrido un error");
                                     await dialog.ShowAsync();
@@ -268,29 +269,29 @@ namespace FilesEncryptor.pages
                     //Si el usuario selecciona un archivo
                     if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
                     {
-                        DebugUtils.WriteLine($"Output file: \"{fileSaver.SelectedFilePath}\"");
+                        ConsoleWL($"Output file: \"{fileSaver.SelectedFilePath}\"");
 
                         //Si el archivo pudo ser abierto correctamente
                         if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                         {                            
-                            DebugUtils.WriteLine($"Dumping hamming decoded bytes to \"{fileSaver.SelectedFilePath}\"");
+                            ConsoleWL($"Dumping hamming decoded bytes to \"{fileSaver.SelectedFilePath}\"");
 
                             if(fileSaver.WriteBytes(result.Code.ToArray()))
                             {
-                                DebugUtils.WriteLine("Dumping completed properly");
-                                DebugUtils.WriteLine("Closing file");
+                                ConsoleWL("Dumping completed properly");
+                                ConsoleWL("Closing file");
                                 await fileSaver.Finish();
-                                DebugUtils.WriteLine("File closed");
+                                ConsoleWL("File closed");
 
                                 MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
                                 await dialog.ShowAsync();
                             }
                             else
                             {
-                                DebugUtils.WriteLine("Dumping uncompleted");
-                                DebugUtils.WriteLine("Closing file");
+                                ConsoleWL("Dumping uncompleted");
+                                ConsoleWL("Closing file");
                                 await fileSaver.Finish();
-                                DebugUtils.WriteLine("File closed");
+                                ConsoleWL("File closed");
 
                                 MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
                                 await dialog.ShowAsync();
@@ -299,7 +300,7 @@ namespace FilesEncryptor.pages
                         //Si el archivo no pudo ser abierto para edicion
                         else
                         {
-                            DebugUtils.WriteLine("File could not be opened to ReadWrite", "[FAIL]");
+                            ConsoleWL("File could not be opened to ReadWrite", "[FAIL]");
 
                             MessageDialog dialog = new MessageDialog("El archivo no pudo ser creado correctamente", "Ha ocurrido un error");
                             await dialog.ShowAsync();
@@ -308,14 +309,14 @@ namespace FilesEncryptor.pages
                     //Si el usuario no selecciono ningun archivo
                     else
                     {
-                        DebugUtils.WriteLine("User cancel file selection");
+                        ConsoleWL("User cancel file selection");
                     }
                 }
             }
             //Si el archivo no pudo ser decodificado
             else
             {
-                DebugUtils.WriteLine("File could not be decoded with Hamming", "[FAIL]");
+                ConsoleWL("File could not be decoded with Hamming", "[FAIL]");
                 
                 MessageDialog dialog = new MessageDialog("El archivo no pudo ser decodificado", "Ha ocurrido un error");
                 await dialog.ShowAsync();

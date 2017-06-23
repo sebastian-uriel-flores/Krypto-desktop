@@ -36,28 +36,22 @@ namespace FilesEncryptor.helpers.hamming
                 {
                     if (encodeType.WordBitsSize > 0)
                     {
-                        DebugUtils.WriteLine(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
+                        DebugUtils.ConsoleWL(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
 
                         //Obtengo todos los bloques de informacion o palabras
                         Tuple<List<BitCode>, int> exploded = _baseCode.Explode(encodeType.WordBitsSize, true, true);
                         List<BitCode> dataBlocks = exploded.Item1;
 
-                        DebugUtils.WriteLine(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));
+                        DebugUtils.ConsoleWL(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));
 
                         //Imprimo todas las palabras de entrada
                         BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
-
-                        //Creo la matriz generadora
-                        DebugUtils.WriteLine("Creating generator matrix");
-
-                        List<BitCode> genMatrix = CreateGeneratorMatrix(encodeType);
-
+                        
                         //Determino el tamaño de los bloques de salida
-                        //sumando la cantidad de bits de la palabra de entrada y la cantidad de columnas
-                        //de la matriz generadora
-                        uint outWordSize = encodeType.WordBitsSize + (uint)genMatrix.Count;
-
-                        DebugUtils.WriteLine(string.Format("Encoding words in {0} bits output size", outWordSize));
+                        //sumando la cantidad de bits de la palabra de entrada y la cantidad de bits de control
+                        uint outWordSize = encodeType.WordBitsSize + CalculateControlBits(encodeType);
+                        
+                        DebugUtils.ConsoleWL(string.Format("Encoding words in {0} bits output size", outWordSize));
 
                         //Creo la lista con los bloques de salida
                         List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
@@ -68,35 +62,21 @@ namespace FilesEncryptor.helpers.hamming
 
                         foreach (BitCode currentWord in dataBlocks)
                         {
-                            int currentExp = 0;
-                            BitCode currentOutputWord = currentWord.Copy();
-
-                            List<Tuple<int, int>> dataBlocksIndexes = new List<Tuple<int, int>>();
-                            List<Tuple<int, int>> controlBlocksIndexes = new List<Tuple<int, int>>();
-                           
-                            //Calculo los valores que iran en cada bit de control
-                            foreach(uint index in controlBitsIndexes)
-                            {
-                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1);
-                                currentOutputWord = currentOutputWord.Insert(index, code);
-                                currentExp++;
-                            }
-                            
-                            //Agrego la palabra recién creada a la lista de palabras de salida
-                            outputBlocks.Add(currentOutputWord);
+                            //Codifico la palabra actual y la agrego a la lista de palabras de salida
+                            outputBlocks.Add(EncodeWord(currentWord, controlBitsIndexes));
 
                             if (outputBlocks.Count % wordsDebugStep  == 0)
                             {
-                                DebugUtils.WriteLine(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
+                                DebugUtils.ConsoleWL(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
                             }
                         }
 
-                        DebugUtils.WriteLine(string.Format("Encoding process finished with a total of {0} output words", outputBlocks.Count));
+                        DebugUtils.ConsoleWL(string.Format("Encoding process finished with a total of {0} output words", outputBlocks.Count));
 
                         //Imprimo todas las palabras de salida
                         BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
 
-                        DebugUtils.WriteLine("Joining encoded words into one array of bytes");
+                        DebugUtils.ConsoleWL("Joining encoded words into one array of bytes");
                         BitCode resultCode = BitOps.Join(outputBlocks);
 
                         BitCodePresenter.From(new List<BitCode>() { resultCode }).Print(BitCodePresenter.LinesDisposition.Row, "Output words");
@@ -111,12 +91,93 @@ namespace FilesEncryptor.helpers.hamming
                     }
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 result = null;
             }
 
             return result;
+        }
+
+        protected BitCode EncodeWord(BitCode inputWord, HammingEncodeType encodeType)
+        {
+            BitCode outputWord = inputWord.Copy();
+            List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
+
+            foreach (uint index in controlBitsIndexes)
+            {
+                outputWord = outputWord.Insert(index, BitCode.ZERO);
+            }
+
+            //Calculo los valores que iran en cada bit de control
+            foreach (uint index in controlBitsIndexes)
+            {
+                uint bitsStep = index + 1;
+                List<BitCode> protectedBits = new List<BitCode>();
+                bool take = true;
+                uint count = 0;
+
+                for (uint i = index; i < outputWord.CodeLength; i++)
+                {
+                    if (take)
+                    {
+                        protectedBits.Add(outputWord.ElementAt(i));
+                    }
+                    count++;
+
+                    if (count == bitsStep)
+                    {
+                        count = 0;
+                        take = !take;
+                    }
+                }
+
+
+                BitCode parityBit = BitOps.Xor(protectedBits);
+                outputWord = outputWord.ReplaceAt(index, parityBit);
+            }
+
+            return outputWord;
+        }
+
+        protected BitCode EncodeWord(BitCode inputWord, List<uint> controlBitsIndexes)
+        {
+            BitCode outputWord = inputWord.Copy();
+            
+            foreach (uint index in controlBitsIndexes)
+            {
+                outputWord = outputWord.Insert(index, BitCode.ZERO);
+            }
+
+            //Calculo los valores que iran en cada bit de control
+            foreach (uint index in controlBitsIndexes)
+            {
+                uint bitsStep = index + 1;
+                List<BitCode> protectedBits = new List<BitCode>();
+                bool take = true;
+                uint count = 0;
+
+                for (uint i = index; i < outputWord.CodeLength; i++)
+                {
+                    if (take)
+                    {
+                        protectedBits.Add(outputWord.ElementAt(i));
+                    }
+                    count++;
+
+                    if (count == bitsStep)
+                    {
+                        count = 0;
+                        take = !take;
+                    }
+                }
+
+
+                BitCode parityBit = BitOps.Xor(protectedBits);
+                outputWord = outputWord.ReplaceAt(index, parityBit);
+            }
+
+            return outputWord;
         }
         
         public static bool WriteEncodedToFile(HammingEncodeResult encodeResult, FileHelper fileHelper)

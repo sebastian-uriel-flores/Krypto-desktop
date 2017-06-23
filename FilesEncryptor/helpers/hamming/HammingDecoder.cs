@@ -66,18 +66,18 @@ namespace FilesEncryptor.helpers.hamming
                 await Task.Factory.StartNew(() =>
                 {
                     //Separo el codigo completo en bloques representando a cada palabra del mismo
-                    DebugUtils.WriteLine("Creating parity matrix");
+                    DebugUtils.ConsoleWL("Creating parity matrix");
 
                     List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
                     uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
-                    DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
+                    DebugUtils.ConsoleWL(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
                     List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false, true).Item1;
 
-                    DebugUtils.WriteLine(string.Format("Extracted {0} encoded words", encodedWords.Count));
+                    DebugUtils.ConsoleWL(string.Format("Extracted {0} encoded words", encodedWords.Count));
 
                     //Decodifico cada una de las palabras
-                    DebugUtils.WriteLine(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
+                    DebugUtils.ConsoleWL(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
 
                     List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
                     List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
@@ -93,12 +93,12 @@ namespace FilesEncryptor.helpers.hamming
                         int errorPosition = CheckParity(parityControlMatrix, decoded);
 
                         //Si hay un error
-                       /* if(errorPosition >= 0)
+                        if(errorPosition >= 0)
                         {
                             //Fixeo el error en el bit correspondiente
                             BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);
                             decoded = decoded.ReplaceAt((uint)errorPosition, erroneousBit.Negate());
-                        }*/
+                        }
 
                         uint currentExp = 0;
                         foreach(uint index in controlBitsIndexes)
@@ -111,16 +111,16 @@ namespace FilesEncryptor.helpers.hamming
 
                         if (decodedWords.Count % wordsDebugStep == 0)
                         {
-                            DebugUtils.WriteLine(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
+                            DebugUtils.ConsoleWL(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
                         }
                     }
 
-                    DebugUtils.WriteLine(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
+                    DebugUtils.ConsoleWL(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
 
                     BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
 
                     //Junto todas las palabras decodificadas en un solo codigo
-                    DebugUtils.WriteLine("Joining decoded words into one array of bytes");
+                    DebugUtils.ConsoleWL("Joining decoded words into one array of bytes");
                     result = BitOps.Join(decodedWords);
 
                     //Remuevo los bits de redundancia

@@ -86,7 +86,7 @@ namespace FilesEncryptor.pages
 
                 if (openResult)
                 {
-                    DebugUtils.WriteLine(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
+                    DebugUtils.ConsoleWL(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
 
                     fileNameBlock.Text = _filesHelper.SelectedFileName;
                     fileSizeBlock.Text = string.Format("{0} bytes", _filesHelper.FileSize);
@@ -99,14 +99,14 @@ namespace FilesEncryptor.pages
                     bool extractResult = ExtractFileProperties();
                     if (extractResult)
                     {
-                        DebugUtils.WriteLine("File bytes extracted properly");
+                        DebugUtils.ConsoleWL("File bytes extracted properly");
                     }
                     else
                     {
-                        DebugUtils.WriteLine("Failed extracting File bytes", "[FAIL]");
+                        DebugUtils.ConsoleWL("Failed extracting File bytes", "[FAIL]");
                     }
 
-                    DebugUtils.WriteLine("Closing file");
+                    DebugUtils.ConsoleWL("Closing file");
                     await _filesHelper.Finish();
                 }
             }
@@ -143,13 +143,13 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
-                    DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
-                    DebugUtils.WriteLine("Extracting input words");
+                    DebugUtils.ConsoleWL(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
+                    DebugUtils.ConsoleWL("Extracting input words");
 
                     List<BitCode> inputWords = _fullCode.Explode(_encodeType.WordBitsSize, false).Item1;
 
-                    DebugUtils.WriteLine(string.Format("Extracted {0} input words of {1} bits size", inputWords.Count, _encodeType.WordBitsSize));
-                    DebugUtils.WriteLine("Start inserting errors");
+                    DebugUtils.ConsoleWL(string.Format("Extracted {0} input words of {1} bits size", inputWords.Count, _encodeType.WordBitsSize));
+                    DebugUtils.ConsoleWL("Start inserting errors");
 
                     //Inserto errores en el archivo codificado en Hamming
                     List<BitCode> outputWords = new List<BitCode>();
@@ -162,7 +162,7 @@ namespace FilesEncryptor.pages
                         if (InsertErrorInModule())
                         {
                             uint replacePos = (uint)SelectBitPositionRandom(0, inputWord.CodeLength - 1);
-                            DebugUtils.WriteLine(string.Format("Insert error in word {0} bit {1}", wordIndex, replacePos), "[PROGRESS]");
+                            DebugUtils.ConsoleWL(string.Format("Insert error in word {0} bit {1}", wordIndex, replacePos), "[PROGRESS]");
                             outputWords.Add(inputWord.ReplaceAt(replacePos, inputWord.ElementAt(replacePos).Negate()));
                             wordsWithError++;
                         }
@@ -173,10 +173,10 @@ namespace FilesEncryptor.pages
                         wordIndex++;
                     }
 
-                    DebugUtils.WriteLine(string.Format("Inserting errors finished with {0} words with error", wordsWithError));
+                    DebugUtils.ConsoleWL(string.Format("Inserting errors finished with {0} words with error", wordsWithError));
                     BitCode outputCode = BitOps.Join(outputWords);
 
-                    DebugUtils.WriteLine(string.Format("Dumping file with errors to \"{0}\"", _filesHelper.SelectedFilePath));
+                    DebugUtils.ConsoleWL(string.Format("Dumping file with errors to \"{0}\"", _filesHelper.SelectedFilePath));
 
                     bool writeResult = _filesHelper.WriteFileHeader(_fileHeader);
                     writeResult = HammingEncoder.WriteEncodedToFile(new HammingEncodeResult(outputCode, _encodeType, _fullCodeLenth), _filesHelper);
@@ -184,16 +184,16 @@ namespace FilesEncryptor.pages
                     //Show congrats message
                     if (writeResult)
                     {
-                        DebugUtils.WriteLine("Dumping completed properly");
-                        DebugUtils.WriteLine("Closing file");
+                        DebugUtils.ConsoleWL("Dumping completed properly");
+                        DebugUtils.ConsoleWL("Closing file");
                         await _filesHelper.Finish();
                         MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
                         await dialog.ShowAsync();
                     }
                     else
                     {
-                        DebugUtils.WriteLine("Dumping uncompleted");
-                        DebugUtils.WriteLine("Closing file");
+                        DebugUtils.ConsoleWL("Dumping uncompleted");
+                        DebugUtils.ConsoleWL("Closing file");
                         await _filesHelper.Finish();
                         MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
                         await dialog.ShowAsync();

@@ -61,9 +61,8 @@ namespace FilesEncryptor.helpers.hamming
 
                 //Reemplazo con un 0 el valor de la fila correspondiente a la
                 //potencia 'i' de 2
-                List<BitCode> bits = currentBitCode.Explode(1, false).Item1;
-                bits[(int)Math.Pow(2, i) - 1] = BitCode.ZERO;
-                genMatrix.Add(BitOps.Join(bits));
+                currentBitCode = currentBitCode.ReplaceAt((uint)Math.Pow(2, i) - 1, BitCode.ZERO);                
+                genMatrix.Add(currentBitCode);
             }
 
             //Imprimo la matriz generadora

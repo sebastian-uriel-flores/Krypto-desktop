@@ -238,7 +238,7 @@ namespace FilesEncryptor.dto
 
             if (printInDebugConsole)
             {
-                DebugUtils.WriteLine(string.Format("Extracting {0} bits encoded words from input code", wordsCount));
+                DebugUtils.ConsoleWL(string.Format("Extracting {0} bits encoded words from input code", wordsCount));
             }
 
             //Construyo la lista de bloques
@@ -281,7 +281,7 @@ namespace FilesEncryptor.dto
 
                 if (printInDebugConsole && blocks.Count % wordsDebugStep == 0)
                 {
-                    DebugUtils.WriteLine(string.Format("Extracted {0} words of {1}", blocks.Count, wordsCount), "[PROGRESS]");
+                    DebugUtils.ConsoleWL(string.Format("Extracted {0} words of {1}", blocks.Count, wordsCount), "[PROGRESS]");
                 }
             }
 
