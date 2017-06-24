@@ -170,7 +170,7 @@ namespace FilesEncryptor.pages
                                 DebugUtils.ConsoleWL(message);
                                 progressText.Text = message;
 
-                                HammingDecoder decoder = HammingDecoder.FromEncoded(encodeRes);                                
+                                HammingDecoder decoder = new HammingDecoder(encodeRes);                                
                                 var decodeRes = await decoder.Decode();
 
                                 if (decodeRes != null)
@@ -240,10 +240,10 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(HammingEncodePage));
                     break;
                 case "decodeFileItem":
-                    Frame.Navigate(typeof(HammingDecodePage));
+                    Frame.Navigate(typeof(HammingDecodePage), HammingDecodePage.PAGE_MODES.DECODE);
                     break;
                 case "introduceErrorItem":
-                    Frame.Navigate(typeof(IntroduceErrorsPage));
+                    Frame.Navigate(typeof(HammingDecodePage), HammingDecodePage.PAGE_MODES.INTRODUCE_ERRORS);
                     break;
             }            
         }

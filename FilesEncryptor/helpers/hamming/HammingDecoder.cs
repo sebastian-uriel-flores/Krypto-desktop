@@ -11,9 +11,9 @@ namespace FilesEncryptor.helpers.hamming
 {
     public class HammingDecoder : BaseHammingCodifier
     {
-        private uint _redundanceBitsCount;
-        private BitCode _fullCode;
-        private HammingEncodeType _encodeType;
+        protected uint _redundanceBitsCount;
+        protected BitCode _fullCode;
+        protected HammingEncodeType _encodeType;
         public EventHandler<double> DecodingProgressChanged;
 
         public BitCode RawCode => _fullCode.Copy();
@@ -21,12 +21,14 @@ namespace FilesEncryptor.helpers.hamming
 
         #region BUILDERS
 
-        private HammingDecoder()
+        public HammingDecoder(HammingEncodeType encodeType, BitCode hammingCode, uint redundanceBitsCount)
         {
-
+            _encodeType = encodeType;
+            _fullCode = hammingCode;
+            _redundanceBitsCount = redundanceBitsCount;
         }
 
-        public static HammingDecoder FromFile(FileHelper fileHelper, HammingEncodeType encodeType)
+        public HammingDecoder(FileHelper fileHelper, HammingEncodeType encodeType) 
         {
             //Obtengo la cantidad de bits del codigo completo, incluyendo la redundancia
             string fullCodeLength = fileHelper.ReadStringUntil(",");
@@ -37,23 +39,13 @@ namespace FilesEncryptor.helpers.hamming
             //Obtengo los bytes del codigo, incluyendo la redundancia
             byte[] fullCodeBytes = fileHelper.ReadBytes(BitCode.BitsLengthToBytesLength(uint.Parse(fullCodeLength)));
 
-            return new HammingDecoder()
-            {
-                _encodeType = encodeType,
-                _fullCode = new BitCode(fullCodeBytes.ToList(), int.Parse(fullCodeLength)),
-                _redundanceBitsCount = uint.Parse(redundanceCodeLength)
-            };
+            _encodeType = encodeType;
+            _fullCode = new BitCode(fullCodeBytes.ToList(), int.Parse(fullCodeLength));
+            _redundanceBitsCount = uint.Parse(redundanceCodeLength);
         }
 
-        public static HammingDecoder FromEncoded(HammingEncodeResult encodeResult)
-        {
-            return new HammingDecoder()
-            {
-                _fullCode = encodeResult.Encoded,
-                _redundanceBitsCount = encodeResult.Length.RedundanceCodeLength,
-                _encodeType = encodeResult.EncodeType
-            };
-        }
+        public HammingDecoder(HammingEncodeResult encodeResult) 
+            : this(encodeResult.EncodeType, encodeResult.Encoded, encodeResult.Length.RedundanceCodeLength) { }
 
         #endregion
 
@@ -145,16 +137,17 @@ namespace FilesEncryptor.helpers.hamming
                 var and = BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] });
                 var exploded = and.Explode(1, false).Item1;
                 var xor = BitOps.Xor(exploded);
+                //xor.Append(syndrome);
                 syndrome.Append(xor);
             }
-
+            
             int errorPosition = 0;
             //Ahora, convierto el sindrome a entero para ver si hay errores
             for (int i = 0; i < syndrome.CodeLength; i++)
             {
                 errorPosition += (int)Math.Pow(2, i) * syndrome.ElementAt((uint)i).Code.First();
             }
-
+            errorPosition /= (int)Math.Pow(2, syndrome.CodeLength);
             return errorPosition - 1;
         }
     }
