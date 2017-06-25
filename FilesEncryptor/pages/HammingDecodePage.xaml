@@ -138,7 +138,7 @@
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Center"
                 Padding="30,0"
-                Click="DecodeBt_Click"
+                Click="ConfirmBt_Click"
                 Visibility="Visible"
                 />
             </Grid>

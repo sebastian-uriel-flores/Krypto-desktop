@@ -109,7 +109,8 @@
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
     <Compile Include="helpers\hamming\BaseHammingCodifier.cs" />
-    <Compile Include="helpers\file_management\FilesComparer.cs" />
+    <Compile Include="helpers\FilesComparer.cs" />
+    <Compile Include="helpers\hamming\HammingBroker.cs" />
     <Compile Include="helpers\hamming\HammingDecoder.cs" />
     <Compile Include="helpers\hamming\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
@@ -125,9 +126,6 @@
     </Compile>
     <Compile Include="pages\HammingEncodePage.xaml.cs">
       <DependentUpon>HammingEncodePage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="pages\IntroduceErrorsPage.xaml.cs">
-      <DependentUpon>IntroduceErrorsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="pages\ResultsPage.xaml.cs">
       <DependentUpon>ResultsPage.xaml</DependentUpon>
@@ -155,6 +153,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
+    <Content Include="Assets\W.scale-400.png" />
+    <Content Include="Assets\SS.scale-200.png" />
+    <Content Include="Assets\M.scale-200.png" />
+    <Content Include="Assets\W.scale-200.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -186,10 +188,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="pages\HammingEncodePage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="pages\IntroduceErrorsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

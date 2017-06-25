@@ -74,7 +74,7 @@ namespace FilesEncryptor.pages
                     _fileHeader = _fileOpener.ReadFileHeader();
 
                     //Leo el archivo
-                    _decoder = HuffmanDecoder.FromFile(_fileOpener);
+                    _decoder = await HuffmanDecoder.FromFile(_fileOpener);
 
                     //Cierro el archivo
                     await _fileOpener.Finish();
@@ -107,7 +107,7 @@ namespace FilesEncryptor.pages
                     await ShowProgressPanel();
                     
                     //Decodifico el archivo
-                    DebugUtils.WriteLine("Starting decoding process");
+                    DebugUtils.ConsoleWL("Starting decoding process");
                     DateTime startDate = DateTime.Now;
 
                     //[IMPORTANTE]: Inicio un Thread para decodificar el archivo, dado que sino, se bloquea la UI
@@ -122,12 +122,12 @@ namespace FilesEncryptor.pages
 
                     //Imprimo la cantidad de tiempo que implico la decodificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                    DebugUtils.WriteLine(string.Format("Decoding process finished in a time of {0}", totalTime.ToString()));
+                    DebugUtils.ConsoleWL(string.Format("Decoding process finished in a time of {0}", totalTime.ToString()));
 
                     //Cierro el archivo descomprimido
-                    DebugUtils.WriteLine("Closing file");
+                    DebugUtils.ConsoleWL("Closing file");
                     await fileSaver.Finish();
-                    DebugUtils.WriteLine("File closed");
+                    DebugUtils.ConsoleWL("File closed");
                     
                     HideProgressPanel();
                 }
@@ -136,12 +136,12 @@ namespace FilesEncryptor.pages
             if (decodeResult)
             {
                 await new MessageDialog("El archivo ha sido descomprimido con exito").ShowAsync();
-                DebugUtils.WriteLine("Huffman decoding finished successfully");
+                DebugUtils.ConsoleWL("Huffman decoding finished successfully");
             }
             else
             {
                 await new MessageDialog("Ha ocurrido un error").ShowAsync();
-                DebugUtils.WriteLine("Huffman decoding process failed");
+                DebugUtils.ConsoleWL("Huffman decoding process failed");
             }
         }
         

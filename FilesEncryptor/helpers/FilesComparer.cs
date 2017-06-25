@@ -106,10 +106,10 @@ namespace FilesEncryptor.helpers.file_management
                 //Si hay 1 archivo diferente, cancelo la comparacion
                 if(!compareResult)
                 {
-                    DebugUtils.WriteLine(string.Format("Files {0} {1} are different:", i, i-1));
+                    DebugUtils.ConsoleWL(string.Format("Files {0} {1} are different:", i, i-1));
                     foreach (uint diff in res.Item2)
                     {
-                        DebugUtils.WriteLine(string.Format("Difference at bit {0}", diff));
+                        DebugUtils.ConsoleWL(string.Format("Difference at bit {0}", diff));
                     }
                     break;
                 }

@@ -73,6 +73,8 @@ namespace FilesEncryptor.pages
                     await ShowProgressPanel();
                     HidePanels();
 
+                    //Si no se puede obtener el tipo de codificacion del archivo, 
+                    //se solicita al usuario que elija una de las posibles codificaciones
                     if(_fileOpener.FileBOM == null)
                     {
                         await ShowEncodingPickPrompt();
@@ -117,25 +119,25 @@ namespace FilesEncryptor.pages
                     await ShowProgressPanel();
 
                     //Creo el Huffman Encoder
-                    DebugUtils.WriteLine("Creating Huffman Encoder");
+                    DebugUtils.ConsoleWL("Creating Huffman Encoder");
                     DateTime startDate = DateTime.Now;
 
                     HuffmanEncoder encoder = HuffmanEncoder.From(_originalFileContent);
 
                     //Creo la tabla de probabilidades                                        
-                    encoder.Scan();
+                    await encoder.Scan();
                     
                     //Comprimo el archivo
-                    DebugUtils.WriteLine("Compressing file");
+                    DebugUtils.ConsoleWL("Compressing file");
                     HuffmanEncodeResult encodeResult = await encoder.Encode();
 
                     //Imprimo la cantidad de tiempo que implico la codificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
+                    DebugUtils.ConsoleWL(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
 
                     if (encodeResult != null)
                     {
-                        DebugUtils.WriteLine("File compressed successfully");
+                        DebugUtils.ConsoleWL("File compressed successfully");
 
                         //Creo y escribo el header del archivo
                         FileHeader header = new FileHeader()
@@ -145,23 +147,23 @@ namespace FilesEncryptor.pages
                             FileExtension = _fileOpener.SelectedFileExtension
                         };
 
-                        DebugUtils.WriteLine(string.Format("File header: {0}", header.ToString()));
+                        DebugUtils.ConsoleWL(string.Format("File header: {0}", header.ToString()));
                         
                         compressResult = fileSaver.WriteFileHeader(header);
 
                         if (compressResult)
                         {
                             //Escribo la tabla de probabilidades
-                            DebugUtils.WriteLine(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
+                            DebugUtils.ConsoleWL(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
                             fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
                             compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult, _fileOpener.FileEncoding, _fileOpener.FileBOM);
                         }
                     }
 
                     //Cierro el archivo comprimido
-                    DebugUtils.WriteLine("Closing file");
+                    DebugUtils.ConsoleWL("Closing file");
                     await fileSaver.Finish();
-                    DebugUtils.WriteLine("File closed");
+                    DebugUtils.ConsoleWL("File closed");
                     HideProgressPanel();
                 }
             }
@@ -169,12 +171,12 @@ namespace FilesEncryptor.pages
             if (compressResult)
             {
                 await new MessageDialog("El archivo ha sido comprimido con exito").ShowAsync();
-                DebugUtils.WriteLine("Compressing finished successfully");
+                DebugUtils.ConsoleWL("Compressing finished successfully");
             }
             else
             {
                 await new MessageDialog("Ha ocurrido un error").ShowAsync();
-                DebugUtils.WriteLine("Compressing process failed");
+                DebugUtils.ConsoleWL("Compressing process failed");
             }
         }
 

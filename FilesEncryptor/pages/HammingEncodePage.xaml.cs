@@ -103,7 +103,7 @@ namespace FilesEncryptor.pages
                 
                 if (openResult)
                 {
-                    DebugUtils.WriteLine(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
+                    DebugUtils.ConsoleWL(string.Format("Selected file: {0} with size of {1} bytes", _filesHelper.SelectedFilePath, _filesHelper.FileSize));
 
                     //Muestro los datos del archivo cargado
                     fileNameBlock.Text = _filesHelper.SelectedFileName;
@@ -122,8 +122,8 @@ namespace FilesEncryptor.pages
                         FileExtension = _filesHelper.SelectedFileExtension
                     };
 
-                    DebugUtils.WriteLine("File bytes extracted properly");
-                    DebugUtils.WriteLine("Closing file");
+                    DebugUtils.ConsoleWL("File bytes extracted properly");
+                    DebugUtils.ConsoleWL("Closing file");
                     await _filesHelper.Finish();
                 }
 
@@ -152,8 +152,8 @@ namespace FilesEncryptor.pages
                     ShowProgressPanel();
                     await Task.Delay(200);
 
-                    DebugUtils.WriteLine(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
-                    DebugUtils.WriteLine(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
+                    DebugUtils.ConsoleWL(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
+                    DebugUtils.ConsoleWL(string.Format("Starting Hamming Encoding in {0} format working with {1} bits input words", selectedEncodingType.Extension, selectedEncodingType.WordBitsSize));
 
                     DateTime startDate = DateTime.Now;
 
@@ -163,7 +163,7 @@ namespace FilesEncryptor.pages
 
                     //Imprimo la cantidad de tiempo que implico la codificacion
                     TimeSpan totalTime = DateTime.Now.Subtract(startDate);
-                    DebugUtils.WriteLine(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
+                    DebugUtils.ConsoleWL(string.Format("Encoding process finished in a time of {0}", totalTime.ToString()));
 
                     //Si pudo encodearse el archivo
                     if (encodeResult != null)
@@ -171,23 +171,23 @@ namespace FilesEncryptor.pages
                         //Escribo el Header
                         if (_filesHelper.WriteFileHeader(_fileHeader))
                         {
-                            DebugUtils.WriteLine(string.Format("Dumping hamming encoded bytes to \"{0}\"", _filesHelper.SelectedFilePath));
+                            DebugUtils.ConsoleWL(string.Format("Dumping hamming encoded bytes to \"{0}\"", _filesHelper.SelectedFilePath));
 
                             bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, _filesHelper);
 
                             //Show congrats message
                             if (writeResult)
                             {
-                                DebugUtils.WriteLine("Dumping completed properly");
-                                DebugUtils.WriteLine("Closing file");
+                                DebugUtils.ConsoleWL("Dumping completed properly");
+                                DebugUtils.ConsoleWL("Closing file");
                                 await _filesHelper.Finish();
                                 MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
                                 await dialog.ShowAsync();
                             }
                             else
                             {
-                                DebugUtils.WriteLine("Dumping uncompleted");
-                                DebugUtils.WriteLine("Closing file");
+                                DebugUtils.ConsoleWL("Dumping uncompleted");
+                                DebugUtils.ConsoleWL("Closing file");
                                 await _filesHelper.Finish();
                                 MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
                                 await dialog.ShowAsync();
@@ -200,7 +200,7 @@ namespace FilesEncryptor.pages
             }
             else
             {
-                DebugUtils.WriteLine("File encoded canceled because user cancel output file selection");
+                DebugUtils.ConsoleWL("File encoded canceled because user cancel output file selection");
             }
         }
 

@@ -141,7 +141,14 @@ namespace FilesEncryptor.helpers
                 {
                     // Prevent updates to the remote version of the file until
                     // we finish making changes and call CompleteUpdatesAsync.
-                    CachedFileManager.DeferUpdates(_selectedFile);
+                    try
+                    {
+                        CachedFileManager.DeferUpdates(_selectedFile);
+                    }
+                    catch(Exception ex)
+                    {
+
+                    }
                 }
 
                 //Abro el archivo en el modo indicado
