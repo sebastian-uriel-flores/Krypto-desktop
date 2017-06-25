@@ -92,7 +92,7 @@ namespace FilesEncryptor.pages
             if (pickResult)
             {
                 _rawFileBytes = null;
-                ShowProgressPanel();
+                ShowLoadingPanel();
                 await Task.Delay(200);
 
                 settingsPanel.Visibility = Visibility.Collapsed;
@@ -127,7 +127,7 @@ namespace FilesEncryptor.pages
                     await _filesHelper.Finish();
                 }
 
-                HideProgressPanel();
+                HideLoadingPanel();
             }
         }
 
@@ -149,7 +149,7 @@ namespace FilesEncryptor.pages
 
                 if (openFileResult)
                 {
-                    ShowProgressPanel();
+                    ShowLoadingPanel();
                     await Task.Delay(200);
 
                     DebugUtils.ConsoleWL(string.Format("Output file: \"{0}\"", _filesHelper.SelectedFilePath));
@@ -195,7 +195,7 @@ namespace FilesEncryptor.pages
                         }
                     }
 
-                    HideProgressPanel();
+                    HideLoadingPanel();
                 }
             }
             else
@@ -204,8 +204,8 @@ namespace FilesEncryptor.pages
             }
         }
 
-        private void ShowProgressPanel() => progressPanel.Visibility = Visibility.Visible;
+        private void ShowLoadingPanel() => loadingPanel.Visibility = Visibility.Visible;
 
-        private void HideProgressPanel() => progressPanel.Visibility = Visibility.Collapsed;
+        private void HideLoadingPanel() => loadingPanel.Visibility = Visibility.Collapsed;
     }
 }

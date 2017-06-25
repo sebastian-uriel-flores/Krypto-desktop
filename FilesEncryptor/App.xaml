@@ -316,6 +316,32 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Name="PanelHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiLight"/>
+            <Setter Property="Foreground" Value="#FF525151"/>
+            <Setter Property="TextAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="20,0,0,0"/>
+            <Setter Property="RelativePanel.AlignVerticalCenterWithPanel" Value="True"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+        <Style x:Name="PanelDividerStyle" TargetType="Rectangle">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="StrokeThickness" Value="0"/>
+            <Setter Property="Fill" Value="#FFEEEEEE"/>
+        </Style>
+        <Style x:Key="SettingsHeaderStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF8C8C8C"/>
+            <Setter Property="FontWeight" Value="Light"/>
+        </Style>
+        <Style x:Key="SettingsContentStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="FontWeight" Value="Light"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
     </Application.Resources>
 
 </Application>

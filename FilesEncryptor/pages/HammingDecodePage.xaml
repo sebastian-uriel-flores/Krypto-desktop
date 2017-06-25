@@ -68,12 +68,7 @@
             Margin="20,10,20,0"
             Visibility="Collapsed"
             >
-                <StackPanel.Resources>
-                    <Style x:Key="SettingsHeaderStyle" TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="#FF8C8C8C"/>
-                        <Setter Property="FontWeight" Value="Light"/>
-                    </Style>
-                </StackPanel.Resources>
+                    
                 <TextBlock
                 Text="Nombre del archivo"
                 Style="{StaticResource SettingsHeaderStyle}"
