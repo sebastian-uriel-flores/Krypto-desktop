@@ -117,6 +117,8 @@
     <Compile Include="helpers\huffman\BinaryTree.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
+    <Compile Include="helpers\processes\KryptoProcess.cs" />
+    <Compile Include="helpers\processes\IKryptoProcessUI.cs" />
     <Compile Include="helpers\VisualTreeHelperExtensions.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
