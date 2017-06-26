@@ -38,6 +38,8 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class HammingEncodePage : Page, IKryptoProcessUI
     {
+
+
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
         private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
@@ -66,7 +68,7 @@ namespace FilesEncryptor.pages
             {
                 // Show UI in title bar if opted-in and in-app backstack is not empty.
                 SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
-                    AppViewBackButtonVisibility.Visible;
+                    AppViewBackButtonVisibility.Collapsed;
             }
             else
             {
@@ -408,6 +410,12 @@ namespace FilesEncryptor.pages
         }
 
         #endregion
+
+        private void BackBt_Click(object sender, RoutedEventArgs e)
+        {
+            if (Frame.CanGoBack)
+                Frame.GoBack();
+        }
 
         private void ProgressPanelEventsToggleBt_Click(object sender, RoutedEventArgs e)
         {

@@ -868,45 +868,34 @@
             MaxHeight="440"
             Background="White"            
             >
-            <Grid 
-                x:Name="pageHeader"
-                Height="48"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                >
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="48"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    TextAlignment="Left"
-                    Text="Codificar con Hamming"
-                    VerticalAlignment="Center"
-                    Margin="20,0,0,0"
-                    FontSize="20"
-                    FontFamily="Segoe UI Light"
-                    FontWeight="SemiLight"
-                    Foreground="#FF525151"/>
-
-                <Button
-                    x:Name="selectFileButton"
-                    Grid.Column="1"                                                       
-                    Height="35"
-                    Content="&#xe1a5;"
-                    BorderBrush="#ff9200"
-                    BorderThickness="0"
+            <CommandBar 
+                    x:Name="pageHeaderBar"
+                    Style="{StaticResource CommandBarWithoutOverflowStyle}" 
                     Background="Transparent"
-                    Foreground="#ff9200"
-                    FontFamily="Segoe MDL2 Assets"                    
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    FontSize="20"
-                    Click="SelectFileBt_Click"
-                    />
-            </Grid>
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"                    
+                    >
+                <CommandBar.Content>
+                    <StackPanel 
+                            VerticalAlignment="Stretch"                            
+                            Orientation="Horizontal"
+                            >
+                        <AppBarButton Icon="Back" Foreground="#FF525151" Click="BackBt_Click"/>
+                        <TextBlock 
+                                Text="Codificar con Hamming"                                
+                                Style="{StaticResource PanelHeaderStyle}"
+                                Margin="0,0,0,12"
+                                />
+                    </StackPanel>
+                </CommandBar.Content>
+                <CommandBar.PrimaryCommands>
+                    <AppBarButton Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/> 
+                </CommandBar.PrimaryCommands>
+            </CommandBar>
+
             <Rectangle
                 x:Name="pageHeaderDivider"
-                RelativePanel.Below="pageHeader"
+                RelativePanel.Below="pageHeaderBar"
                 RelativePanel.AlignLeftWithPanel="True"
                 RelativePanel.AlignRightWithPanel="True"
                 Height="1"
@@ -1078,9 +1067,10 @@
                     RelativePanel.AlignRightWithPanel="True"                    
                     >
                     <CommandBar.Content>
-                        <Grid 
+                        <StackPanel 
                             VerticalAlignment="Stretch"                            
-                            >
+                            Orientation="Horizontal"
+                            >                            
                             <TextBlock 
                                 Text="Codificar con Hamming"
                                 VerticalAlignment="Center"
@@ -1088,10 +1078,12 @@
                                 Margin="20,12,0,0"
                                 FontSize="18"
                                 />
-                        </Grid>
+                        </StackPanel>
                     </CommandBar.Content>
-                    <AppBarButton Icon="NewWindow" Label="Nueva ventana" Visibility="Collapsed"/>
-                    <AppBarButton x:Name="progressPanelCloseButton" Icon="Cancel" Label="Cerrar" Click="ProgressPanelCloseButton_Click" Visibility="Collapsed"/>
+                    <CommandBar.PrimaryCommands>
+                        <AppBarButton Icon="NewWindow" Foreground="#FF525151" Label="Nueva ventana" Visibility="Collapsed"/>
+                        <AppBarButton x:Name="progressPanelCloseButton" Icon="Cancel" Foreground="#FF525151" Label="Cerrar" Click="ProgressPanelCloseButton_Click" Visibility="Collapsed"/>
+                    </CommandBar.PrimaryCommands>                    
                 </CommandBar>
                 <Rectangle
                     x:Name="progressPanelHeaderDivider"
@@ -1188,6 +1180,8 @@
                     Margin="20,0,20,20"
                     Height="180"
                     Visibility="Collapsed"
+                    ScrollViewer.HorizontalScrollMode="Enabled"
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"                    
                     >
                     
                 </ListView>
