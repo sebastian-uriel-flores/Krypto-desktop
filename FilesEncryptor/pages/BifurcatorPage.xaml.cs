@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
@@ -140,7 +141,7 @@ namespace FilesEncryptor.pages
                                 DebugUtils.ConsoleWL(message);
                                 progressText.Text = message;
 
-                                var encodeRes = await encoder.Encode(encodeType);
+                                var encodeRes = await Task.Run(()=> encoder.Encode(encodeType));
 
                                 if (encodeRes != null)
                                 {

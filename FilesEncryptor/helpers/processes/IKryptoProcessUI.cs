@@ -12,7 +12,7 @@ namespace FilesEncryptor.helpers.processes
         void SetTime(TimeSpan totalTime);
         void SetProgressMessage(string progressMessage);
         void SetProgressLevel(double progressLevel);        
-        void AddEvent(KryptoProcess.KryptoEvent kEvent);
+        void AddEvent(BaseKryptoProcess.KryptoEvent kEvent);
         void SetShowFailureInformationButtonVisible(bool visible);
     }
 }

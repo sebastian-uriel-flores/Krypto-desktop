@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.helpers;
+using FilesEncryptor.helpers.processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace FilesEncryptor.utils
 {
     public static class BitOps
     {
-        public static BitCode Join(List<BitCode> codes)
+        public static BitCode Join(List<BitCode> codes, KryptoProcess processToWrite = null)
         {
             BitCode joined = BitCode.EMPTY;
 

@@ -1066,13 +1066,13 @@
             >
             <RelativePanel
                 Background="White"
-                Width="400"
+                Width="480"
                 RelativePanel.AlignHorizontalCenterWithPanel="True"
                 RelativePanel.AlignVerticalCenterWithPanel="True"
                 >
                 <CommandBar 
                     x:Name="progressPanelHeaderBar"
-                    Style="{StaticResource CommandBarStyle1}" 
+                    Style="{StaticResource CommandBarWithoutOverflowStyle}" 
                     Background="Transparent"
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"                    
@@ -1090,8 +1090,8 @@
                                 />
                         </Grid>
                     </CommandBar.Content>
-                    <AppBarButton Icon="FullScreen" Label="Pantalla completa" Visibility="Collapsed"/>
-                    <AppBarButton Icon="Cancel" Label="Cerrar" Visibility="Collapsed"/>
+                    <AppBarButton Icon="NewWindow" Label="Nueva ventana" Visibility="Collapsed"/>
+                    <AppBarButton x:Name="progressPanelCloseButton" Icon="Cancel" Label="Cerrar" Click="ProgressPanelCloseButton_Click" Visibility="Collapsed"/>
                 </CommandBar>
                 <Rectangle
                     x:Name="progressPanelHeaderDivider"
@@ -1112,7 +1112,8 @@
                     x:Name="progressPanelStatus"
                     RelativePanel.Below="progressPanelHeaderDivider"
                     RelativePanel.RightOf="progressPanelStatusHeader"                    
-                    Text="Tiempo total"
+                    Text=""
+                    TextWrapping="WrapWholeWords"
                     Style="{StaticResource SettingsHeaderStyle}"
                     FontWeight="Bold"
                     Margin="0,10,20,10"
@@ -1120,16 +1121,16 @@
 
                 <TextBlock
                     x:Name="progressPanelTimeHeader"
-                    RelativePanel.Below="progressPanelStatusHeader"
+                    RelativePanel.Below="progressPanelStatus"
                     Style="{StaticResource SettingsHeaderStyle}"
-                    Text="Estado actual:"
+                    Text="Tiempo transcurrido:"
                     Margin="20,10"
                     />
                 <TextBlock
                     x:Name="progressPanelTime"
-                    RelativePanel.Below="progressPanelStatusHeader"
+                    RelativePanel.Below="progressPanelStatus"
                     RelativePanel.RightOf="progressPanelTimeHeader"                    
-                    Text="20:01:15:1296"
+                    Text=""
                     Style="{StaticResource SettingsHeaderStyle}"
                     FontWeight="Bold"
                     Margin="0,10,20,10"
@@ -1147,7 +1148,7 @@
                     RelativePanel.Below="progressPanelTimeHeader"
                     RelativePanel.LeftOf="progressPanelEventsToggleBt"
                     RelativePanel.RightOf="progressPanelEventsHeader"
-                    Text="Comprimiendo 1254345 bits"
+                    Text=""
                     Style="{StaticResource SettingsHeaderStyle}"
                     FontWeight="Bold"
                     Margin="0,10,20,10"
@@ -1161,8 +1162,10 @@
                     Height="40"
                     Width="56"
                     FontFamily="Segoe MDL2 Assets"
+                    Foreground="#ff9200"
                     Content="&#xe15c;"
                     Background="Transparent"
+                    Click="ProgressPanelEventsToggleBt_Click"
                     />
 
                 <ProgressBar
@@ -1172,7 +1175,7 @@
                     RelativePanel.AlignRightWithPanel="True"
                     Margin="20,15,20,20"
                     Foreground="#ff9200"
-                    Value="40"
+                    Value="0"
                     />
                 
                 <ListView

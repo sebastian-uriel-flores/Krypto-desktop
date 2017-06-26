@@ -2,96 +2,91 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FilesEncryptor.helpers.processes
 {
-    public class KryptoProcess
+    public class KryptoProcess : BaseKryptoProcess
     {
-        private string _status;
-        private double _progressLevel;
-        private DateTime _startTime;
-        private TimeSpan _currentTime;
-        private List<KryptoEvent> _events;
+        protected static Dictionary<int, KryptoProcess> _processes = new Dictionary<int, KryptoProcess>();
 
-        private IKryptoProcessUI _currentUI;
-        private Timer _timer;
-
-        public void Start(IKryptoProcessUI uiToShow)
+        public static KryptoProcess GetCurrent()
         {
-            if(uiToShow != null)
+            KryptoProcess current = null;
+                        
+            if (Task.CurrentId != null)
             {
-                _events = new List<KryptoEvent>();
-                _startTime = DateTime.Now;
-                _progressLevel = 0;
+                _processes.TryGetValue((int)Task.CurrentId, out current);
+            }
 
-                UpdateStatus("Initializing");
-                AddEvent(new KryptoEvent()
-                {
-                    Moment = _startTime,
-                    Message = "Setting up system...",
-                    ProgressAdvance = 0,
-                    Tag = "[INFO]"
-                });                
+            return current;
+        }
 
-                _timer = new Timer(
-                (empty) =>
+        protected List<Tuple<Task, string>> _tasks;
+        protected int _currentTaskIndex;        
+        protected Action<int> _onCompletedAction;
+        protected Action<int> _onFailedAction;
+
+        public KryptoProcess(List<Tuple<Task, string>> tasks) : base()
+        {
+            _tasks = tasks?? new List<Tuple<Task, string>>();
+        }
+
+        public void Start(IKryptoProcessUI uiToShow, Action<int> onCompletedAction = null, Action<int> onFailedAction = null)
+        {
+            base.Start(uiToShow);
+
+            //Inicio la primera de las tareas
+            _currentTaskIndex = -1;
+            _onCompletedAction = onCompletedAction;
+            _onFailedAction = onFailedAction;
+            StartNextTask();
+        }
+
+        protected virtual void StartNextTask(Task lastTask = null)
+        {
+            lock (_processes)
+            {
+                if (_currentTaskIndex >= 0)
                 {
-                    _currentTime = DateTime.Now.Subtract(_startTime);
-                    _currentUI.SetTime(_currentTime);
-                },
-                null, 0, 1000);
+                    _processes.Remove(_tasks[_currentTaskIndex].Item1.Id);
+                }
+
+                if (lastTask != null && lastTask.IsFaulted)
+                {
+                    Stop(true);
+                    return;
+                }
+                else
+                {
+                    _currentTaskIndex++;
+
+                    if (!string.IsNullOrEmpty(_tasks[_currentTaskIndex].Item2))
+                    {
+                        UpdateStatus($"Initializing {_tasks[_currentTaskIndex].Item2}...", true);
+                    }
+                    _processes.Add(_tasks[_currentTaskIndex].Item1.Id, this);
+
+                    if (_currentTaskIndex < _tasks.Count)
+                    {
+                        _tasks[_currentTaskIndex].Item1.ContinueWith((t) => StartNextTask(t));
+                    }
+                    else
+                    {
+                        Stop(lastTask.IsFaulted);
+                    }
+                }
             }
         }
-
-        public void ChangeUI(IKryptoProcessUI uiToSet)
+     
+        public override void Stop(bool failed=false)
         {
-            lock (_currentUI)
-            {
-                _currentUI = uiToSet;
-            }
-        }
-
-        public void UpdateStatus(string status)
-        {
-            _status = status;
-            _currentUI.SetStatus(status);
-        }
-
-        public void AddEvent(KryptoEvent kEvent)
-        {
-            _events.Add(kEvent);
-            _progressLevel = Math.Max(Math.Min(0, _progressLevel + kEvent.ProgressAdvance), 100);
-            _currentUI.AddEvent(kEvent);
-            _currentUI.SetProgressMessage(kEvent.Message);
-            _currentUI.SetProgressLevel(_progressLevel);
-        }
-
-        public void Stop(bool failed = false)
-        {
-            _timer.Dispose();
-            _currentUI.SetTime(DateTime.Now.Subtract(_startTime));
-            _currentUI.SetProgressLevel(100.0);
-            _currentUI.SetShowFailureInformationButtonVisible(failed);
+            base.Stop(failed);
 
             if (failed)
-            {
-                _currentUI.SetStatus("Failed");                
-            }
+                _onFailedAction?.Invoke(_currentTaskIndex);
             else
-            {
-                _currentUI.SetStatus("Completed");
-            }
-        }
-    
-
-        public sealed class KryptoEvent
-        {
-            public DateTime Moment { get; set; }
-            public string Tag { get; set; }
-            public string Message { get; set; }
-            public double ProgressAdvance { get; set; }
+                _onCompletedAction?.Invoke(_currentTaskIndex);
         }
     }
 }

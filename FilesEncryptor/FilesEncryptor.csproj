@@ -117,8 +117,10 @@
     <Compile Include="helpers\huffman\BinaryTree.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
-    <Compile Include="helpers\processes\KryptoProcess.cs" />
+    <Compile Include="helpers\processes\BaseKryptoProcess.cs" />
     <Compile Include="helpers\processes\IKryptoProcessUI.cs" />
+    <Compile Include="helpers\processes\KryptoProcess.cs" />
+    <Compile Include="helpers\processes\KryptoProcessGeneric.cs" />
     <Compile Include="helpers\VisualTreeHelperExtensions.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
@@ -155,6 +157,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Package.StoreAssociation.xml" />
+    <Content Include="Assets\badge.PNG" />
+    <Content Include="Assets\re.PNG" />
     <Content Include="Assets\W.scale-400.png" />
     <Content Include="Assets\SS.scale-200.png" />
     <Content Include="Assets\M.scale-200.png" />
