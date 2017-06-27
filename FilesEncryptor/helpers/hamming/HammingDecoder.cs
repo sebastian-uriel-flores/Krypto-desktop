@@ -176,18 +176,21 @@ namespace FilesEncryptor.helpers.hamming
             {
                 var and = BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] });
                 var exploded = and.Explode(1, false).Item1;
-                var xor = BitOps.Xor(exploded);
-                //xor.Append(syndrome);
+                var xor = BitOps.Xor(exploded);                
                 syndrome.Append(xor);
             }
+
+            //Ahora, convierto el sindrome a entero para ver si hay errores
+            List<int> syndromeNumbers = syndrome.ToIntList();
+            syndromeNumbers.Reverse();
             
             int errorPosition = 0;
-            //Ahora, convierto el sindrome a entero para ver si hay errores
-            for (int i = 0; i < syndrome.CodeLength; i++)
+
+            for(int i = 0; i < syndromeNumbers.Count; i++)
             {
-                errorPosition += (int)Math.Pow(2, i) * syndrome.ElementAt((uint)i).Code.First();
+                errorPosition += (int)Math.Pow(2, syndromeNumbers.Count - i - 1) * syndromeNumbers[i];
             }
-            errorPosition /= (int)Math.Pow(2, syndrome.CodeLength);
+            
             return errorPosition - 1;
         }
     }

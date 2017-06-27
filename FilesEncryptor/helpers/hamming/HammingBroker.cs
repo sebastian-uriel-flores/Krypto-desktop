@@ -39,8 +39,12 @@ namespace FilesEncryptor.helpers.hamming
 
                 currentProcess?.UpdateStatus($"Introducing errors in some of the {numberOfWords} words");
 
+                //brokenCode = brokenCode.ReplaceAt(2, brokenCode.ElementAt(2).Negate());
+                //wordsWithError = 1;
+
+                
                 //Por cada palabra, determino aleatoriamente si insertar o no errores
-                for(uint index = 0; (int)index < _fullCode.CodeLength; index+= _encodeType.WordBitsSize)
+                for (uint index = 0; (int)index < _fullCode.CodeLength; index+= _encodeType.WordBitsSize)
                 {
                     if(InsertErrorInModule())
                     {
