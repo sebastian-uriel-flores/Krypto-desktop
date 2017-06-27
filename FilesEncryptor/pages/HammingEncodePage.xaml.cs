@@ -201,6 +201,7 @@ namespace FilesEncryptor.pages
 
                     switch (_pageMode)
                     {
+                        #region HUFFMAN_ENCODE
                         case PAGE_MODES.Huffman_Encode:
                             //TODO Si no se puede obtener el tipo de codificacion del archivo, 
                             //se solicita al usuario que elija una de las posibles codificaciones
@@ -238,10 +239,13 @@ namespace FilesEncryptor.pages
                                 FileExtension = _fileOpener.SelectedFileExtension
                             };
                             break;
+                        #endregion
+                        #region HUFFMAN_DECODE
                         case PAGE_MODES.Huffman_Decode:
                             _fileHeader = _fileOpener.ReadFileHeader();
                             _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
                             break;
+                        #endregion
                         case PAGE_MODES.Hamming_Encode:
                             _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
                             _fileHeader = new FileHeader()
@@ -265,6 +269,7 @@ namespace FilesEncryptor.pages
                             }
                             break;
                         case PAGE_MODES.Hamming_Broke:
+                            _fileHeader = _fileOpener.ReadFileHeader();
                             HammingEncodeType fileEncodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
                             _broker = new HammingBroker(_fileOpener, fileEncodeType);
                             break;
@@ -299,7 +304,7 @@ namespace FilesEncryptor.pages
                     HammingDecode();
                     break;
                 case PAGE_MODES.Hamming_Broke:
-                    IntroduceErrors();
+                    HammingBroke();
                     break;
             }
         }
@@ -794,7 +799,7 @@ namespace FilesEncryptor.pages
                         }
                         else
                         {
-                            DebugUtils.ConsoleWL("File encoded canceled because user cancel output file selection");
+                            ConsoleWL("File encoded canceled because user cancel output file selection");
                             HideProgressPanel();
                             ResetProgressPanel();
                         }
@@ -892,98 +897,93 @@ namespace FilesEncryptor.pages
                                     Tag = "[RESULT]"
                                 });
 
-                                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                                //Si la decodificacion finalizo correctamente
+                                if (huffDecoded != null)
                                 {
-                                        //Si la decodificacion finalizo correctamente
-                                        if (huffDecoded != null)
-                                    {
-                                        FileHelper fileSaver = new FileHelper();
+                                    FileHelper fileSaver = new FileHelper();
 
-                                            //Solicito al usuario que seleccione la carpeta en la que se almacenara el archivo decodificado
-                                            if (await fileSaver.PickToSave(internalFileHeader.FileName, internalFileHeader.FileDisplayType, internalFileHeader.FileExtension))
-                                        {
-                                            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                            {
-                                                Message = $"Output file selected: {fileSaver.SelectedFilePath}",
-                                                ProgressAdvance = 0,
-                                                Tag = "[INFO]"
-                                            });
-
-                                                //Si el archivo pudo abrirse
-                                                if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
-                                            {
-                                                decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
-
-                                                    //Seteo la codificacion en la que se escribira el texto
-                                                    fileSaver.SetFileEncoding(tempHufFileHelper.FileEncoding);
-
-                                                    //Escribo el texto decodificado en el archivo de salida
-                                                    fileSaver.WriteString(huffDecoded);
-
-                                                    //Cierro el archivo descomprimido
-                                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                                {
-                                                    Message = "Decoded file dumped properly",
-                                                    ProgressAdvance = 100,
-                                                    Tag = "[PROGRESS]"
-                                                });
-                                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                                {
-                                                    Message = "Closing file",
-                                                    ProgressAdvance = 100,
-                                                    Tag = "[INFO]"
-                                                });
-
-                                                    //DebugUtils.ConsoleWL("Dumping completed properly");
-                                                    //DebugUtils.ConsoleWL("Closing file");
-                                                    await fileSaver.Finish();
-
-                                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                                {
-                                                    Message = "File closed",
-                                                    ProgressAdvance = 100,
-                                                    Tag = "[INFO]"
-                                                });
-                                                decodingProcess.Stop();
-                                            }
-                                            //Si el archivo no pudo ser abierto
-                                            else
-                                            {
-                                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                                {
-                                                    Message = "File could not be opened to ReadWrite",
-                                                    ProgressAdvance = 100,
-                                                    Tag = "[FAIL]"
-                                                });
-                                                decodingProcess.Stop(true);
-                                            }
-
-                                            progressPanelCloseButton.Visibility = Visibility.Visible;
-                                        }
-                                            //Si el usuario no selecciono ningun archivo
-                                            else
-                                        {
-                                            ConsoleWL("User cancel file selection");
-                                            decodingProcess.Stop(true);
-                                            HideProgressPanel();
-                                            ResetProgressPanel();
-                                        }
-                                    }
-
-                                        //Si no se pudo decodificar
-                                        else
+                                    //Solicito al usuario que seleccione la carpeta en la que se almacenara el archivo decodificado
+                                    if (await fileSaver.PickToSave(internalFileHeader.FileName, internalFileHeader.FileDisplayType, internalFileHeader.FileExtension))
                                     {
                                         decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                                         {
-                                            Message = "File could not be decoded with Huffman",
-                                            ProgressAdvance = 100,
-                                            Tag = "[FAIL]"
+                                            Message = $"Output file selected: {fileSaver.SelectedFilePath}",
+                                            ProgressAdvance = 0,
+                                            Tag = "[INFO]"
                                         });
-                                        decodingProcess.Stop(true);
+
+                                        //Si el archivo pudo abrirse
+                                        if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                                        {
+                                            decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
+
+                                            //Seteo la codificacion en la que se escribira el texto
+                                            fileSaver.SetFileEncoding(tempHufFileHelper.FileEncoding);
+
+                                            //Escribo el texto decodificado en el archivo de salida
+                                            fileSaver.WriteString(huffDecoded);
+
+                                            //Cierro el archivo descomprimido
+                                            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                            {
+                                                Message = "Decoded file dumped properly",
+                                                ProgressAdvance = 100,
+                                                Tag = "[PROGRESS]"
+                                            });
+                                            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                            {
+                                                Message = "Closing file",
+                                                ProgressAdvance = 100,
+                                                Tag = "[INFO]"
+                                            });
+
+                                            await fileSaver.Finish();
+
+                                            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                            {
+                                                Message = "File closed",
+                                                ProgressAdvance = 100,
+                                                Tag = "[INFO]"
+                                            });
+                                            decodingProcess.Stop();
+                                        }
+                                        //Si el archivo no pudo ser abierto
+                                        else
+                                        {
+                                            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                            {
+                                                Message = "File could not be opened to ReadWrite",
+                                                ProgressAdvance = 100,
+                                                Tag = "[FAIL]"
+                                            });
+                                            decodingProcess.Stop(true);
+                                        }
 
                                         progressPanelCloseButton.Visibility = Visibility.Visible;
                                     }
-                                });
+                                    //Si el usuario no selecciono ningun archivo
+                                    else
+                                    {
+                                        ConsoleWL("User cancel file selection");
+                                        decodingProcess.Stop(true);
+                                        HideProgressPanel();
+                                        ResetProgressPanel();
+                                    }
+                                }
+
+                                //Si no se pudo decodificar
+                                else
+                                {
+                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                    {
+                                        Message = "File could not be decoded with Huffman",
+                                        ProgressAdvance = 100,
+                                        Tag = "[FAIL]"
+                                    });
+                                    decodingProcess.Stop(true);
+
+                                    progressPanelCloseButton.Visibility = Visibility.Visible;
+                                }
                             }
                         }
                     }
@@ -996,115 +996,113 @@ namespace FilesEncryptor.pages
 
                 else
                 {
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-                    {
-                        FileHelper fileSaver = new FileHelper();
+                    FileHelper fileSaver = new FileHelper();
 
-                            //Si el usuario selecciona un archivo
-                        if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
+                    //Si el usuario selecciona un archivo
+                    if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
+                    {
+                        decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = $"Output file selected {fileSaver.SelectedFilePath}",
+                            ProgressAdvance = 0,
+                            Tag = "[INFO]"
+                        });
+
+                        //Si el archivo pudo ser abierto correctamente
+                        if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                        {
+                            decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
+
+                            if (fileSaver.WriteBytes(result.Code.ToArray()))
+                            {
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Decoded file dumped properly",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+
+                                await fileSaver.Finish();
+
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+                                decodingProcess.Stop();
+                            }
+                            //Si ocurrio un error al escribir el archivo
+                            else
+                            {
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Decoded file dumping uncompleted",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+
+                                await fileSaver.Finish();
+
+                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+                                decodingProcess.Stop(true);
+                            }
+                        }
+
+                        //Si el archivo no pudo ser abierto para edicion
+                        else
                         {
                             decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                             {
-                                Message = $"Output file selected {fileSaver.SelectedFilePath}",
-                                ProgressAdvance = 0,
-                                Tag = "[INFO]"
+                                Message = "File could not be opened to ReadWrite",
+                                ProgressAdvance = 100,
+                                Tag = "[FAIL]"
                             });
-
-                            //Si el archivo pudo ser abierto correctamente
-                            if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
-                            {
-                                decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
-
-                                if (fileSaver.WriteBytes(result.Code.ToArray()))
-                                {
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "Decoded file dumped properly",
-                                        ProgressAdvance = 100,
-                                        Tag = "[PROGRESS]"
-                                    });
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "Closing file",
-                                        ProgressAdvance = 100,
-                                        Tag = "[INFO]"
-                                    });
-
-                                        //DebugUtils.ConsoleWL("Dumping completed properly");
-                                        //DebugUtils.ConsoleWL("Closing file");
-                                    await fileSaver.Finish();
-
-
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "File closed",
-                                        ProgressAdvance = 100,
-                                        Tag = "[INFO]"
-                                    });
-                                    decodingProcess.Stop();
-                                }
-                                //Si ocurrio un error al escribir el archivo
-                                else
-                                {
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "Decoded file dumping uncompleted",
-                                        ProgressAdvance = 100,
-                                        Tag = "[PROGRESS]"
-                                    });
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "Closing file",
-                                        ProgressAdvance = 100,
-                                        Tag = "[INFO]"
-                                    });
-
-                                        //DebugUtils.ConsoleWL("Dumping completed properly");
-                                        //DebugUtils.ConsoleWL("Closing file");
-                                        await fileSaver.Finish();
-
-                                    decodingProcess.UpdateStatus("Failed");
-                                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "File closed",
-                                        ProgressAdvance = 100,
-                                        Tag = "[INFO]"
-                                    });
-                                }
-                            }
-
-                                //Si el archivo no pudo ser abierto para edicion
-                                else
-                            {
-                                decodingProcess.UpdateStatus("Failed");
-                                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "File could not be opened to ReadWrite",
-                                    ProgressAdvance = 100,
-                                    Tag = "[FAIL]"
-                                });
-                            }
-
-                            progressPanelCloseButton.Visibility = Visibility.Visible;
+                            decodingProcess.Stop(true);
                         }
-                            //Si el usuario no selecciono ningun archivo
-                            else
-                        {
-                            ConsoleWL("User cancel file selection");
-                            HideProgressPanel();
-                            ResetProgressPanel();
-                        }
-                    });
+
+                        progressPanelCloseButton.Visibility = Visibility.Visible;
+                    }
+                    //Si el usuario no selecciono ningun archivo
+                    else
+                    {
+                        ConsoleWL("User cancel file selection");
+                        HideProgressPanel();
+                        ResetProgressPanel();
+                        decodingProcess.Stop(true);
+                    }
                 }
 
                 #endregion
             }
+            //Si el archivo no pudo ser decodificado con Hamming
             else
             {
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                 {
-                    progressPanelCloseButton.Visibility = Visibility.Visible;
+                    Message = "File could not be decoded with Hamming",
+                    ProgressAdvance = 100,
+                    Tag = "[FAIL]"
                 });
+                decodingProcess.Stop(true);
+                progressPanelCloseButton.Visibility = Visibility.Visible;
             }
         }
 
@@ -1112,80 +1110,121 @@ namespace FilesEncryptor.pages
 
         #region HAMMING_BROKE
 
-        private async void IntroduceErrors()
+        private async void HammingBroke()
         {
-            //Inicio la decodificacion en Hamming
-            await ShowLoadingPanel();
-            ConsoleWL("Starting Hamming Decoding");
-
-            DateTime startDate = DateTime.Now;
-
-            //Codifico el archivo original
-
-            HammingEncodeResult result = await _broker.Broke();
-
-            //Imprimo la cantidad de tiempo que implico la decodificacion
-            TimeSpan hammingDecodingTime = DateTime.Now.Subtract(startDate);
-            ConsoleWL($"Hamming decoding process finished in a time of {hammingDecodingTime}");
-
+            BaseKryptoProcess process = new BaseKryptoProcess();
+            await ShowProgressPanel();
+            process.Start(this);
+            
+            //Introduzco errores en el archivo original
+            HammingEncodeResult result = await _broker.Broke(process);
+            
             //Si el archivo pudo ser decodificado con Hamming
             if (result != null)
             {
                 FileHelper fileSaver = new FileHelper();
 
                 //Si el usuario selecciona un archivo
+
                 if (await fileSaver.PickToSave(_fileOpener.SelectedFileName, _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension))
                 {
-                    ConsoleWL($"Output file: \"{fileSaver.SelectedFilePath}\"");
+                    process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Output file selected {fileSaver.SelectedFilePath}",
+                        ProgressAdvance = 0,
+                        Tag = "[INFO]"
+                    });
 
                     //Si el archivo pudo ser abierto correctamente
                     if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                     {
-                        ConsoleWL($"Dumping hamming encoded bytes to \"{fileSaver.SelectedFilePath}\"");
-
+                        process.UpdateStatus($"Dumping broken file to {fileSaver.SelectedFilePath}");
+                        
                         if (fileSaver.WriteFileHeader(_fileHeader) && HammingEncoder.WriteEncodedToFile(result, fileSaver))
                         {
-                            ConsoleWL("Dumping completed properly");
-                            ConsoleWL("Closing file");
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Broken file dumped properly",
+                                ProgressAdvance = 100,
+                                Tag = "[PROGRESS]"
+                            });
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Closing file",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
+                                                        
                             await fileSaver.Finish();
-                            ConsoleWL("File closed");
-
-                            MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
-                            await dialog.ShowAsync();
+                            
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "File closed",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
+                            process.Stop();                            
                         }
                         else
                         {
-                            ConsoleWL("Dumping uncompleted");
-                            ConsoleWL("Closing file");
-                            await fileSaver.Finish();
-                            ConsoleWL("File closed");
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Failed dumping broken file",
+                                ProgressAdvance = 100,
+                                Tag = "[PROGRESS]"
+                            });
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Closing file",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
 
-                            MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
-                            await dialog.ShowAsync();
+                            await fileSaver.Finish();
+
+                            process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "File closed",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
+                            process.Stop(true);
                         }
                     }
                     //Si el archivo no pudo ser abierto para edicion
                     else
                     {
-                        ConsoleWL("File could not be opened to ReadWrite", "[FAIL]");
-
-                        MessageDialog dialog = new MessageDialog("El archivo no pudo ser creado correctamente", "Ha ocurrido un error");
-                        await dialog.ShowAsync();
+                        process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "File could not be opened to ReadWrite",
+                            ProgressAdvance = 100,
+                            Tag = "[FAIL]"
+                        });
+                        process.Stop(true);
                     }
+
+                    progressPanelCloseButton.Visibility = Visibility.Visible;
                 }
                 //Si el usuario no selecciono ningun archivo
                 else
                 {
                     ConsoleWL("User cancel file selection");
+                    HideProgressPanel();
+                    ResetProgressPanel();
+                    process.Stop(true);
                 }
             }
             //Si el archivo no pudo ser decodificado
             else
             {
-                ConsoleWL("File could not be decoded with Hamming", "[FAIL]");
-
-                MessageDialog dialog = new MessageDialog("El archivo no pudo ser decodificado", "Ha ocurrido un error");
-                await dialog.ShowAsync();
+                process.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                {
+                    Message = "File could not be broken",
+                    ProgressAdvance = 100,
+                    Tag = "[FAIL]"
+                });
+                process.Stop(true);
+                progressPanelCloseButton.Visibility = Visibility.Visible;
             }
 
             HideLoadingPanel();

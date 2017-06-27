@@ -1113,7 +1113,8 @@
                             Orientation="Horizontal"
                             >                            
                             <TextBlock 
-                                Text="Codificar con Hamming"
+                                x:Name="progressPanelHeaderContent"
+                                Text="{Binding ElementName=pageHeaderContent, Mode=OneWay, Path=Text}"
                                 VerticalAlignment="Center"
                                 Style="{StaticResource PanelHeaderStyle}"                                
                                 Margin="20,12,0,0"

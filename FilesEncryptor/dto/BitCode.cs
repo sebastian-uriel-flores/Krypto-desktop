@@ -362,7 +362,11 @@ namespace FilesEncryptor.dto
             {
                 result.Code[pos] ^= 255;
             }
-            
+
+            //Por ultimo, pongo en cero los bits a la derecha que esten de mas
+            uint localEndBitPos = GlobalBitPositionToLocal((uint)result.CodeLength - 1);
+            result.Code[result.Code.Count - 1] = MaskLeft(result.Code.Last(), (int)localEndBitPos + 1);
+
             return result;
         }
 

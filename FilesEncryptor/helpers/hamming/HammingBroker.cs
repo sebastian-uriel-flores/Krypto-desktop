@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.hamming;
+using FilesEncryptor.helpers.processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,12 +29,15 @@ namespace FilesEncryptor.helpers.hamming
             _bitPositionRandom = new Random();
         }
 
-        public Task<HammingEncodeResult> Broke()
+        public Task<HammingEncodeResult> Broke(BaseKryptoProcess currentProcess = null)
         {
             return Task.Run(() =>
             {
                 BitCode brokenCode = _fullCode.Copy();
                 int wordsWithError = 0;
+                double numberOfWords = _fullCode.CodeLength / _encodeType.WordBitsSize;
+
+                currentProcess?.UpdateStatus($"Introducing errors in some of the {numberOfWords} words");
 
                 //Por cada palabra, determino aleatoriamente si insertar o no errores
                 for(uint index = 0; (int)index < _fullCode.CodeLength; index+= _encodeType.WordBitsSize)
@@ -41,13 +45,40 @@ namespace FilesEncryptor.helpers.hamming
                     if(InsertErrorInModule())
                     {
                         uint replacePos = SelectBitPositionRandom(index, index + _encodeType.WordBitsSize - 1);
-                        DebugUtils.ConsoleWL(string.Format("Insert error in word {0} bit {1}", index / _encodeType.WordBitsSize, replacePos), "[PROGRESS]");
+
+                        if (currentProcess != null)
+                        {
+                            uint numberOfWord = index / _encodeType.WordBitsSize;
+
+                            currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {                                
+                                Message = $"Inserted error in word {numberOfWord}, bit {replacePos}, of {numberOfWords} words",
+                                ProgressAdvance = numberOfWord * 100 / numberOfWords,
+                                Tag = "[PROGRESS]"
+                            });
+                        }
+                        else
+                        {
+                            DebugUtils.ConsoleWL(string.Format("Insert error in word {0} bit {1}", index / _encodeType.WordBitsSize, replacePos), "[PROGRESS]");
+                        }
                         brokenCode = brokenCode.ReplaceAt(replacePos, brokenCode.ElementAt(replacePos).Negate());
                         wordsWithError++;
                     }
                 }
 
-                DebugUtils.ConsoleWL(string.Format("Inserting errors finished with {0} words with error", wordsWithError));
+                if (currentProcess != null)
+                {
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Inserting errors finished with {wordsWithError} words with error",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
+                }
+                else
+                {
+                    DebugUtils.ConsoleWL(string.Format("Inserting errors finished with {0} words with error", wordsWithError));
+                }
 
                 return new HammingEncodeResult(brokenCode, _encodeType, new HammingCodeLength()
                 {

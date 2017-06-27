@@ -45,6 +45,7 @@
                 ToolTipService.Placement="Bottom"                
                 ToolTipService.ToolTip="Mostrar consola"
                 Click="ShowConsoleBt_Click"
+                Visibility="Collapsed"
                 />
         </Grid>
         
@@ -62,50 +63,8 @@
             TextWrapping="WrapWholeWords"
             TextAlignment="Center"
             />
-        <Grid RelativePanel.Below="titleBar" Visibility="Collapsed" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <RelativePanel
-                Grid.Column="0"
-                Background="white">
-            <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe1f6;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="80"
-                    Foreground="DodgerBlue"
-                        Margin="0,0,0,25"
-                        />
-                    <TextBlock 
-                        RelativePanel.AlignVerticalCenterWithPanel="True"
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        Margin="0,150,0,0"
-                        Text="Proteger archivo"
-                        FontSize="30"
-                        Foreground="DodgerBlue"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        />
-                </RelativePanel>
-            <RelativePanel
-                Grid.Column="1"
-                Background="Yellow"
-                />
-            <RelativePanel
-                Grid.Column="2"
-                Background="DodgerBlue"
-                />
-            <RelativePanel
-                Grid.Column="3"
-                Background="MediumSpringGreen"
-                />
-        </Grid>
-        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+
+        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="CommandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
             <GridView.Resources>
                 <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
                     <Setter  Property="Height" Value="300"/>
@@ -114,57 +73,6 @@
                     <Setter Property="Margin" Value="15"/>
                 </Style>
             </GridView.Resources>
-            <RelativePanel x:Name="compareFilesItem" Style="{StaticResource ItemPanelStyle}">
-                <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe11e;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
-                        Foreground="#FF9200"
-                        Margin="0,0,0,25"
-                        />
-                <Grid
-                    RelativePanel.AlignBottomWithPanel="True" 
-                    RelativePanel.AlignLeftWithPanel="True"
-                    RelativePanel.AlignRightWithPanel="True"
-                    Height="45"
-                    Background="#FF9200">
-                    <TextBlock 
-                        Text="Comparar archivos"
-                        FontSize="18"
-                        Foreground="White"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        />
-                </Grid>
-            </RelativePanel>
-
-            <RelativePanel x:Name="checkHammingAlgorithmItem" Style="{StaticResource ItemPanelStyle}">
-                <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe179;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
-                        Foreground="#FF9200"
-                        Margin="0,0,0,25"
-                        />
-                <Grid
-                    RelativePanel.AlignBottomWithPanel="True" 
-                    RelativePanel.AlignLeftWithPanel="True"
-                    RelativePanel.AlignRightWithPanel="True"
-                    Height="45"
-                    Background="#FF9200">
-                    <TextBlock 
-                        Text="Chequear algoritmos Hamming"
-                        FontSize="18"
-                        Foreground="White"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        />
-                </Grid>
-            </RelativePanel>
 
             <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
@@ -294,34 +202,5 @@
                 </Grid>
             </RelativePanel>
         </GridView>
-
-        <RelativePanel
-            x:Name="progressPanel"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"                
-            RelativePanel.AlignTopWithPanel="True"
-            RelativePanel.AlignBottomWithPanel="True"
-            Background="#66000000"
-            Visibility="Collapsed"
-            >
-            <ProgressRing
-                x:Name="progressIndicator"
-                RelativePanel.AlignHorizontalCenterWithPanel="True"
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                Height="60"
-                Width="60"
-                Foreground="#ff9200"
-                IsActive="True"
-                />
-            <TextBlock
-                x:Name="progressText"
-                RelativePanel.Below="progressIndicator"
-                RelativePanel.AlignHorizontalCenterWith="progressIndicator"                
-                FontSize="20"
-                Foreground="#ff9200"
-                />
-        </RelativePanel>
     </RelativePanel>
-    
-
 </Page>
