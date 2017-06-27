@@ -1008,7 +1008,6 @@
                     RelativePanel.Below="fileContentTextHeader"
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
-                    Width="610"
                     Height="140"
                     FontSize="14"
                     Background="WhiteSmoke"                    
