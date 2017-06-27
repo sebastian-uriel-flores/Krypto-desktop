@@ -139,40 +139,6 @@ namespace FilesEncryptor.pages
             }
         }
 
-        private List<string>GetExtensions(PAGE_MODES mode)
-        {
-            List<string> extensions = new List<string>();
-            switch (mode)
-            {
-                case PAGE_MODES.Huffman_Encode:
-                    extensions.Add(".txt");
-                    break;
-                case PAGE_MODES.Huffman_Decode:
-                    extensions.Add(".huf");
-                    break;
-                case PAGE_MODES.Hamming_Encode:
-                    extensions = new List<string>(){
-                        ".txt",
-                        ".huf",
-                        ".pdf",
-                        ".docx",
-                        ".doc",
-                        ".jpg"
-                        };
-                    break;
-                case PAGE_MODES.Hamming_Decode:
-                case PAGE_MODES.Hamming_Broke:
-                    foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
-                    {
-                        extensions.Add(type.Extension);
-                    }
-
-                    break;
-            }
-
-            return extensions;
-        }
-
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
             if (await _fileOpener.PickToOpen(GetExtensions(_pageMode)))
@@ -180,11 +146,10 @@ namespace FilesEncryptor.pages
                 _rawFileBytes = null;
                 await ShowLoadingPanel();
 
-                //settingsPanel.Visibility = Visibility.Collapsed;
-                //pageCommandsDivider.Visibility = Visibility.Collapsed;
-                //pageCommands.Visibility = Visibility.Collapsed;
                 confirmBt.IsEnabled = false;
 
+                //Si voy a codificar un archivo con Huffman, 
+                //entonces debo leer la codificacion del archivo original
                 bool takeEncoding = _pageMode == PAGE_MODES.Huffman_Encode;
 
                 if (await _fileOpener.OpenFile(FileAccessMode.Read, takeEncoding))
@@ -194,9 +159,6 @@ namespace FilesEncryptor.pages
                     fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
                     fileDescriptionBlock.Text = string.Format("{0} ({1})", _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension);
 
-                    //settingsPanel.Visibility = Visibility.Visible;
-                    //pageCommandsDivider.Visibility = Visibility.Visible;
-                    //pageCommands.Visibility = Visibility.Visible;
                     confirmBt.IsEnabled = true;
 
                     switch (_pageMode)
@@ -240,12 +202,15 @@ namespace FilesEncryptor.pages
                             };
                             break;
                         #endregion
+
                         #region HUFFMAN_DECODE
                         case PAGE_MODES.Huffman_Decode:
                             _fileHeader = _fileOpener.ReadFileHeader();
                             _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
                             break;
                         #endregion
+
+                        #region HAMMING_ENCODE
                         case PAGE_MODES.Hamming_Encode:
                             _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
                             _fileHeader = new FileHeader()
@@ -254,8 +219,10 @@ namespace FilesEncryptor.pages
                                 FileDisplayType = _fileOpener.SelectedFileDisplayType,
                                 FileExtension = _fileOpener.SelectedFileExtension
                             };
-
                             break;
+                        #endregion
+
+                        #region HAMMING_DECODE
                         case PAGE_MODES.Hamming_Decode:
                             _fileHeader = _fileOpener.ReadFileHeader();
 
@@ -268,11 +235,15 @@ namespace FilesEncryptor.pages
                                 ConsoleWL("The original file is compressed with Huffman", "[WARN]");
                             }
                             break;
+                        #endregion
+
+                        #region HAMMING_BROKE
                         case PAGE_MODES.Hamming_Broke:
                             _fileHeader = _fileOpener.ReadFileHeader();
                             HammingEncodeType fileEncodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
                             _broker = new HammingBroker(_fileOpener, fileEncodeType);
                             break;
+                        #endregion
                     }
 
                     await _fileOpener.Finish();
@@ -287,26 +258,29 @@ namespace FilesEncryptor.pages
             _selectedEncoding = hammingEncodeTypeSelector.SelectedIndex;
         }
 
-        private void ConfirmBt_Click(object sender, RoutedEventArgs e)
+        private async void ConfirmBt_Click(object sender, RoutedEventArgs e)
         {
-            switch(_pageMode)
+            await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
-                case PAGE_MODES.Huffman_Encode:
-                    HuffmanEncode();
-                    break;
-                case PAGE_MODES.Huffman_Decode:
-                    HuffmanDecode();
-                    break;
-                case PAGE_MODES.Hamming_Encode:
-                    HammingEncode();
-                    break;
-                case PAGE_MODES.Hamming_Decode:
-                    HammingDecode();
-                    break;
-                case PAGE_MODES.Hamming_Broke:
-                    HammingBroke();
-                    break;
-            }
+                switch (_pageMode)
+                {
+                    case PAGE_MODES.Huffman_Encode:
+                        HuffmanEncode();
+                        break;
+                    case PAGE_MODES.Huffman_Decode:
+                        HuffmanDecode();
+                        break;
+                    case PAGE_MODES.Hamming_Encode:
+                        HammingEncode();
+                        break;
+                    case PAGE_MODES.Hamming_Decode:
+                        HammingDecode();
+                        break;
+                    case PAGE_MODES.Hamming_Broke:
+                        HammingBroke();
+                        break;
+                }
+            });
         }
 
         private void BackBt_Click(object sender, RoutedEventArgs e)
@@ -328,6 +302,39 @@ namespace FilesEncryptor.pages
             ResetProgressPanel();
         }
 
+        private List<string> GetExtensions(PAGE_MODES mode)
+        {
+            List<string> extensions = new List<string>();
+            switch (mode)
+            {
+                case PAGE_MODES.Huffman_Encode:
+                    extensions.Add(".txt");
+                    break;
+                case PAGE_MODES.Huffman_Decode:
+                    extensions.Add(".huf");
+                    break;
+                case PAGE_MODES.Hamming_Encode:
+                    extensions = new List<string>(){
+                        ".txt",
+                        ".huf",
+                        ".pdf",
+                        ".docx",
+                        ".doc",
+                        ".jpg"
+                        };
+                    break;
+                case PAGE_MODES.Hamming_Decode:
+                case PAGE_MODES.Hamming_Broke:
+                    foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
+                    {
+                        extensions.Add(type.Extension);
+                    }
+
+                    break;
+            }
+
+            return extensions;
+        }
 
         private async Task ShowLoadingPanel()
         {
@@ -400,7 +407,7 @@ namespace FilesEncryptor.pages
                     return;
 
                 progressPanelEventsList.SelectedIndex = selectedIndex;
-                progressPanelEventsList.UpdateLayout();
+                //progressPanelEventsList.UpdateLayout();
 
                 progressPanelEventsList.ScrollIntoView(progressPanelEventsList.SelectedItem);
             });
@@ -593,8 +600,6 @@ namespace FilesEncryptor.pages
 
             //Creo el decodificador de Huffman            
             string huffDecoded = await _huffmanDecoder.DecodeWithTreeMultithreaded(decodingProcess);
-
-            
 
             //Si la decodificacion finalizo correctamente
             if (huffDecoded != null)

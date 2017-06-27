@@ -67,15 +67,18 @@ namespace FilesEncryptor.helpers.processes
             }
         }
 
-        public void AddEvent(KryptoEvent kEvent)
+        public async void AddEvent(KryptoEvent kEvent)
         {
-            _events.Add(kEvent);
-            //_progressLevel = Math.Max(Math.Min(0, _progressLevel + kEvent.ProgressAdvance), 100);
-            _progressLevel = Math.Min(Math.Max(0, kEvent.ProgressAdvance), 100);
-            kEvent.Moment = DateTime.Now.Subtract(_startTime);
-            _currentUI.AddEvent(kEvent);
-            _currentUI.SetProgressMessage(kEvent.Message);
-            _currentUI.SetProgressLevel(_progressLevel);
+            await Task.Run(() =>
+            {
+                _events.Add(kEvent);
+                //_progressLevel = Math.Max(Math.Min(0, _progressLevel + kEvent.ProgressAdvance), 100);
+                _progressLevel = Math.Min(Math.Max(0, kEvent.ProgressAdvance), 100);
+                kEvent.Moment = DateTime.Now.Subtract(_startTime);
+                _currentUI.AddEvent(kEvent);
+                _currentUI.SetProgressMessage(kEvent.Message);
+                _currentUI.SetProgressLevel(_progressLevel);
+            });
         }
 
         public virtual void Stop(bool failed = false)
