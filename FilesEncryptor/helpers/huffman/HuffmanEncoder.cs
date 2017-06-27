@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.huffman;
+using FilesEncryptor.helpers.processes;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -71,12 +72,14 @@ namespace FilesEncryptor.helpers.huffman
             });
         }
 
-        public Task<HuffmanEncodeResult> Encode()
+        public Task<HuffmanEncodeResult> Encode(BaseKryptoProcess currentProcess = null)
         {
             return Task.Run(() =>
             {
                 HuffmanEncodeResult encoded = null;
                 int encodedCharsCount = 0;
+
+                currentProcess?.UpdateStatus("Encoding file with Huffman");
 
                 #region CALCULATE_CODE_PARTS_COUNT
 
@@ -127,11 +130,30 @@ namespace FilesEncryptor.helpers.huffman
 
                         if (encodedCharsCount % wordsDebugStep == 0)
                         {
-                            DebugUtils.ConsoleWL(string.Format("Encoded {0} chars of {1}", encodedCharsCount, _baseText.Length), "[PROGRESS]");
+                            if (currentProcess != null)
+                            {
+                                currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = $"Encoded {encodedCharsCount} symbols of {_baseText.Length}",
+                                    ProgressAdvance = encodedCharsCount * 100 / (double)_baseText.Length,
+                                    Tag = "[PROGRESS]"
+                                });
+                            }
+                            else
+                            {
+                                DebugUtils.ConsoleWL(string.Format("Encoded {0} chars of {1}", encodedCharsCount, _baseText.Length), "[PROGRESS]");
+                            }
                         }
 
                         #endregion
                     }
+
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Huffman encoding process finished with a {fullCode.CodeLength} bits encoded file",
+                        ProgressAdvance = 100,
+                        Tag="[RESULT]"
+                    });
 
                     #region CALCULATE_CODE_PARTS_SIZE
 

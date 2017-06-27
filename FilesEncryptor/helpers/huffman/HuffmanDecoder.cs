@@ -492,58 +492,75 @@ namespace FilesEncryptor.helpers.huffman
         public async Task<string> DecodeWithTreeMultithreaded(BaseKryptoProcess currentProcess = null)
         {
             //TODO Mejorar esto
-            if (currentProcess == null)
-            {
-                currentProcess = KryptoProcess.GetCurrent();
-            }
+            //if (currentProcess == null)
+            //{
+            //    currentProcess = KryptoProcess.GetCurrent();
+            //}
 
             currentProcess?.UpdateStatus($"Decoding with Huffman using {_encodedPartsLengths.Count} threads");
 
             //Si poseo un BOM, lo incluyo al principio del texto decodificado.
             string decoded = _fileBOMString ?? "";
 
-                //Creo tantas Task como partes tenga el documento            
-                Task<string>[] tasks = new Task<string>[_encodedPartsLengths.Count];
+            //Creo tantas Task como partes tenga el documento            
+            Task<string>[] tasks = new Task<string>[_encodedPartsLengths.Count];
 
-                //Creo un diccionario en el cual almacenare el progreso de cada tarea, 
-                //para poder imprimir por consola las estadisticas
-                _tasksProgress = new Dictionary<int, uint>();
+            //Creo un diccionario en el cual almacenare el progreso de cada tarea, 
+            //para poder imprimir por consola las estadisticas
+            _tasksProgress = new Dictionary<int, uint>();
 
             uint baseIndex = 0;
-                for (int i = 0; i < _encodedPartsLengths.Count; i++)
+            for (int i = 0; i < _encodedPartsLengths.Count; i++)
+            {
+                tasks[i] = DecodeWithTreeTask(baseIndex, _encodedPartsLengths[i]);
+            baseIndex += _encodedPartsLengths[i];
+                _tasksProgress.Add(tasks[i].Id, 0);
+            }
+
+            Timer timer = new Timer(
+                (optionalParam) =>
                 {
-                    tasks[i] = DecodeWithTreeTask(baseIndex, _encodedPartsLengths[i]);
-                baseIndex += _encodedPartsLengths[i];
-                    _tasksProgress.Add(tasks[i].Id, 0);
-                }
+                    uint totalProgress = 0;
 
-                Timer timer = new Timer(
-                    (optionalParam) =>
+                    foreach (uint progress in _tasksProgress.Values.ToList())
                     {
-                        uint totalProgress = 0;
+                        totalProgress += progress;
+                    }
 
-                        foreach (uint progress in _tasksProgress.Values.ToList())
-                        {
-                            totalProgress += progress;
-                        }
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Decoded {totalProgress} bits of {_encoded.CodeLength}",
+                        ProgressAdvance = totalProgress * 100 / (double)_encoded.CodeLength,
+                        Tag = "[PROGRESS]"
+                    });
 
-                        currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                        {
-                            Message = $"Decoded {totalProgress} bits of {_encoded.CodeLength}",
-                            ProgressAdvance = totalProgress * 100 / (double)_encoded.CodeLength,
-                            Tag = "[PROGRESS]"
-                        });
-
-                        DebugUtils.ConsoleWL(string.Format("Decoded {0} bits of {1}", totalProgress, _encoded.CodeLength), "[PROGRESS]");
-                    },
-                    null, 0, 4000);
+                    DebugUtils.ConsoleWL(string.Format("Decoded {0} bits of {1}", totalProgress, _encoded.CodeLength), "[PROGRESS]");
+                },
+                null, 0, 4000);
 
 
-                //Las partes decodificadas se encontraran en el mismo orden en que se iniciaron las Task,
-                //por lo que simplemente hay que concatenarlas.            
-                string[] decodedParts = await Task.WhenAll(tasks);
-                timer.Dispose();
-                decoded += string.Join("", decodedParts);
+            //Las partes decodificadas se encontraran en el mismo orden en que se iniciaron las Task,
+            //por lo que simplemente hay que concatenarlas.            
+            string[] decodedParts = await Task.WhenAll(tasks);
+            timer.Dispose();
+
+            currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+            {
+                Message = $"Huffman decoding process finished",
+                ProgressAdvance = 100,
+                Tag = "[RESULT]"
+            });
+
+            currentProcess?.UpdateStatus("Joining decoded parts into one array of bytes", true);
+
+            decoded += string.Join("", decodedParts);
+
+            currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+            {
+                Message = $"Decoded file joining process finished in a {decoded.Length} symbols file",
+                ProgressAdvance = 100,
+                Tag = "[RESULT]"
+            });
 
             return decoded;
         }

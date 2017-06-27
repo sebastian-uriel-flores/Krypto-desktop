@@ -426,9 +426,11 @@ namespace FilesEncryptor.pages
             encodingProcess.Start(this);
 
             HuffmanEncoder encoder = HuffmanEncoder.From(fileContentTextBlock.Text);
+
+            encodingProcess.UpdateStatus("Creating huffman probabilities tree");
             await encoder.Scan();
 
-            HuffmanEncodeResult encodeResult = await encoder.Encode();
+            HuffmanEncodeResult encodeResult = await encoder.Encode(encodingProcess);
 
             //Si el archivo pudo ser codificado con Huffman
             if (encodeResult != null)
@@ -438,16 +440,25 @@ namespace FilesEncryptor.pages
                 //Si el usuario selecciono correctamente un archivo
                 if (await fileSaver.PickToSave(_fileHeader.FileName, BaseHuffmanCodifier.HUFFMAN_FILE_DISPLAY_TYPE, BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION))
                 {
+                    encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Output file selected: {fileSaver.SelectedFilePath}",
+                        ProgressAdvance = 0,
+                        Tag = "[INFO]"
+                    });
+
                     //Si el archivo pudo ser abierto
                     if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                     {
+                        encodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
+
                         compressResult = fileSaver.WriteFileHeader(_fileHeader);
 
                         //Si el header se escribio correctamente
                         if (compressResult)
                         {
                             //Escribo la tabla de probabilidades
-                            DebugUtils.ConsoleWL(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
+                            ConsoleWL(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
                             fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
                             compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult, _fileOpener.FileEncoding, _fileOpener.FileBOM);
 
@@ -585,13 +596,7 @@ namespace FilesEncryptor.pages
             //Creo el decodificador de Huffman            
             string huffDecoded = await _huffmanDecoder.DecodeWithTreeMultithreaded(decodingProcess);
 
-            //Imprimo la cantidad de tiempo que implico la decodificacion
-            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-            {
-                Message = $"Huffman decoding process finished",
-                ProgressAdvance = 100,
-                Tag = "[RESULT]"
-            });
+            
 
             //Si la decodificacion finalizo correctamente
             if (huffDecoded != null)
