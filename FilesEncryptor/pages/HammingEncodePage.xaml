@@ -916,7 +916,7 @@
                     x:Name="fileNameHeader"
                     Text="Nombre del archivo"
                     Style="{StaticResource SettingsHeaderStyle}"                    
-                    Margin="20,0"
+                    Margin="20,20,20,0"
                 />
                 <TextBlock
                     x:Name="fileNameBlock"

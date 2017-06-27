@@ -47,12 +47,8 @@ namespace FilesEncryptor.pages
         }
 
         private PAGE_MODES _pageMode;
-
-        #region HAMMING_DECODE
-
-        private HammingDecoder _decoder;
-
-        #endregion
+        private FileHelper _fileOpener;
+        private FileHeader _fileHeader;
 
         #region HUFFMAN_DECODE
 
@@ -60,12 +56,23 @@ namespace FilesEncryptor.pages
 
         #endregion  
 
+        #region HAMMING_DECODE
+
+        private HammingDecoder _decoder;
+
+        #endregion
+
+        #region HAMMING_BROKE
+
+        HammingBroker _broker;
+
+        #endregion
+
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
         private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
 
-        private FileHelper _fileOpener;
-        private FileHeader _fileHeader;
+       
 
         public HammingEncodePage()
         {
@@ -106,8 +113,8 @@ namespace FilesEncryptor.pages
             {
                 case PAGE_MODES.Huffman_Encode:
                     pageHeaderContent.Text = "Comprimir con Huffman";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Visible;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;                    
                     break;
                 case PAGE_MODES.Huffman_Decode:
                     pageHeaderContent.Text = "Descomprimir con Huffman";
@@ -116,11 +123,16 @@ namespace FilesEncryptor.pages
                     break;
                 case PAGE_MODES.Hamming_Encode:
                     pageHeaderContent.Text = "Codificar con Hamming";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeHeader.Visibility = Visibility.Visible;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;                    
                     break;
                 case PAGE_MODES.Hamming_Decode:
                     pageHeaderContent.Text = "Decodificar con Hamming";
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
+                    break;
+                case PAGE_MODES.Hamming_Broke:
+                    pageHeaderContent.Text = "Introducir errores en archivo Hamming";
                     hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
                     hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
@@ -209,6 +221,9 @@ namespace FilesEncryptor.pages
                             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                              {
                                  //Seteo el texto en pantalla
+                                 fileContentTextBlock.Text = originalFileContent;
+                                 fileContentTextHeader.Visibility = Visibility.Visible;
+                                 fileContentTextBlock.Visibility = Visibility.Visible;
                              });
 
                             //Muestro la informacion del archivo
@@ -249,6 +264,10 @@ namespace FilesEncryptor.pages
                                 ConsoleWL("The original file is compressed with Huffman", "[WARN]");
                             }
                             break;
+                        case PAGE_MODES.Hamming_Broke:
+                            HammingEncodeType fileEncodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
+                            _broker = new HammingBroker(_fileOpener, fileEncodeType);
+                            break;
                     }
 
                     await _fileOpener.Finish();
@@ -278,6 +297,9 @@ namespace FilesEncryptor.pages
                     break;
                 case PAGE_MODES.Hamming_Decode:
                     HammingDecode();
+                    break;
+                case PAGE_MODES.Hamming_Broke:
+                    IntroduceErrors();
                     break;
             }
         }
@@ -398,7 +420,7 @@ namespace FilesEncryptor.pages
             await ShowProgressPanel();
             encodingProcess.Start(this);
 
-            HuffmanEncoder encoder = HuffmanEncoder.From("");
+            HuffmanEncoder encoder = HuffmanEncoder.From(fileContentTextBlock.Text);
             await encoder.Scan();
 
             HuffmanEncodeResult encodeResult = await encoder.Encode();
@@ -519,6 +541,7 @@ namespace FilesEncryptor.pages
                         });
                         encodingProcess.Stop(true);
                     }
+                    progressPanelCloseButton.Visibility = Visibility.Visible;
                 }
                 //Si el usuario cancelo la seleccion de archivo
                 else
@@ -1083,6 +1106,89 @@ namespace FilesEncryptor.pages
                     progressPanelCloseButton.Visibility = Visibility.Visible;
                 });
             }
+        }
+
+        #endregion
+
+        #region HAMMING_BROKE
+
+        private async void IntroduceErrors()
+        {
+            //Inicio la decodificacion en Hamming
+            await ShowLoadingPanel();
+            ConsoleWL("Starting Hamming Decoding");
+
+            DateTime startDate = DateTime.Now;
+
+            //Codifico el archivo original
+
+            HammingEncodeResult result = await _broker.Broke();
+
+            //Imprimo la cantidad de tiempo que implico la decodificacion
+            TimeSpan hammingDecodingTime = DateTime.Now.Subtract(startDate);
+            ConsoleWL($"Hamming decoding process finished in a time of {hammingDecodingTime}");
+
+            //Si el archivo pudo ser decodificado con Hamming
+            if (result != null)
+            {
+                FileHelper fileSaver = new FileHelper();
+
+                //Si el usuario selecciona un archivo
+                if (await fileSaver.PickToSave(_fileOpener.SelectedFileName, _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension))
+                {
+                    ConsoleWL($"Output file: \"{fileSaver.SelectedFilePath}\"");
+
+                    //Si el archivo pudo ser abierto correctamente
+                    if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                    {
+                        ConsoleWL($"Dumping hamming encoded bytes to \"{fileSaver.SelectedFilePath}\"");
+
+                        if (fileSaver.WriteFileHeader(_fileHeader) && HammingEncoder.WriteEncodedToFile(result, fileSaver))
+                        {
+                            ConsoleWL("Dumping completed properly");
+                            ConsoleWL("Closing file");
+                            await fileSaver.Finish();
+                            ConsoleWL("File closed");
+
+                            MessageDialog dialog = new MessageDialog("El archivo ha sido guardado", "Ha sido todo un Exito");
+                            await dialog.ShowAsync();
+                        }
+                        else
+                        {
+                            ConsoleWL("Dumping uncompleted");
+                            ConsoleWL("Closing file");
+                            await fileSaver.Finish();
+                            ConsoleWL("File closed");
+
+                            MessageDialog dialog = new MessageDialog("El archivo no pudo ser guardado.", "Ha ocurrido un error");
+                            await dialog.ShowAsync();
+                        }
+                    }
+                    //Si el archivo no pudo ser abierto para edicion
+                    else
+                    {
+                        ConsoleWL("File could not be opened to ReadWrite", "[FAIL]");
+
+                        MessageDialog dialog = new MessageDialog("El archivo no pudo ser creado correctamente", "Ha ocurrido un error");
+                        await dialog.ShowAsync();
+                    }
+                }
+                //Si el usuario no selecciono ningun archivo
+                else
+                {
+                    ConsoleWL("User cancel file selection");
+                }
+            }
+            //Si el archivo no pudo ser decodificado
+            else
+            {
+                ConsoleWL("File could not be decoded with Hamming", "[FAIL]");
+
+                MessageDialog dialog = new MessageDialog("El archivo no pudo ser decodificado", "Ha ocurrido un error");
+                await dialog.ShowAsync();
+            }
+
+            HideLoadingPanel();
         }
 
         #endregion

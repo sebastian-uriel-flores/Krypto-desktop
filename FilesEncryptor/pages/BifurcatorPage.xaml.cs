@@ -232,7 +232,7 @@ namespace FilesEncryptor.pages
                     
                     break;
                 case "compressFileItem":
-                    Frame.Navigate(typeof(HuffmanCompressPage));
+                    Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Huffman_Encode);
                     break;
                 case "uncompressFileItem":
                     Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Huffman_Decode);
@@ -244,7 +244,7 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Hamming_Decode);
                     break;
                 case "introduceErrorItem":
-                    Frame.Navigate(typeof(HammingDecodePage), HammingDecodePage.PAGE_MODES.INTRODUCE_ERRORS);
+                    Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Hamming_Broke);
                     break;
             }            
         }
