@@ -32,9 +32,9 @@ namespace FilesEncryptor.helpers.processes
             _tasks = tasks?? new List<Tuple<Task, string>>();
         }
 
-        public void Start(IKryptoProcessUI uiToShow, Action<int> onCompletedAction = null, Action<int> onFailedAction = null)
+        public void Start(IKryptoProcessUI uiToShow, bool stopWatchWhenFinish = true, Action<int> onCompletedAction = null, Action<int> onFailedAction = null)
         {
-            base.Start(uiToShow);
+            base.Start(uiToShow, stopWatchWhenFinish);
 
             //Inicio la primera de las tareas
             _currentTaskIndex = -1;

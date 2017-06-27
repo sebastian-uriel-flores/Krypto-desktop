@@ -17,8 +17,9 @@ namespace FilesEncryptor.helpers.processes
 
         private IKryptoProcessUI _currentUI;
         private Timer _timer;
+        private bool _stopWatchWhenFinish;
 
-        public virtual void Start(IKryptoProcessUI uiToShow)
+        public virtual void Start(IKryptoProcessUI uiToShow, bool stopWatchWhenFinish = true)
         {
             if(uiToShow != null)
             {
@@ -26,6 +27,7 @@ namespace FilesEncryptor.helpers.processes
                 _events = new List<KryptoEvent>();
                 _startTime = DateTime.Now;
                 _progressLevel = 0;
+                _stopWatchWhenFinish = stopWatchWhenFinish;
 
                 UpdateStatus("Initializing");
                 AddEvent(new KryptoEvent()
@@ -78,8 +80,11 @@ namespace FilesEncryptor.helpers.processes
 
         public virtual void Stop(bool failed = false)
         {
-            _timer.Dispose();
-            _currentUI.SetTime(DateTime.Now.Subtract(_startTime));
+            if (_stopWatchWhenFinish)
+            {
+                _timer.Dispose();
+                _currentUI.SetTime(DateTime.Now.Subtract(_startTime));
+            }
             _currentUI.SetProgressLevel(100.0);
             _currentUI.SetShowFailureInformationButtonVisible(failed);
 
@@ -91,6 +96,12 @@ namespace FilesEncryptor.helpers.processes
             {
                 _currentUI.SetStatus("Completed");
             }
+        }
+
+        public void StopWatch()
+        {
+            _timer?.Dispose();
+            _currentUI.SetTime(DateTime.Now.Subtract(_startTime));
         }
     
 

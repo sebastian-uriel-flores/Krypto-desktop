@@ -203,7 +203,7 @@ namespace FilesEncryptor.dto
             return range;
         }
           
-        public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false, KryptoProcess processWherePrint = null)
+        public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false, BaseKryptoProcess processWherePrint = null)
         {
             BitCode copy = Copy();
             int addedZeros = 0;

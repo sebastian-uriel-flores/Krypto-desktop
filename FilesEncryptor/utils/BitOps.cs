@@ -11,7 +11,7 @@ namespace FilesEncryptor.utils
 {
     public static class BitOps
     {
-        public static BitCode Join(List<BitCode> codes, KryptoProcess processToWrite = null)
+        public static BitCode Join(List<BitCode> codes, BaseKryptoProcess processToWrite = null)
         {
             BitCode joined = BitCode.EMPTY;
 

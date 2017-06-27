@@ -1017,7 +1017,7 @@
                     VerticalAlignment="Stretch"
                     HorizontalAlignment="Center"
                     Padding="30,0"
-                    Click="EncodeBt_Click"
+                    Click="ConfirmBt_Click"
                     Visibility="Visible"
                     />
             </Grid>

@@ -172,7 +172,7 @@ namespace FilesEncryptor.pages
                                 progressText.Text = message;
 
                                 HammingDecoder decoder = new HammingDecoder(encodeRes);                                
-                                var decodeRes = await decoder.Decode();
+                                var decodeRes = await Task.Run(()=> decoder.Decode());
 
                                 if (decodeRes != null)
                                 {
@@ -238,10 +238,10 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(UncompressFilePage));
                     break;
                 case "encodeFileItem":
-                    Frame.Navigate(typeof(HammingEncodePage));
+                    Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Hamming_Encode);
                     break;
                 case "decodeFileItem":
-                    Frame.Navigate(typeof(HammingDecodePage), HammingDecodePage.PAGE_MODES.DECODE);
+                    Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Hamming_Decode);
                     break;
                 case "introduceErrorItem":
                     Frame.Navigate(typeof(HammingDecodePage), HammingDecodePage.PAGE_MODES.INTRODUCE_ERRORS);

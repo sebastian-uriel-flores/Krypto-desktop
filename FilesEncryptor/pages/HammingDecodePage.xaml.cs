@@ -201,7 +201,7 @@ namespace FilesEncryptor.pages
 
             //Codifico el archivo original
 
-            BitCode result = await _decoder.Decode();
+            BitCode result = await Task.Run(()=> _decoder.Decode());
 
             //Imprimo la cantidad de tiempo que implico la decodificacion
             TimeSpan hammingDecodingTime = DateTime.Now.Subtract(startDate);

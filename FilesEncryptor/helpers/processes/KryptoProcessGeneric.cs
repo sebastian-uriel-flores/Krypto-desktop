@@ -17,11 +17,11 @@ namespace FilesEncryptor.helpers.processes
             _lastTask = lastTask;
         }
 
-        public void Start(IKryptoProcessUI uiToShow, Action<T> onCompletedAction = null, Action<int> onFailedAction = null)
+        public void Start(IKryptoProcessUI uiToShow, bool stopWatchWhenFinish = true, Action<T> onCompletedAction = null, Action<int> onFailedAction = null)
         {
             _onCompletedAction = onCompletedAction;
             _onFailedAction = onFailedAction;
-            base.Start(uiToShow);            
+            base.Start(uiToShow, stopWatchWhenFinish);            
         }
 
         protected override void StartNextTask(Task lastTask = null)
