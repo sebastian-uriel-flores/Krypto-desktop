@@ -354,9 +354,7 @@ namespace FilesEncryptor.pages
             progressPanelProgressBar.Value = 0;
             progressPanelEventsList.Items.Clear();
         }
-
-       
-
+        
         #region KRYPTO_PROCESS_UI_INTERFACE
 
         public async void SetStatus(string currentStatus)
@@ -393,7 +391,7 @@ namespace FilesEncryptor.pages
 
         public async void AddEvent(BaseKryptoProcess.KryptoEvent kEvent)
         {
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
                 progressPanelEventsList.Items.Add($"{kEvent.Tag} : {kEvent.Message}");
 

@@ -20,7 +20,7 @@
                 <ColumnDefinition Width="auto"/>
             </Grid.ColumnDefinitions>
             <TextBlock 
-                Text="Files Encryptor" 
+                Text="Krypto" 
                 Margin="80,0,0,30" 
                 TextAlignment="Left" 
                 FontSize="60" 

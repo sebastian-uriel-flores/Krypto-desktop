@@ -897,7 +897,7 @@
                         </StackPanel>
                     </CommandBar.Content>
                     <CommandBar.PrimaryCommands>
-                        <AppBarButton Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/>
+                        <AppBarButton x:Name="selectFileButton" Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/>
                     </CommandBar.PrimaryCommands>
                 </CommandBar>
 

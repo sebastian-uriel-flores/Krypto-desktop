@@ -7,8 +7,8 @@
     <ProjectGuid>{AFE60599-C2A8-4909-A967-1011C147E838}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FilesEncryptor</RootNamespace>
-    <AssemblyName>FilesEncryptor</AssemblyName>
+    <RootNamespace>Krypto</RootNamespace>
+    <AssemblyName>Krypto</AssemblyName>
     <DefaultLanguage>es-ES</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
@@ -125,9 +125,6 @@
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="pages\HammingDecodePage.xaml.cs">
-      <DependentUpon>HammingDecodePage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="pages\HammingEncodePage.xaml.cs">
       <DependentUpon>HammingEncodePage.xaml</DependentUpon>
     </Compile>
@@ -140,12 +137,6 @@
     <Compile Include="helpers\huffman\HuffmanEncoder.cs" />
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="pages\HuffmanCompressPage.xaml.cs">
-      <DependentUpon>HuffmanCompressPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="pages\HuffmanUncompressPage.xaml.cs">
-      <DependentUpon>HuffmanUncompressPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -181,15 +172,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="pages\HuffmanCompressPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="pages\DebugConsolePage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="pages\HammingDecodePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -200,10 +183,6 @@
     <Page Include="pages\ResultsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="pages\HuffmanUncompressPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

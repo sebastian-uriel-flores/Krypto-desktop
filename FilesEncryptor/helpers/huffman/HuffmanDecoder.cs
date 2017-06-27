@@ -590,22 +590,15 @@ namespace FilesEncryptor.helpers.huffman
                         {
                             foreach (uint codeLength in _codesTree.TerminalCodesLengths)
                             {
-                                BitCode range = BitCode.EMPTY;
-                                try
-                                {
-                                    range = remainingEncodedText.GetRange(baseIndex, codeLength);
-                                }
-                                catch (Exception ex)
-                                {
+                                BitCode range = remainingEncodedText.GetRange(baseIndex, codeLength);
 
-                                }
                                 string value = _codesTree.Get(range);
 
                                 if (value != default(string))
                                 {
                                     result += value;
                                     baseIndex += codeLength;
-                                    _tasksProgress[currentTaskId] = (uint)remainingEncodedText.CodeLength - baseIndex;
+                                    _tasksProgress[currentTaskId] = baseIndex;// (uint)remainingEncodedText.CodeLength - baseIndex;
                                     break;
                                 }
                             }

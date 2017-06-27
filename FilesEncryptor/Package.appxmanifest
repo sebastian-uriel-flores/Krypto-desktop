@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="SebastianFlores.Krypto" Publisher="CN=117BBCF7-BEB8-4B33-9B09-A0CCAB17ADA9" Version="1.1.0.0" />
+  <Identity Name="SebastianFlores.Krypto" Publisher="CN=117BBCF7-BEB8-4B33-9B09-A0CCAB17ADA9" Version="1.1.10.0" />
   <mp:PhoneIdentity PhoneProductId="b1e459b4-8ff1-42a9-97a2-eaed355d5ea2" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Krypto</DisplayName>
-    <PublisherDisplayName>Sebastian Flores</PublisherDisplayName>
+    <DisplayName>Files Encryptor</DisplayName>
+    <PublisherDisplayName>New Era Developing</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Dependencies>
@@ -14,9 +14,9 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="FilesEncryptor.App">
-      <uap:VisualElements DisplayName="Krypto" Square150x150Logo="Assets\M.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="Krypto" BackgroundColor="transparent">
-        <uap:DefaultTile Wide310x150Logo="Assets\W.png" ShortName="Krypto" Square71x71Logo="Assets\re.png">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Krypto.App">
+      <uap:VisualElements DisplayName="Files Encryptor" Square150x150Logo="Assets\M.png" Square44x44Logo="Assets\Square44x44Logo.png" Description="Krypto" BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\W.png" ShortName="Krypto">
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SS.png" BackgroundColor="#FF9200" />
       </uap:VisualElements>
