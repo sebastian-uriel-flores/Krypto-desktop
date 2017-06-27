@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.hamming;
+using FilesEncryptor.dto.huffman;
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.helpers.huffman;
@@ -54,7 +55,9 @@ namespace FilesEncryptor.pages
         #endregion
 
         #region HUFFMAN_DECODE
+
         HuffmanDecoder _huffmanDecoder;
+
         #endregion  
 
         private int _selectedEncoding;
@@ -102,17 +105,26 @@ namespace FilesEncryptor.pages
             switch(_pageMode)
             {
                 case PAGE_MODES.Huffman_Encode:
+                    pageHeaderContent.Text = "Comprimir con Huffman";
+                    hammingEncodeTypeHeader.Visibility = Visibility.Visible;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;
                     break;
-                case PAGE_MODES.Huffman_Decode:                    
+                case PAGE_MODES.Huffman_Decode:
+                    pageHeaderContent.Text = "Descomprimir con Huffman";
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Hamming_Encode:
+                    pageHeaderContent.Text = "Codificar con Hamming";
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Hamming_Decode:
+                    pageHeaderContent.Text = "Decodificar con Hamming";
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
             }
-            hammingEncodeTypeSelector.Visibility = _pageMode == PAGE_MODES.Hamming_Encode
-                ? Visibility.Visible
-                : Visibility.Collapsed;
         }
 
         private List<string>GetExtensions(PAGE_MODES mode)
@@ -156,23 +168,61 @@ namespace FilesEncryptor.pages
                 _rawFileBytes = null;
                 await ShowLoadingPanel();
 
-                settingsPanel.Visibility = Visibility.Collapsed;
-                pageCommandsDivider.Visibility = Visibility.Collapsed;
-                pageCommands.Visibility = Visibility.Collapsed;
+                //settingsPanel.Visibility = Visibility.Collapsed;
+                //pageCommandsDivider.Visibility = Visibility.Collapsed;
+                //pageCommands.Visibility = Visibility.Collapsed;
+                confirmBt.IsEnabled = false;
 
-                if (await _fileOpener.OpenFile(FileAccessMode.Read))
+                bool takeEncoding = _pageMode == PAGE_MODES.Huffman_Encode;
+
+                if (await _fileOpener.OpenFile(FileAccessMode.Read, takeEncoding))
                 {
                     //Muestro los datos del archivo cargado
                     fileNameBlock.Text = _fileOpener.SelectedFileName;
                     fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
                     fileDescriptionBlock.Text = string.Format("{0} ({1})", _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension);
 
-                    settingsPanel.Visibility = Visibility.Visible;
-                    pageCommandsDivider.Visibility = Visibility.Visible;
-                    pageCommands.Visibility = Visibility.Visible;
+                    //settingsPanel.Visibility = Visibility.Visible;
+                    //pageCommandsDivider.Visibility = Visibility.Visible;
+                    //pageCommands.Visibility = Visibility.Visible;
+                    confirmBt.IsEnabled = true;
 
                     switch (_pageMode)
                     {
+                        case PAGE_MODES.Huffman_Encode:
+                            //TODO Si no se puede obtener el tipo de codificacion del archivo, 
+                            //se solicita al usuario que elija una de las posibles codificaciones
+                            if (_fileOpener.FileBOM == null)
+                            {
+                                _fileOpener.SetFileEncoding(System.Text.Encoding.UTF8);
+                            }
+
+                            //Leo todos los bytes del texto
+                            byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);
+
+                            //Obtengo el texto que sera mostrado en pantalla
+                            string originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
+
+                            //Cierro el archivo
+                            await _fileOpener.Finish();
+
+                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                             {
+                                 //Seteo el texto en pantalla
+                             });
+
+                            //Muestro la informacion del archivo
+                            HideLoadingPanel();
+
+
+                            //Creo el header que tendra el archivo al guardarlo
+                            _fileHeader = new FileHeader()
+                            {
+                                FileName = _fileOpener.SelectedFileDisplayName,
+                                FileDisplayType = _fileOpener.SelectedFileDisplayType,
+                                FileExtension = _fileOpener.SelectedFileExtension
+                            };
+                            break;
                         case PAGE_MODES.Huffman_Decode:
                             _fileHeader = _fileOpener.ReadFileHeader();
                             _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
@@ -217,6 +267,9 @@ namespace FilesEncryptor.pages
         {
             switch(_pageMode)
             {
+                case PAGE_MODES.Huffman_Encode:
+                    HuffmanEncode();
+                    break;
                 case PAGE_MODES.Huffman_Decode:
                     HuffmanDecode();
                     break;
@@ -337,9 +390,157 @@ namespace FilesEncryptor.pages
 
         #region HUFFMAN_ENCODE
 
-        private async void Huffman_Encode()
+        private async void HuffmanEncode()
         {
+            bool compressResult = false;
 
+            BaseKryptoProcess encodingProcess = new BaseKryptoProcess();
+            await ShowProgressPanel();
+            encodingProcess.Start(this);
+
+            HuffmanEncoder encoder = HuffmanEncoder.From("");
+            await encoder.Scan();
+
+            HuffmanEncodeResult encodeResult = await encoder.Encode();
+
+            //Si el archivo pudo ser codificado con Huffman
+            if (encodeResult != null)
+            {
+                FileHelper fileSaver = new FileHelper();
+
+                //Si el usuario selecciono correctamente un archivo
+                if (await fileSaver.PickToSave(_fileHeader.FileName, BaseHuffmanCodifier.HUFFMAN_FILE_DISPLAY_TYPE, BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION))
+                {
+                    //Si el archivo pudo ser abierto
+                    if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                    {
+                        compressResult = fileSaver.WriteFileHeader(_fileHeader);
+
+                        //Si el header se escribio correctamente
+                        if (compressResult)
+                        {
+                            //Escribo la tabla de probabilidades
+                            DebugUtils.ConsoleWL(string.Format("Start dumping to: {0}", fileSaver.SelectedFilePath));
+                            fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
+                            compressResult = HuffmanEncoder.WriteToFile(fileSaver, encodeResult, _fileOpener.FileEncoding, _fileOpener.FileBOM);
+
+                            if(compressResult)
+                            {
+                                //Cierro el archivo comprimido
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Encoded file dumped properly",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+
+                                //DebugUtils.ConsoleWL("Dumping completed properly");
+                                //DebugUtils.ConsoleWL("Closing file");
+                                await fileSaver.Finish();
+
+
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+                                encodingProcess.Stop();
+                            }
+                            //Si ocurrio un error al escribir el archivo
+                            else
+                            {
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Decoded file dumping uncompleted",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+
+                                await fileSaver.Finish();
+
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+                                encodingProcess.Stop(true);
+                            }
+                        }
+                        //Si ocurrio un error al escribir el Header
+                        else
+                        {
+                            //Cierro el archivo comprimido
+                            encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Decoded file dumping uncompleted",
+                                ProgressAdvance = 100,
+                                Tag = "[PROGRESS]"
+                            });
+                            encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "Closing file",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
+
+                            await fileSaver.Finish();
+
+                            encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = "File closed",
+                                ProgressAdvance = 100,
+                                Tag = "[INFO]"
+                            });
+                            encodingProcess.Stop(true);
+                        }
+                    }
+                    //Si el archivo seleccionado no pudo ser abierto
+                    else
+                    {
+                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "File could not be opened to ReadWrite",
+                            ProgressAdvance = 100,
+                            Tag = "[FAIL]"
+                        });
+                        encodingProcess.Stop(true);
+                    }
+                }
+                //Si el usuario cancelo la seleccion de archivo
+                else
+                {
+                    HideProgressPanel();
+                    ResetProgressPanel();
+                    encodingProcess.Stop(true);
+                }
+            }
+            //Si el archivo no pudo ser codificado con Huffman
+            else
+            {
+                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                {
+                    Message = "File could not be encoded with Huffman",
+                    ProgressAdvance = 100,
+                    Tag = "[FAIL]"
+                });
+                encodingProcess.Stop(true);
+
+                progressPanelCloseButton.Visibility = Visibility.Visible;
+            }
         }
 
         #endregion
@@ -786,8 +987,8 @@ namespace FilesEncryptor.pages
                                 Tag = "[INFO]"
                             });
 
-                                //Si el archivo pudo ser abierto correctamente
-                                if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                            //Si el archivo pudo ser abierto correctamente
+                            if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
                             {
                                 decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
 
@@ -808,16 +1009,18 @@ namespace FilesEncryptor.pages
 
                                         //DebugUtils.ConsoleWL("Dumping completed properly");
                                         //DebugUtils.ConsoleWL("Closing file");
-                                        await fileSaver.Finish();
+                                    await fileSaver.Finish();
 
-                                    decodingProcess.UpdateStatus("Completed");
+
                                     decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                                     {
                                         Message = "File closed",
                                         ProgressAdvance = 100,
                                         Tag = "[INFO]"
                                     });
+                                    decodingProcess.Stop();
                                 }
+                                //Si ocurrio un error al escribir el archivo
                                 else
                                 {
                                     decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()

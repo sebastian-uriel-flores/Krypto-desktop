@@ -864,36 +864,44 @@
     <Grid Background="#FFF9CD9F" RequestedTheme="Light">
 
         <RelativePanel
-            MaxWidth="650"
-            MaxHeight="440"
-            Background="White"            
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"                
+            RelativePanel.AlignTopWithPanel="True"
+            RelativePanel.AlignBottomWithPanel="True"
             >
-            <CommandBar 
+            <RelativePanel
+                RelativePanel.AlignHorizontalCenterWithPanel="True"
+                RelativePanel.AlignVerticalCenterWithPanel="True"
+                Width="650"
+                Background="White"            
+                >
+                <CommandBar 
                     x:Name="pageHeaderBar"
                     Style="{StaticResource CommandBarWithoutOverflowStyle}" 
                     Background="Transparent"
                     RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"                    
                     >
-                <CommandBar.Content>
-                    <StackPanel 
+                    <CommandBar.Content>
+                        <StackPanel 
                             VerticalAlignment="Stretch"                            
                             Orientation="Horizontal"
                             >
-                        <AppBarButton Icon="Back" Foreground="#FF525151" Click="BackBt_Click"/>
-                        <TextBlock 
+                            <AppBarButton Icon="Back" Foreground="#FF525151" Click="BackBt_Click"/>
+                            <TextBlock 
+                                x:Name="pageHeaderContent"
                                 Text="Codificar con Hamming"                                
                                 Style="{StaticResource PanelHeaderStyle}"
                                 Margin="0,0,0,12"
                                 />
-                    </StackPanel>
-                </CommandBar.Content>
-                <CommandBar.PrimaryCommands>
-                    <AppBarButton Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/> 
-                </CommandBar.PrimaryCommands>
-            </CommandBar>
+                        </StackPanel>
+                    </CommandBar.Content>
+                    <CommandBar.PrimaryCommands>
+                        <AppBarButton Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/>
+                    </CommandBar.PrimaryCommands>
+                </CommandBar>
 
-            <Rectangle
+                <Rectangle
                 x:Name="pageHeaderDivider"
                 RelativePanel.Below="pageHeaderBar"
                 RelativePanel.AlignLeftWithPanel="True"
@@ -902,128 +910,162 @@
                 StrokeThickness="0"
                 Fill="#FFEEEEEE"
                 />
-            
-            <StackPanel
-                x:Name="settingsPanel"
-                RelativePanel.Below="pageHeaderDivider"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
-                Margin="20,10,20,0"
-                Visibility="Collapsed"
-                >
-                <StackPanel.Resources>
-                    <Style x:Key="SettingsHeaderStyle" TargetType="TextBlock">
-                        <Setter Property="Foreground" Value="#FF8C8C8C"/>
-                        <Setter Property="FontWeight" Value="Light"/>
-                    </Style>
-                </StackPanel.Resources>
+
                 <TextBlock
+                    RelativePanel.Below="pageHeaderBar"
+                    x:Name="fileNameHeader"
                     Text="Nombre del archivo"
-                    Style="{StaticResource SettingsHeaderStyle}"
-                    />
+                    Style="{StaticResource SettingsHeaderStyle}"                    
+                    Margin="20,0"
+                />
                 <TextBlock
                     x:Name="fileNameBlock"
-                    Text="Mi archivo.txt"
+                    RelativePanel.Below="fileNameHeader"
+                    Text="..."
                     FontSize="20"
-                    Margin="0,5,0,0"/>
+                    Margin="20,5,20,0"
+                    />
 
                 <TextBlock
-                    Text="Tamaño del archivo"
-                    Margin="0,30,0,0"
-                    Style="{StaticResource SettingsHeaderStyle}"
-                    />
+                    x:Name="fileSizeHeader"
+                    RelativePanel.Below="fileNameBlock"
+                Text="Tamaño del archivo"
+                Margin="20,30,0,0"
+                Style="{StaticResource SettingsHeaderStyle}"
+                />
                 <TextBlock
                     x:Name="fileSizeBlock"
-                    Text="2500 bytes"
+                    RelativePanel.Below="fileSizeHeader"
+                    Text="..."
                     FontSize="20"
-                    Margin="0,5,0,0"/>
+                    Margin="20,5,20,0"
+                    />
 
                 <TextBlock
+                    x:Name="fileDescriptionHeader"
+                    RelativePanel.Below="fileSizeBlock"
                     Text="Descripción del archivo"
-                    Margin="0,30,0,0"
+                    Margin="20,30,20,0"
                     Style="{StaticResource SettingsHeaderStyle}"
                     />
                 <TextBlock
                     x:Name="fileDescriptionBlock"
-                    Text="Documento de texto plano (.txt)"
+                    RelativePanel.Below="fileDescriptionHeader"
+                    Text="..."
                     FontSize="20"
-                    Margin="0,5,0,0"/>
+                    Margin="20,5,20,0"
+                    />
 
                 <TextBlock
+                    x:Name="hammingEncodeTypeHeader"
+                    RelativePanel.Below="fileDescriptionBlock"
                     Text="Seleccione la codificación de Hamming a utilizar"
-                    Margin="0,30,0,0"
+                    Margin="20,30,20,0"
                     Style="{StaticResource SettingsHeaderStyle}"
+                    Visibility="Collapsed"
                     />
                 <ComboBox 
                     x:Name="hammingEncodeTypeSelector"
-                    RelativePanel.AlignLeftWithPanel="True"                     
+                    RelativePanel.Below="hammingEncodeTypeHeader"                    
                     Height="40" 
                     Width="320"
-                    Margin="0,5,0,0"
+                    Margin="20,5,20,0"
                     BorderThickness="2"
                     Background="WhiteSmoke"
                     BorderBrush="WhiteSmoke"                    
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
-                    Visibility="Visible"
+                    Visibility="Collapsed"
                     >
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:HammingEncodeType">
                             <Grid                                
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                >
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            >
                                 <TextBlock 
-                                    Text="{x:Bind ShortDescription}"                                 
-                                    FontFamily="Segoe UI"
-                                    Foreground="#99000000"
-                                    HorizontalAlignment="Stretch" 
-                                    VerticalAlignment="Center"                                 
-                                    />
+                                Text="{x:Bind ShortDescription}"                                 
+                                FontFamily="Segoe UI"
+                                Foreground="#99000000"
+                                HorizontalAlignment="Stretch" 
+                                VerticalAlignment="Center"                                 
+                                />
                             </Grid>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-            </StackPanel>
 
-            <Rectangle
-                x:Name="pageCommandsDivider"
-                RelativePanel.Above="pageCommands"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                Height="1"
-                StrokeThickness="0"
-                Fill="#FFEEEEEE"
-                Margin="0,20,0,0"
-                Visibility="Collapsed"
-                />
-            <Grid
-                x:Name="pageCommands"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"
-                Height="50"
-                RelativePanel.AlignBottomWithPanel="True"
-                Background="WhiteSmoke"
-                Visibility="Collapsed"
-                >
-                <Button
-                    x:Name="confirmBt"
-                    FontFamily="Segoe MDL2 Assets"
-                    Content="&#xe001;"                    
-                    FontSize="25"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Foreground="#ff9200"
-                    VerticalAlignment="Stretch"
-                    HorizontalAlignment="Center"
-                    Padding="30,0"
-                    Click="ConfirmBt_Click"
+                <TextBlock
+                    x:Name="fileContentTextHeader"
+                    RelativePanel.Below="hammingEncodeTypeSelector"
+                    Text="Contenido del archivo"
+                    Margin="20,30,20,0"
+                    Style="{StaticResource SettingsHeaderStyle}"
+                    Visibility="Collapsed"
+                    />
+                <TextBox
+                    x:Name="fileContentTextBlock"
+                    RelativePanel.Below="fileContentTextHeader"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Width="610"
+                    Height="140"
+                    FontSize="14"
+                    Background="WhiteSmoke"                    
+                    TextAlignment="Left"
+                    ScrollViewer.HorizontalScrollMode="Auto"
+                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                    ScrollViewer.VerticalScrollMode="Enabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto" 
+                    AcceptsReturn="True" 
+                    IsReadOnly="True"                    
+                    Margin="20,5,20,0"
+                    Visibility="Collapsed"
+                    />
+
+                <Rectangle
+                    x:Name="pageCommandsDivider"
+                    RelativePanel.Below="fileContentTextBlock"                
+                    RelativePanel.Above="pageCommands"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    Height="1"
+                    StrokeThickness="0"
+                    Fill="#FFEEEEEE"
+                    Margin="0,20,0,0"
                     Visibility="Visible"
                     />
-            </Grid>
 
-            
+                <Grid
+                    x:Name="pageCommands"
+                    RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    RelativePanel.AlignBottomWithPanel="True"
+                    Height="50"                
+                    Background="WhiteSmoke"
+                    Visibility="Visible"
+                    >
+                    <Button
+                        x:Name="confirmBt"
+                        FontFamily="Segoe MDL2 Assets"
+                        Content="&#xe001;"                    
+                        FontSize="25"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#ff9200"
+                        VerticalAlignment="Stretch"
+                        HorizontalAlignment="Center"
+                        Padding="30,0"
+                        Click="ConfirmBt_Click"
+                        Visibility="Visible"
+                        IsEnabled="False"
+                        />
+                </Grid>
+
+
+            </RelativePanel>
         </RelativePanel>
+        
 
         <RelativePanel
                 x:Name="loadingPanel"
