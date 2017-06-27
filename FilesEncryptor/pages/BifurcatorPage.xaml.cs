@@ -235,7 +235,7 @@ namespace FilesEncryptor.pages
                     Frame.Navigate(typeof(HuffmanCompressPage));
                     break;
                 case "uncompressFileItem":
-                    Frame.Navigate(typeof(UncompressFilePage));
+                    Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Huffman_Decode);
                     break;
                 case "encodeFileItem":
                     Frame.Navigate(typeof(HammingEncodePage), HammingEncodePage.PAGE_MODES.Hamming_Encode);

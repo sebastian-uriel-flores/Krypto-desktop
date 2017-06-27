@@ -53,6 +53,10 @@ namespace FilesEncryptor.pages
 
         #endregion
 
+        #region HUFFMAN_DECODE
+        HuffmanDecoder _huffmanDecoder;
+        #endregion  
+
         private int _selectedEncoding;
         private List<byte> _rawFileBytes;
         private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
@@ -95,6 +99,17 @@ namespace FilesEncryptor.pages
                 ? (PAGE_MODES)e.Parameter
                 : PAGE_MODES.Hamming_Encode;
 
+            switch(_pageMode)
+            {
+                case PAGE_MODES.Huffman_Encode:
+                    break;
+                case PAGE_MODES.Huffman_Decode:                    
+                    break;
+                case PAGE_MODES.Hamming_Encode:
+                    break;
+                case PAGE_MODES.Hamming_Decode:
+                    break;
+            }
             hammingEncodeTypeSelector.Visibility = _pageMode == PAGE_MODES.Hamming_Encode
                 ? Visibility.Visible
                 : Visibility.Collapsed;
@@ -105,6 +120,12 @@ namespace FilesEncryptor.pages
             List<string> extensions = new List<string>();
             switch (mode)
             {
+                case PAGE_MODES.Huffman_Encode:
+                    extensions.Add(".txt");
+                    break;
+                case PAGE_MODES.Huffman_Decode:
+                    extensions.Add(".huf");
+                    break;
                 case PAGE_MODES.Hamming_Encode:
                     extensions = new List<string>(){
                         ".txt",
@@ -116,6 +137,7 @@ namespace FilesEncryptor.pages
                         };
                     break;
                 case PAGE_MODES.Hamming_Decode:
+                case PAGE_MODES.Hamming_Broke:
                     foreach (HammingEncodeType type in BaseHammingCodifier.EncodeTypes)
                     {
                         extensions.Add(type.Extension);
@@ -151,6 +173,10 @@ namespace FilesEncryptor.pages
 
                     switch (_pageMode)
                     {
+                        case PAGE_MODES.Huffman_Decode:
+                            _fileHeader = _fileOpener.ReadFileHeader();
+                            _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
+                            break;
                         case PAGE_MODES.Hamming_Encode:
                             _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
                             _fileHeader = new FileHeader()
@@ -191,6 +217,9 @@ namespace FilesEncryptor.pages
         {
             switch(_pageMode)
             {
+                case PAGE_MODES.Huffman_Decode:
+                    HuffmanDecode();
+                    break;
                 case PAGE_MODES.Hamming_Encode:
                     HammingEncode();
                     break;
@@ -302,6 +331,128 @@ namespace FilesEncryptor.pages
         public void SetShowFailureInformationButtonVisible(bool visible)
         {
 
+        }
+
+        #endregion
+
+        #region HUFFMAN_ENCODE
+
+        private async void Huffman_Encode()
+        {
+
+        }
+
+        #endregion
+
+        #region HUFFMAN_DECODE
+
+        private async void HuffmanDecode()
+        {
+            BaseKryptoProcess decodingProcess = new BaseKryptoProcess();
+
+            await ShowProgressPanel();
+            decodingProcess.Start(this);
+
+            //Creo el decodificador de Huffman            
+            string huffDecoded = await _huffmanDecoder.DecodeWithTreeMultithreaded(decodingProcess);
+
+            //Imprimo la cantidad de tiempo que implico la decodificacion
+            decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+            {
+                Message = $"Huffman decoding process finished",
+                ProgressAdvance = 100,
+                Tag = "[RESULT]"
+            });
+
+            //Si la decodificacion finalizo correctamente
+            if (huffDecoded != null)
+            {
+                FileHelper fileSaver = new FileHelper();
+
+                //Solicito al usuario que seleccione la carpeta en la que se almacenara el archivo decodificado
+                if (await fileSaver.PickToSave(_fileHeader.FileName, _fileHeader.FileDisplayType, _fileHeader.FileExtension))
+                {
+                    decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Output file selected: {fileSaver.SelectedFilePath}",
+                        ProgressAdvance = 0,
+                        Tag = "[INFO]"
+                    });
+
+                    //Si el archivo pudo abrirse
+                    if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                    {
+                        decodingProcess.UpdateStatus($"Dumping decoded file to {fileSaver.SelectedFilePath}");
+
+                        //Seteo la codificacion en la que se escribira el texto
+                        fileSaver.SetFileEncoding(_fileOpener.FileEncoding);
+
+                        //Escribo el texto decodificado en el archivo de salida
+                        fileSaver.WriteString(huffDecoded);
+
+                        //Cierro el archivo descomprimido
+                        decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "Decoded file dumped properly",
+                            ProgressAdvance = 100,
+                            Tag = "[PROGRESS]"
+                        });
+                        decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "Closing file",
+                            ProgressAdvance = 100,
+                            Tag = "[INFO]"
+                        });
+
+                        //DebugUtils.ConsoleWL("Dumping completed properly");
+                        //DebugUtils.ConsoleWL("Closing file");
+                        await fileSaver.Finish();
+
+                        decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "File closed",
+                            ProgressAdvance = 100,
+                            Tag = "[INFO]"
+                        });
+                        decodingProcess.Stop();
+                    }
+                    //Si el archivo no pudo ser abierto
+                    else
+                    {
+                        decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = "File could not be opened to ReadWrite",
+                            ProgressAdvance = 100,
+                            Tag = "[FAIL]"
+                        });
+                        decodingProcess.Stop(true);
+                    }
+
+                    progressPanelCloseButton.Visibility = Visibility.Visible;
+                }
+                //Si el usuario no selecciono ningun archivo
+                else
+                {
+                    ConsoleWL("User cancel file selection");
+                    decodingProcess.Stop(true);
+                    HideProgressPanel();
+                    ResetProgressPanel();
+                }
+            }
+
+            //Si no se pudo decodificar
+            else
+            {
+                decodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                {
+                    Message = "File could not be decoded with Huffman",
+                    ProgressAdvance = 100,
+                    Tag = "[FAIL]"
+                });
+                decodingProcess.Stop(true);
+
+                progressPanelCloseButton.Visibility = Visibility.Visible;
+            }
         }
 
         #endregion
@@ -589,6 +740,7 @@ namespace FilesEncryptor.pages
                                             else
                                         {
                                             ConsoleWL("User cancel file selection");
+                                            decodingProcess.Stop(true);
                                             HideProgressPanel();
                                             ResetProgressPanel();
                                         }
