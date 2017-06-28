@@ -963,6 +963,7 @@
                     Margin="20,30,20,0"
                     Style="{StaticResource SettingsHeaderStyle}"
                     Visibility="Collapsed"
+                    x:DeferLoadStrategy="Lazy"
                     />
                 <ComboBox 
                     x:Name="hammingEncodeTypeSelector"
@@ -976,6 +977,7 @@
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
                     SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     Visibility="Collapsed"
+                    x:DeferLoadStrategy="Lazy"
                     >
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="dto:HammingEncodeType">
@@ -1002,6 +1004,7 @@
                     Margin="20,30,20,0"
                     Style="{StaticResource SettingsHeaderStyle}"
                     Visibility="Collapsed"
+                    x:DeferLoadStrategy="Lazy"
                     />
                 <TextBox
                     x:Name="fileContentTextBlock"
@@ -1020,6 +1023,7 @@
                     IsReadOnly="True"                    
                     Margin="20,5,20,0"
                     Visibility="Collapsed"
+                    x:DeferLoadStrategy="Lazy"
                     />
 
                 <Rectangle
@@ -1044,24 +1048,16 @@
                     Background="WhiteSmoke"
                     Visibility="Visible"
                     >
-                    <Button
+                    <AppBarButton 
                         x:Name="confirmBt"
-                        FontFamily="Segoe MDL2 Assets"
-                        Content="&#xe001;"                    
-                        FontSize="25"
-                        Background="Transparent"
-                        BorderThickness="0"
+                        Icon="Accept" 
                         Foreground="#ff9200"
                         VerticalAlignment="Stretch"
                         HorizontalAlignment="Center"
-                        Padding="30,0"
                         Click="ConfirmBt_Click"
-                        Visibility="Visible"
-                        IsEnabled="False"
+                        IsEnabled="False"                        
                         />
                 </Grid>
-
-
             </RelativePanel>
         </RelativePanel>
         

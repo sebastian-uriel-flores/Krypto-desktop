@@ -54,7 +54,15 @@ namespace FilesEncryptor.pages
 
         HuffmanDecoder _huffmanDecoder;
 
-        #endregion  
+        #endregion
+
+        #region HAMMING_ENCODE
+
+        private int _selectedEncoding;
+        private List<byte> _rawFileBytes;
+        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
+
+        #endregion
 
         #region HAMMING_DECODE
 
@@ -68,22 +76,10 @@ namespace FilesEncryptor.pages
 
         #endregion
 
-        private int _selectedEncoding;
-        private List<byte> _rawFileBytes;
-        private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
-
-       
-
         public HammingEncodePage()
         {
             this.InitializeComponent();
-            hammingEncodeTypeSelector.Loaded += new RoutedEventHandler((obj, routEvArgs) =>
-            {
-                if (hammingEncodeTypeSelector.Items.Count > 0)
-                {
-                    hammingEncodeTypeSelector.SelectedIndex = 0;
-                }
-            });
+            
             _fileOpener = new FileHelper();
         }
 
@@ -108,33 +104,31 @@ namespace FilesEncryptor.pages
             _pageMode = e.Parameter != null && e.Parameter is PAGE_MODES
                 ? (PAGE_MODES)e.Parameter
                 : PAGE_MODES.Hamming_Encode;
-
+            
             switch(_pageMode)
             {
                 case PAGE_MODES.Huffman_Encode:
                     pageHeaderContent.Text = "Comprimir con Huffman";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;                    
+                    FindName("fileContentTextHeader");
+                    FindName("fileContentTextBlock");
+                    fileContentTextHeader.Visibility = Visibility.Collapsed;
+                    fileContentTextBlock.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Huffman_Decode:
                     pageHeaderContent.Text = "Descomprimir con Huffman";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Hamming_Encode:
                     pageHeaderContent.Text = "Codificar con Hamming";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Visible;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Visible;                    
+                    FindName("hammingEncodeTypeHeader");
+                    FindName("hammingEncodeTypeSelector");
+                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
+                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Hamming_Decode:
                     pageHeaderContent.Text = "Decodificar con Hamming";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Hamming_Broke:
                     pageHeaderContent.Text = "Introducir errores en archivo Hamming";
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
                     break;
             }
         }
@@ -219,6 +213,9 @@ namespace FilesEncryptor.pages
                                 FileDisplayType = _fileOpener.SelectedFileDisplayType,
                                 FileExtension = _fileOpener.SelectedFileExtension
                             };
+                            hammingEncodeTypeHeader.Visibility = Visibility.Visible;
+                            hammingEncodeTypeSelector.Visibility = Visibility.Visible;
+                            hammingEncodeTypeSelector.SelectedIndex = 0;
                             break;
                         #endregion
 
