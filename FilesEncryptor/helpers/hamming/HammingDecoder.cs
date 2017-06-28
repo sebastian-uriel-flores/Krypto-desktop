@@ -95,7 +95,7 @@ namespace FilesEncryptor.helpers.hamming
                         int errorPosition = CheckParity(parityControlMatrix, decoded);
 
                         //Si hay un error
-                        if (errorPosition >= 0)
+                        if (errorPosition >= 0)// && errorPosition < decoded.CodeLength)
                         {
                             //Fixeo el error en el bit correspondiente
                             BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);

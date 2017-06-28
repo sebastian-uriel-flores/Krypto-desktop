@@ -235,7 +235,7 @@ namespace FilesEncryptor.dto
             }
 
             uint wordsCount = (uint)copy.CodeLength / blockBitsSize;
-            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 1000);
+            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 5000);
 
             if (printInDebugConsole)
             {
@@ -258,20 +258,6 @@ namespace FilesEncryptor.dto
                 {
                     bitsToObtain = (uint)copy.CodeLength - i;
                 }
-
-
-
-                /*if (i + blockBitsSize >= copy.CodeLength)
-                {
-                    uint localStartBitPos = GlobalBitPositionToLocal(i);
-                    uint startBytePos = BitPositionToBytePosition(i);
-                    uint bytesCountExceptFirst = (uint)copy.Code.Count - startBytePos - 1;
-                    bitsToObtain = bytesCountExceptFirst * 8 + (8 - localStartBitPos);
-                }*/
-
-                /*uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
-                    ? (uint)copy.CodeLength - i
-                    : blockBitsSize;*/
 
                 blocks.Add(copy.GetRange(i, bitsToObtain));
 

@@ -42,13 +42,16 @@ namespace FilesEncryptor.helpers.hamming
                 //brokenCode = brokenCode.ReplaceAt(2, brokenCode.ElementAt(2).Negate());
                 //wordsWithError = 1;
 
-                
+                //Obtengo la casntidad de bits de control del archivo
+                var ctrlBitsIndexes = GetControlBitsIndexes(_encodeType);
+                uint bitsStep = _encodeType.WordBitsSize + (uint)ctrlBitsIndexes.Count;
+
                 //Por cada palabra, determino aleatoriamente si insertar o no errores
-                for (uint index = 0; (int)index < _fullCode.CodeLength; index+= _encodeType.WordBitsSize)
+                for (uint index = 0; (int)index < _fullCode.CodeLength; index+= bitsStep)
                 {
                     if(InsertErrorInModule())
                     {
-                        uint replacePos = SelectBitPositionRandom(index, index + _encodeType.WordBitsSize - 1);
+                        uint replacePos = Math.Max(index, Math.Min(SelectBitPositionRandom(index, index + bitsStep), index + bitsStep));
 
                         if (currentProcess != null)
                         {
