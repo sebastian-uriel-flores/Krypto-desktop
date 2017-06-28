@@ -1067,14 +1067,15 @@
         
 
         <RelativePanel
-                x:Name="loadingPanel"
-                RelativePanel.AlignLeftWithPanel="True"
-                RelativePanel.AlignRightWithPanel="True"                
-                RelativePanel.AlignTopWithPanel="True"
-                RelativePanel.AlignBottomWithPanel="True"
-                Background="#66000000"
-                Visibility="Collapsed"
-                >
+            x:Name="loadingPanel"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"                
+            RelativePanel.AlignTopWithPanel="True"
+            RelativePanel.AlignBottomWithPanel="True"
+            Background="#66000000"
+            Visibility="Collapsed"
+            x:DeferLoadStrategy="Lazy"
+            >
             <ProgressRing
                     RelativePanel.AlignHorizontalCenterWithPanel="True"
                     RelativePanel.AlignVerticalCenterWithPanel="True"
@@ -1093,6 +1094,7 @@
             RelativePanel.AlignBottomWithPanel="True"
             Background="#66000000"
             Visibility="Collapsed"
+            x:DeferLoadStrategy="Lazy"
             >
             <RelativePanel
                 Background="White"
@@ -1225,7 +1227,11 @@
                     ScrollViewer.HorizontalScrollMode="Enabled"
                     ScrollViewer.HorizontalScrollBarVisibility="Auto"                    
                     >
-                    
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Margin="0,0,0,5"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
                 </ListView>
 
 

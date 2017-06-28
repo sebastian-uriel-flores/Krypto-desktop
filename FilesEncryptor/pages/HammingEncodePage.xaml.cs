@@ -338,6 +338,10 @@ namespace FilesEncryptor.pages
 
         private async Task ShowLoadingPanel()
         {
+            if(loadingPanel == null)
+            {
+                FindName("loadingPanel");
+            }
             loadingPanel.Visibility = Visibility.Visible;
             await Task.Delay(200);
         }
@@ -346,6 +350,11 @@ namespace FilesEncryptor.pages
 
         private async Task ShowProgressPanel()
         {
+            if (progressPanel == null)
+            {
+                FindName("progressPanel");
+            }
+
             progressPanelCloseButton.Visibility = Visibility.Collapsed;
             progressPanel.Visibility = Visibility.Visible;
             await Task.Delay(200);
