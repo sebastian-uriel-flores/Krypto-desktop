@@ -7,68 +7,32 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <RelativePanel Background="#FFF9CD9F">
-        <Grid
-            x:Name="titleBar"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            Background="#FF9200"                
-            Height="250" VerticalAlignment="Top"
-            >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock 
-                Text="Krypto" 
-                Margin="80,0,0,30" 
-                TextAlignment="Left" 
-                FontSize="60" 
-                FontFamily="Segoe UI SemiLight" 
-                VerticalAlignment="Bottom" 
-                Foreground="White"
-                />
-
-            <Button
-                x:Name="showConsoleButton"
-                Grid.Column="1"                                                       
-                
-                Content="&#xe15e;"
-                BorderThickness="0"
-                Background="Transparent"
-                Foreground="White"
-                FontFamily="Segoe MDL2 Assets"                    
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Bottom"
-                Margin="10,0,10,30"
-                FontSize="40"
-                ToolTipService.Placement="Bottom"                
-                ToolTipService.ToolTip="Mostrar consola"
-                Click="ShowConsoleBt_Click"
-                Visibility="Collapsed"
-                />
-        </Grid>
+    <Page.TopAppBar>
+        <CommandBar Style="{StaticResource CommandBarWithoutOverflowStyle}">
+            <CommandBar.Content>
+                <Grid VerticalAlignment="Stretch">
+                    <TextBlock 
+                        Text="Selecciona una opción"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        Margin="20,12,0,0"
+                        FontSize="16"
+                        />
+                </Grid>
+            </CommandBar.Content>
+            <CommandBar.PrimaryCommands>
+                <AppBarButton Icon="Repair" Foreground="White" Click="ShowConsoleBt_Click" Visibility="Collapsed"/>
+            </CommandBar.PrimaryCommands>
+        </CommandBar>
         
-        <TextBlock
-            x:Name="header"
-            Text="Seleccione una opción"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            RelativePanel.Below="titleBar"
-            Padding="0,40,0,20"
-            FontFamily="Segoe UI Light"
-            FontSize="26"    
-            Foreground="#99000000"
-            
-            TextWrapping="WrapWholeWords"
-            TextAlignment="Center"
-            />
+    </Page.TopAppBar>
 
-        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="CommandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+    <RelativePanel Background="#FFF9CD9F">
+        <GridView x:Name="commandsPanel" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Padding="0" ItemClick="CommandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
             <GridView.Resources>
                 <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
-                    <Setter  Property="Height" Value="300"/>
-                    <Setter  Property="Width" Value="300"/>
+                    <Setter  Property="Height" Value="200"/>
+                    <Setter  Property="Width" Value="200"/>
                     <Setter Property="Background" Value="White"/>
                     <Setter Property="Margin" Value="15"/>
                 </Style>
@@ -80,7 +44,7 @@
                         Glyph="&#xe1f6;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -92,7 +56,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Codificar con Hamming"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -106,7 +70,7 @@
                         Glyph="&#xe1f7;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -118,7 +82,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Decodificar con Hamming"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -131,7 +95,7 @@
                         Glyph="&#xe16b;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -143,7 +107,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Introducir errores"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -157,7 +121,7 @@
                         Glyph="&#xed41;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -168,8 +132,8 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Codificar con Huffman"
-                        FontSize="18"
+                        Text="Compactar con Huffman"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -182,7 +146,7 @@
                         Glyph="&#xed43;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                         Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -193,8 +157,8 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Decodificar con Huffman"
-                        FontSize="18"
+                        Text="Des-compactar con Huffman"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"

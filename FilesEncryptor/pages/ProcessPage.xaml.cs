@@ -39,7 +39,7 @@ namespace FilesEncryptor.pages
     /// <summary>
     /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
     /// </summary>
-    public sealed partial class HammingEncodePage : Page, IKryptoProcessUI
+    public sealed partial class ProcessPage : Page, IKryptoProcessUI
     {
         public enum PAGE_MODES
         {
@@ -76,7 +76,7 @@ namespace FilesEncryptor.pages
 
         #endregion
 
-        public HammingEncodePage()
+        public ProcessPage()
         {
             this.InitializeComponent();
             
@@ -108,14 +108,14 @@ namespace FilesEncryptor.pages
             switch(_pageMode)
             {
                 case PAGE_MODES.Huffman_Encode:
-                    pageHeaderContent.Text = "Comprimir con Huffman";
+                    pageHeaderContent.Text = "Compactar con Huffman";
                     FindName("fileContentTextHeader");
                     FindName("fileContentTextBlock");
                     fileContentTextHeader.Visibility = Visibility.Collapsed;
                     fileContentTextBlock.Visibility = Visibility.Collapsed;
                     break;
                 case PAGE_MODES.Huffman_Decode:
-                    pageHeaderContent.Text = "Descomprimir con Huffman";
+                    pageHeaderContent.Text = "Des-compactar con Huffman";
                     break;
                 case PAGE_MODES.Hamming_Encode:
                     pageHeaderContent.Text = "Codificar con Hamming";
