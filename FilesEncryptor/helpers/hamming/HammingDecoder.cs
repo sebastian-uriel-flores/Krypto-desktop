@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.hamming;
+using FilesEncryptor.helpers.processes;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -49,32 +50,41 @@ namespace FilesEncryptor.helpers.hamming
 
         #endregion
 
-        public async Task<BitCode> Decode()
+        public Task<BitCode> Decode(BaseKryptoProcess currentProcess = null)
         {
-            BitCode result = BitCode.EMPTY;
-
-            try
+            return Task.Run(() =>
             {
-                await Task.Factory.StartNew(() =>
+                BitCode result = BitCode.EMPTY;
+                //currentProcess = KryptoProcess.GetCurrent();
+
+                try
                 {
                     //Separo el codigo completo en bloques representando a cada palabra del mismo
-                    DebugUtils.ConsoleWL("Creating parity matrix");
+                    currentProcess?.UpdateStatus("Creating parity matrix", true);
 
                     List<BitCode> parityControlMatrix = CreateParityControlMatrix(_encodeType);
                     uint encodedWordSize = (uint)parityControlMatrix[0].CodeLength;
 
-                    DebugUtils.ConsoleWL(string.Format("Extracting {0} bits encoded words from input code", encodedWordSize));
-                    List<BitCode> encodedWords = _fullCode.Explode(encodedWordSize, false, true).Item1;
+                    currentProcess?.UpdateStatus(string.Format("Extracting input words of {0} bits", encodedWordSize), true);
 
-                    DebugUtils.ConsoleWL(string.Format("Extracted {0} encoded words", encodedWords.Count));
+                    //Obtengo todos los bloques de informacion o palabras
+                    Tuple<List<BitCode>, int> exploded = _fullCode.Explode(encodedWordSize, false, false, currentProcess);
+                    List<BitCode> encodedWords = exploded.Item1;
+
+                    currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Input words extracting process finished with a total of {exploded.Item1.Count} input words",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
 
                     //Decodifico cada una de las palabras
-                    DebugUtils.ConsoleWL(string.Format("Decoding words in {0} bits word output size", _encodeType.WordBitsSize));
-
                     List<BitCode> decodedWords = new List<BitCode>(encodedWords.Count);
                     List<uint> controlBitsIndexes = GetControlBitsIndexes(_encodeType);
 
-                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    currentProcess?.UpdateStatus($"Decoding words with {controlBitsIndexes.Count} control bits, in {_encodeType.WordBitsSize} bits word output size");
+
+                    //Determino cada cuantas palabras se mostrará el progreso por consola
                     int wordsDebugStep = (int)Math.Min(0.1 * encodedWords.Count, 1000);
 
                     foreach (BitCode encoded in encodedWords)
@@ -85,7 +95,7 @@ namespace FilesEncryptor.helpers.hamming
                         int errorPosition = CheckParity(parityControlMatrix, decoded);
 
                         //Si hay un error
-                        if(errorPosition >= 0)
+                        if (errorPosition >= 0)// && errorPosition < decoded.CodeLength)
                         {
                             //Fixeo el error en el bit correspondiente
                             BitCode erroneousBit = decoded.ElementAt((uint)errorPosition);
@@ -93,7 +103,7 @@ namespace FilesEncryptor.helpers.hamming
                         }
 
                         uint currentExp = 0;
-                        foreach(uint index in controlBitsIndexes)
+                        foreach (uint index in controlBitsIndexes)
                         {
                             decoded = decoded.ReplaceAt(index - currentExp, BitCode.EMPTY);
                             currentExp++;
@@ -103,29 +113,59 @@ namespace FilesEncryptor.helpers.hamming
 
                         if (decodedWords.Count % wordsDebugStep == 0)
                         {
-                            DebugUtils.ConsoleWL(string.Format("Decoded {0} words of {1}", decodedWords.Count, encodedWords.Count), "[PROGRESS]");
+                            currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = $"Decoded {decodedWords.Count} words of {encodedWords.Count}",
+                                ProgressAdvance = decodedWords.Count * 100 / (double)encodedWords.Count,
+                                Tag = "[PROGRESS]"
+                            });
                         }
                     }
 
-                    DebugUtils.ConsoleWL(string.Format("Decoding process finished with a total of {0} output words", decodedWords.Count));
+                    currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Decoding process finished with a total of {decodedWords.Count} output words",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
 
                     BitCodePresenter.From(decodedWords).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
 
                     //Junto todas las palabras decodificadas en un solo codigo
-                    DebugUtils.ConsoleWL("Joining decoded words into one array of bytes");
-                    result = BitOps.Join(decodedWords);
+                    currentProcess?.UpdateStatus("Joining encoded words into one array of bytes", true);
+                    result = BitOps.Join(decodedWords, currentProcess);
+
+                    currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Joining process finished in a decoded file of {result.CodeLength} bits size",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
 
                     //Remuevo los bits de redundancia
                     result = result.GetRange(0, (uint)result.CodeLength - _redundanceBitsCount);
 
+                    currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"{_redundanceBitsCount} Redundance bits removed, generating a decoded file of {result.CodeLength} bits size",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
+
                     BitCodePresenter.From(new List<BitCode>() { result }).Print(BitCodePresenter.LinesDisposition.Row, "Decoded matrix");
-                });
-            }
-            catch (Exception ex)
-            {
-                result = null;
-            }
-            return result;
+                }
+                catch (Exception ex)
+                {
+                    result = null;
+                    currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Decoding process failed because of {ex.Message}",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
+                }
+                return result;
+            });
         }
 
         private int CheckParity(List<BitCode> parityControlMatrix, BitCode codeToCheck)
@@ -136,18 +176,21 @@ namespace FilesEncryptor.helpers.hamming
             {
                 var and = BitOps.And(new List<BitCode>() { codeToCheck, parityControlMatrix[columnIndex] });
                 var exploded = and.Explode(1, false).Item1;
-                var xor = BitOps.Xor(exploded);
-                //xor.Append(syndrome);
+                var xor = BitOps.Xor(exploded);                
                 syndrome.Append(xor);
             }
+
+            //Ahora, convierto el sindrome a entero para ver si hay errores
+            List<int> syndromeNumbers = syndrome.ToIntList();
+            syndromeNumbers.Reverse();
             
             int errorPosition = 0;
-            //Ahora, convierto el sindrome a entero para ver si hay errores
-            for (int i = 0; i < syndrome.CodeLength; i++)
+
+            for(int i = 0; i < syndromeNumbers.Count; i++)
             {
-                errorPosition += (int)Math.Pow(2, i) * syndrome.ElementAt((uint)i).Code.First();
+                errorPosition += (int)Math.Pow(2, syndromeNumbers.Count - i - 1) * syndromeNumbers[i];
             }
-            errorPosition /= (int)Math.Pow(2, syndrome.CodeLength);
+            
             return errorPosition - 1;
         }
     }

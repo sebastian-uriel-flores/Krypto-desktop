@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.helpers.processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -413,6 +414,8 @@ namespace FilesEncryptor.helpers.huffman
 
         public async Task<string> DecodeWithTreeFast()
         {
+            KryptoProcess currentProcess = KryptoProcess.GetCurrent();
+
             //Si poseo un BOM, lo incluyo al principio del texto decodificado.
             string result = _fileBOMString ?? "";
 
@@ -435,7 +438,15 @@ namespace FilesEncryptor.helpers.huffman
                     {
                         foreach (uint codeLength in _codesTree.TerminalCodesLengths)
                         {
-                            BitCode range = remainingEncodedText.GetRange(baseIndex, codeLength);
+                            BitCode range = BitCode.EMPTY;
+                            try
+                            {
+                                range = remainingEncodedText.GetRange(baseIndex, codeLength);
+                            }
+                            catch(Exception ex)
+                            {
+
+                            }
                             string value = _codesTree.Get(range);
 
                             if (value != default(string))
@@ -449,7 +460,15 @@ namespace FilesEncryptor.helpers.huffman
                         if (lastCodeLength - ((uint)remainingEncodedText.CodeLength - baseIndex) >= wordsDebugStep)
                         {
                             lastCodeLength = (uint)remainingEncodedText.CodeLength - baseIndex;
-                            DebugUtils.ConsoleWL(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
+                            uint decodedCount = (uint)_encoded.CodeLength - lastCodeLength;
+
+                            currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                            {
+                                Message = $"Decoded {decodedCount} bits of {_encoded.CodeLength}",
+                                ProgressAdvance = decodedCount * 100 / (double)_encoded.CodeLength,
+                                Tag = "[PROGRESS]"
+                            });
+                            //DebugUtils.ConsoleWL(string.Format("Decoded {0} bits of {1}", _encoded.CodeLength - lastCodeLength, _encoded.CodeLength), "[PROGRESS]");
                         }
                     }
                     while (baseIndex < remainingEncodedText.CodeLength);
@@ -463,15 +482,23 @@ namespace FilesEncryptor.helpers.huffman
 
             return result;
         }
-        
+
         /// <summary>
         /// Decodifica el arbol utilizando varios Threads en simultaneo.
         /// Luego, espera a que finalicen todos utilizando el metodo Task.WhenAll.
         /// Mas informacion en el link https://msdn.microsoft.com/en-us/library/hh194874(v=vs.110).aspx
         /// </summary>
         /// <returns></returns>
-        public async Task<string> DecodeWithTreeMultithreaded()
+        public async Task<string> DecodeWithTreeMultithreaded(BaseKryptoProcess currentProcess = null)
         {
+            //TODO Mejorar esto
+            //if (currentProcess == null)
+            //{
+            //    currentProcess = KryptoProcess.GetCurrent();
+            //}
+
+            currentProcess?.UpdateStatus($"Decoding with Huffman using {_encodedPartsLengths.Count} threads");
+
             //Si poseo un BOM, lo incluyo al principio del texto decodificado.
             string decoded = _fileBOMString ?? "";
 
@@ -483,10 +510,10 @@ namespace FilesEncryptor.helpers.huffman
             _tasksProgress = new Dictionary<int, uint>();
 
             uint baseIndex = 0;
-            for(int i = 0; i < _encodedPartsLengths.Count; i++)
+            for (int i = 0; i < _encodedPartsLengths.Count; i++)
             {
                 tasks[i] = DecodeWithTreeTask(baseIndex, _encodedPartsLengths[i]);
-                baseIndex += _encodedPartsLengths[i];
+            baseIndex += _encodedPartsLengths[i];
                 _tasksProgress.Add(tasks[i].Id, 0);
             }
 
@@ -500,24 +527,47 @@ namespace FilesEncryptor.helpers.huffman
                         totalProgress += progress;
                     }
 
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Decoded {totalProgress} bits of {_encoded.CodeLength}",
+                        ProgressAdvance = totalProgress * 100 / (double)_encoded.CodeLength,
+                        Tag = "[PROGRESS]"
+                    });
+
                     DebugUtils.ConsoleWL(string.Format("Decoded {0} bits of {1}", totalProgress, _encoded.CodeLength), "[PROGRESS]");
-                    },
+                },
                 null, 0, 4000);
 
-            //Las partes decodificadas se encontraran en el mismo orden en que se iniciaron las Task,
-            //por lo que simplemente hay que concatenarlas.
-            string[] decodedParts = await Task.WhenAll(tasks);
 
+            //Las partes decodificadas se encontraran en el mismo orden en que se iniciaron las Task,
+            //por lo que simplemente hay que concatenarlas.            
+            string[] decodedParts = await Task.WhenAll(tasks);
             timer.Dispose();
 
+            currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+            {
+                Message = $"Huffman decoding process finished",
+                ProgressAdvance = 100,
+                Tag = "[RESULT]"
+            });
+
+            currentProcess?.UpdateStatus("Joining decoded parts into one array of bytes", true);
+
             decoded += string.Join("", decodedParts);
-            
+
+            currentProcess?.AddEvent(new BaseKryptoProcess.KryptoEvent()
+            {
+                Message = $"Decoded file joining process finished in a {decoded.Length} symbols file",
+                ProgressAdvance = 100,
+                Tag = "[RESULT]"
+            });
+
             return decoded;
         }
 
         private Task<string> DecodeWithTreeTask(uint baseIndex, uint count)
         {
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 string result = "";
 
@@ -540,22 +590,15 @@ namespace FilesEncryptor.helpers.huffman
                         {
                             foreach (uint codeLength in _codesTree.TerminalCodesLengths)
                             {
-                                BitCode range = BitCode.EMPTY;
-                                try
-                                {
-                                    range = remainingEncodedText.GetRange(baseIndex, codeLength);
-                                }
-                                catch (Exception ex)
-                                {
+                                BitCode range = remainingEncodedText.GetRange(baseIndex, codeLength);
 
-                                }
                                 string value = _codesTree.Get(range);
 
                                 if (value != default(string))
                                 {
                                     result += value;
                                     baseIndex += codeLength;
-                                    _tasksProgress[currentTaskId] = (uint)remainingEncodedText.CodeLength - baseIndex;
+                                    _tasksProgress[currentTaskId] = baseIndex;// (uint)remainingEncodedText.CodeLength - baseIndex;
                                     break;
                                 }
                             }
@@ -573,7 +616,6 @@ namespace FilesEncryptor.helpers.huffman
                     result = null;
                     DebugUtils.ConsoleF("Exception decoding huffman file", "Task ID is null");
                 }
-
                 return result;
             });
         }

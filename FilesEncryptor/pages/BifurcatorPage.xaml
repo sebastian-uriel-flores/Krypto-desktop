@@ -7,164 +7,36 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <RelativePanel Background="#FFF9CD9F">
-        <Grid
-            x:Name="titleBar"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            Background="#FF9200"                
-            Height="250" VerticalAlignment="Top"
-            >
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock 
-                Text="Files Encryptor" 
-                Margin="80,0,0,30" 
-                TextAlignment="Left" 
-                FontSize="60" 
-                FontFamily="Segoe UI SemiLight" 
-                VerticalAlignment="Bottom" 
-                Foreground="White"
-                />
-
-            <Button
-                x:Name="showConsoleButton"
-                Grid.Column="1"                                                       
-                
-                Content="&#xe15e;"
-                BorderThickness="0"
-                Background="Transparent"
-                Foreground="White"
-                FontFamily="Segoe MDL2 Assets"                    
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Bottom"
-                Margin="10,0,10,30"
-                FontSize="40"
-                ToolTipService.Placement="Bottom"                
-                ToolTipService.ToolTip="Mostrar consola"
-                Click="ShowConsoleBt_Click"
-                />
-        </Grid>
-        
-        <TextBlock
-            x:Name="header"
-            Text="Seleccione una opción"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            RelativePanel.Below="titleBar"
-            Padding="0,40,0,20"
-            FontFamily="Segoe UI Light"
-            FontSize="26"    
-            Foreground="#99000000"
-            
-            TextWrapping="WrapWholeWords"
-            TextAlignment="Center"
-            />
-        <Grid RelativePanel.Below="titleBar" Visibility="Collapsed" RelativePanel.AlignLeftWithPanel="True" RelativePanel.AlignBottomWithPanel="True" RelativePanel.AlignRightWithPanel="True">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <RelativePanel
-                Grid.Column="0"
-                Background="white">
-            <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe1f6;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="80"
-                    Foreground="DodgerBlue"
-                        Margin="0,0,0,25"
-                        />
+    <Page.TopAppBar>
+        <CommandBar Style="{StaticResource CommandBarWithoutOverflowStyle}">
+            <CommandBar.Content>
+                <Grid VerticalAlignment="Stretch">
                     <TextBlock 
-                        RelativePanel.AlignVerticalCenterWithPanel="True"
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        Margin="0,150,0,0"
-                        Text="Proteger archivo"
-                        FontSize="30"
-                        Foreground="DodgerBlue"
-                        HorizontalAlignment="Center"
+                        Text="Selecciona una opción"
                         VerticalAlignment="Center"
+                        Foreground="White"
+                        Margin="20,12,0,0"
+                        FontSize="16"
                         />
-                </RelativePanel>
-            <RelativePanel
-                Grid.Column="1"
-                Background="Yellow"
-                />
-            <RelativePanel
-                Grid.Column="2"
-                Background="DodgerBlue"
-                />
-            <RelativePanel
-                Grid.Column="3"
-                Background="MediumSpringGreen"
-                />
-        </Grid>
-        <GridView Visibility="Visible" x:Name="commandsPanel" RelativePanel.Below="header" RelativePanel.AlignHorizontalCenterWithPanel="True" Padding="0" ItemClick="commandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                </Grid>
+            </CommandBar.Content>
+            <CommandBar.PrimaryCommands>
+                <AppBarButton Icon="Repair" Foreground="White" Click="ShowConsoleBt_Click" Visibility="Collapsed"/>
+            </CommandBar.PrimaryCommands>
+        </CommandBar>
+        
+    </Page.TopAppBar>
+
+    <RelativePanel Background="#FFF9CD9F">
+        <GridView x:Name="commandsPanel" RelativePanel.AlignHorizontalCenterWithPanel="True" RelativePanel.AlignVerticalCenterWithPanel="True" Padding="0" ItemClick="CommandsPanel_ItemClick" SelectionMode="None" IsItemClickEnabled="True" ScrollViewer.VerticalScrollBarVisibility="Hidden">
             <GridView.Resources>
                 <Style TargetType="RelativePanel" x:Key="ItemPanelStyle">
-                    <Setter  Property="Height" Value="300"/>
-                    <Setter  Property="Width" Value="300"/>
+                    <Setter  Property="Height" Value="200"/>
+                    <Setter  Property="Width" Value="200"/>
                     <Setter Property="Background" Value="White"/>
                     <Setter Property="Margin" Value="15"/>
                 </Style>
             </GridView.Resources>
-            <RelativePanel x:Name="compareFilesItem" Style="{StaticResource ItemPanelStyle}">
-                <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe11e;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
-                        Foreground="#FF9200"
-                        Margin="0,0,0,25"
-                        />
-                <Grid
-                    RelativePanel.AlignBottomWithPanel="True" 
-                    RelativePanel.AlignLeftWithPanel="True"
-                    RelativePanel.AlignRightWithPanel="True"
-                    Height="45"
-                    Background="#FF9200">
-                    <TextBlock 
-                        Text="Comparar archivos"
-                        FontSize="18"
-                        Foreground="White"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        />
-                </Grid>
-            </RelativePanel>
-
-            <RelativePanel x:Name="checkHammingAlgorithmItem" Style="{StaticResource ItemPanelStyle}">
-                <FontIcon                        
-                        FontFamily="Segoe MDL2 Assets"
-                        Glyph="&#xe179;"                        
-                        RelativePanel.AlignHorizontalCenterWithPanel="True"
-                        RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
-                        Foreground="#FF9200"
-                        Margin="0,0,0,25"
-                        />
-                <Grid
-                    RelativePanel.AlignBottomWithPanel="True" 
-                    RelativePanel.AlignLeftWithPanel="True"
-                    RelativePanel.AlignRightWithPanel="True"
-                    Height="45"
-                    Background="#FF9200">
-                    <TextBlock 
-                        Text="Chequear algoritmos Hamming"
-                        FontSize="18"
-                        Foreground="White"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        />
-                </Grid>
-            </RelativePanel>
 
             <RelativePanel x:Name="encodeFileItem" Style="{StaticResource ItemPanelStyle}">
                 <FontIcon                        
@@ -172,7 +44,7 @@
                         Glyph="&#xe1f6;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -184,7 +56,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Codificar con Hamming"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -198,7 +70,7 @@
                         Glyph="&#xe1f7;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -210,7 +82,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Decodificar con Hamming"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -223,7 +95,7 @@
                         Glyph="&#xe16b;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -235,7 +107,7 @@
                     Background="#FF9200">
                     <TextBlock 
                         Text="Introducir errores"
-                        FontSize="18"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -249,7 +121,7 @@
                         Glyph="&#xed41;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                     Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -260,8 +132,8 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Codificar con Huffman"
-                        FontSize="18"
+                        Text="Compactar con Huffman"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -274,7 +146,7 @@
                         Glyph="&#xed43;"                        
                         RelativePanel.AlignHorizontalCenterWithPanel="True"
                         RelativePanel.AlignVerticalCenterWithPanel="True"                        
-                        FontSize="60"
+                        FontSize="40"
                         Foreground="#FF9200"
                         Margin="0,0,0,25"
                         />
@@ -285,8 +157,8 @@
                     Height="45"
                     Background="#FF9200">
                     <TextBlock 
-                        Text="Decodificar con Huffman"
-                        FontSize="18"
+                        Text="Des-compactar con Huffman"
+                        FontSize="14"
                         Foreground="White"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -294,34 +166,5 @@
                 </Grid>
             </RelativePanel>
         </GridView>
-
-        <RelativePanel
-            x:Name="progressPanel"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"                
-            RelativePanel.AlignTopWithPanel="True"
-            RelativePanel.AlignBottomWithPanel="True"
-            Background="#66000000"
-            Visibility="Collapsed"
-            >
-            <ProgressRing
-                x:Name="progressIndicator"
-                RelativePanel.AlignHorizontalCenterWithPanel="True"
-                RelativePanel.AlignVerticalCenterWithPanel="True"
-                Height="60"
-                Width="60"
-                Foreground="#ff9200"
-                IsActive="True"
-                />
-            <TextBlock
-                x:Name="progressText"
-                RelativePanel.Below="progressIndicator"
-                RelativePanel.AlignHorizontalCenterWith="progressIndicator"                
-                FontSize="20"
-                Foreground="#ff9200"
-                />
-        </RelativePanel>
     </RelativePanel>
-    
-
 </Page>

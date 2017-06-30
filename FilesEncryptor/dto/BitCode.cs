@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FilesEncryptor.utils;
 using System.Collections;
 using FilesEncryptor.helpers;
+using FilesEncryptor.helpers.processes;
 
 namespace FilesEncryptor.dto
 {
@@ -202,7 +203,7 @@ namespace FilesEncryptor.dto
             return range;
         }
           
-        public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false)
+        public Tuple<List<BitCode>, int> Explode(uint blockBitsSize, bool fillRemainingWithZeros = true, bool printInDebugConsole = false, BaseKryptoProcess processWherePrint = null)
         {
             BitCode copy = Copy();
             int addedZeros = 0;
@@ -234,7 +235,7 @@ namespace FilesEncryptor.dto
             }
 
             uint wordsCount = (uint)copy.CodeLength / blockBitsSize;
-            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 1000);
+            uint wordsDebugStep = (uint)Math.Min(Math.Max(0.1 * wordsCount, 500), 5000);
 
             if (printInDebugConsole)
             {
@@ -246,11 +247,6 @@ namespace FilesEncryptor.dto
 
             for (uint i = 0; i < copy.CodeLength; i += blockBitsSize)
             {
-                if (i >= copy.CodeLength - blockBitsSize - 1)
-                {
-
-                }
-
                 //Si la siguiente palabra es mas chica, es decir,
                 //quedan menos bits que 'blockBitsSize', 
                 //entonces solo devuelvo los bits restantes
@@ -263,25 +259,27 @@ namespace FilesEncryptor.dto
                     bitsToObtain = (uint)copy.CodeLength - i;
                 }
 
-
-
-                /*if (i + blockBitsSize >= copy.CodeLength)
-                {
-                    uint localStartBitPos = GlobalBitPositionToLocal(i);
-                    uint startBytePos = BitPositionToBytePosition(i);
-                    uint bytesCountExceptFirst = (uint)copy.Code.Count - startBytePos - 1;
-                    bitsToObtain = bytesCountExceptFirst * 8 + (8 - localStartBitPos);
-                }*/
-
-                /*uint bitsToObtain = i + blockBitsSize >= copy.CodeLength
-                    ? (uint)copy.CodeLength - i
-                    : blockBitsSize;*/
-
                 blocks.Add(copy.GetRange(i, bitsToObtain));
 
-                if (printInDebugConsole && blocks.Count % wordsDebugStep == 0)
+
+                if (blocks.Count % wordsDebugStep == 0)
                 {
-                    DebugUtils.ConsoleWL(string.Format("Extracted {0} words of {1}", blocks.Count, wordsCount), "[PROGRESS]");
+                    string message = string.Format($"Extracted {blocks.Count} words of {wordsCount}");
+                    string tag = "[PROGRESS]";
+
+                    if (processWherePrint != null)
+                    {
+                        processWherePrint.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                        {
+                            Message = message,
+                            ProgressAdvance = blocks.Count * 100 / (double)wordsCount,
+                            Tag = tag
+                        });
+                    }
+                    else if(printInDebugConsole)
+                    {
+                        DebugUtils.ConsoleWL(message, tag);
+                    }
                 }
             }
 
@@ -350,7 +348,11 @@ namespace FilesEncryptor.dto
             {
                 result.Code[pos] ^= 255;
             }
-            
+
+            //Por ultimo, pongo en cero los bits a la derecha que esten de mas
+            uint localEndBitPos = GlobalBitPositionToLocal((uint)result.CodeLength - 1);
+            result.Code[result.Code.Count - 1] = MaskLeft(result.Code.Last(), (int)localEndBitPos + 1);
+
             return result;
         }
 
