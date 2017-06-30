@@ -7,8 +7,8 @@
     <ProjectGuid>{AFE60599-C2A8-4909-A967-1011C147E838}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FilesEncryptor</RootNamespace>
-    <AssemblyName>FilesEncryptor</AssemblyName>
+    <RootNamespace>Krypto</RootNamespace>
+    <AssemblyName>Krypto</AssemblyName>
     <DefaultLanguage>es-ES</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
@@ -17,7 +17,11 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WindowsXamlEnableOverview>true</WindowsXamlEnableOverview>
-    <PackageCertificateKeyFile>FilesEncryptor_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>FilesEncryptor_StoreKey.pfx</PackageCertificateKeyFile>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>6C68EFE9AA121E094DAED51A39912F5A4044BB19</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -90,6 +94,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <None Include="FilesEncryptor_StoreKey.pfx" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -104,25 +109,23 @@
     <Compile Include="helpers\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
     <Compile Include="helpers\hamming\BaseHammingCodifier.cs" />
-    <Compile Include="helpers\file_management\FilesComparer.cs" />
+    <Compile Include="helpers\hamming\HammingBroker.cs" />
     <Compile Include="helpers\hamming\HammingDecoder.cs" />
     <Compile Include="helpers\hamming\HammingEncoder.cs" />
     <Compile Include="helpers\huffman\BaseHuffmanCodifier.cs" />
     <Compile Include="helpers\huffman\BinaryTree.cs" />
     <Compile Include="helpers\huffman\HuffmanDecoder.cs" />
     <Compile Include="helpers\huffman\HuffmanTreeNode.cs" />
+    <Compile Include="helpers\processes\BaseKryptoProcess.cs" />
+    <Compile Include="helpers\processes\IKryptoProcessUI.cs" />
+    <Compile Include="helpers\processes\KryptoProcess.cs" />
+    <Compile Include="helpers\processes\KryptoProcessGeneric.cs" />
     <Compile Include="helpers\VisualTreeHelperExtensions.cs" />
     <Compile Include="pages\DebugConsolePage.xaml.cs">
       <DependentUpon>DebugConsolePage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="pages\HammingDecodePage.xaml.cs">
-      <DependentUpon>HammingDecodePage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="pages\HammingEncodePage.xaml.cs">
       <DependentUpon>HammingEncodePage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="pages\IntroduceErrorsPage.xaml.cs">
-      <DependentUpon>IntroduceErrorsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="pages\ResultsPage.xaml.cs">
       <DependentUpon>ResultsPage.xaml</DependentUpon>
@@ -134,12 +137,6 @@
     <Compile Include="pages\BifurcatorPage.xaml.cs">
       <DependentUpon>BifurcatorPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="pages\HuffmanCompressPage.xaml.cs">
-      <DependentUpon>HuffmanCompressPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="pages\HuffmanUncompressPage.xaml.cs">
-      <DependentUpon>HuffmanUncompressPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -149,11 +146,22 @@
     <None Include="FilesEncryptor_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Package.StoreAssociation.xml" />
+    <Content Include="Assets\AI.scale-400.png" />
+    <Content Include="Assets\AI.scale-150.png" />
+    <Content Include="Assets\AI.scale-125.png" />
+    <Content Include="Assets\AI.scale-200.png" />
+    <Content Include="Assets\AI.scale-100.png" />
+    <Content Include="Assets\badge.PNG" />
+    <Content Include="Assets\re.PNG" />
+    <Content Include="Assets\W.scale-400.png" />
+    <Content Include="Assets\SS.scale-200.png" />
+    <Content Include="Assets\M.scale-200.png" />
+    <Content Include="Assets\W.scale-200.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
     <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
@@ -167,15 +175,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="pages\HuffmanCompressPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="pages\DebugConsolePage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="pages\HammingDecodePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -183,17 +183,9 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="pages\IntroduceErrorsPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="pages\ResultsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="pages\HuffmanUncompressPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">

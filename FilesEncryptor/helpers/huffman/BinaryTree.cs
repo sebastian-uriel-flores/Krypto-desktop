@@ -35,7 +35,7 @@ namespace FilesEncryptor.helpers.huffman
 
         public bool Contains(BitCode position)
         {
-            List<BitCode> bits = position.Explode2(1, false).Item1;
+            List<BitCode> bits = position.Explode(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
             
@@ -65,7 +65,7 @@ namespace FilesEncryptor.helpers.huffman
         {
             T value = default(T);
 
-            List<BitCode> bits = position.Explode2(1, false).Item1;
+            List<BitCode> bits = position.Explode(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
 
@@ -98,7 +98,7 @@ namespace FilesEncryptor.helpers.huffman
 
         public void Add(BitCode position, T value)
         {
-            List<BitCode> bits = position.Explode2(1, false).Item1;
+            List<BitCode> bits = position.Explode(1, false).Item1;
 
             BinaryTree<T> lastSon = this;
 

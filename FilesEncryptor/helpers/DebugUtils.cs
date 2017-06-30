@@ -53,21 +53,21 @@ namespace FilesEncryptor.helpers
             _consoleWindowId = -1;
         }
 
-        public static void Write(object message, string category = "[INFO]")
+        public static void ConsoleW(object message, string category = "[INFO]")
         {
             string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
             Debug.Write(messageWithDate, category);
 
             ConsoleWrited?.Invoke(messageWithDate, category);
         }
-        public static void WriteLine(object message, string category = "[INFO]")
+        public static void ConsoleWL(object message, string category = "[INFO]")
         {
             string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, message);
             Debug.WriteLine(messageWithDate, category);
 
             ConsoleWrited?.Invoke(messageWithDate, category);
         }
-        public static void Fail(object shortMessage, string detailedMessage = "")
+        public static void ConsoleF(object shortMessage, string detailedMessage = "")
         {
             string messageWithDate = string.Format("({0}) - {1}", DateTime.Now, shortMessage);
             Debug.Fail(messageWithDate, detailedMessage);

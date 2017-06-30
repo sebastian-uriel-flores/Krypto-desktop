@@ -1,4 +1,6 @@
 ﻿using FilesEncryptor.dto;
+using FilesEncryptor.helpers;
+using FilesEncryptor.helpers.processes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,7 @@ namespace FilesEncryptor.utils
 {
     public static class BitOps
     {
-        public static BitCode Join(List<BitCode> codes)
+        public static BitCode Join(List<BitCode> codes, BaseKryptoProcess processToWrite = null)
         {
             BitCode joined = BitCode.EMPTY;
 
@@ -27,12 +29,12 @@ namespace FilesEncryptor.utils
 
             if (codes != null)
             {
-                List<BitCode> bitsFirstElement = codes[0].Explode2(1, false).Item1;
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
 
                 //Opero de a pares de códigos
                 for (int pos = 1; pos < codes.Count; pos++)
                 {
-                    List<BitCode> bitsSecondElement = codes[pos].Explode2(1, false).Item1;
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
                     List<BitCode> xorBits = new List<BitCode>();
 
                     //Realizo el xor bit a bit,
@@ -58,12 +60,12 @@ namespace FilesEncryptor.utils
 
             if(codes != null)
             {
-                List<BitCode> bitsFirstElement = codes[0].Explode2(1, false).Item1;
+                List<BitCode> bitsFirstElement = codes[0].Explode(1, false).Item1;
 
                 //Opero de a pares de códigos
                 for (int pos = 1; pos < codes.Count; pos++)
                 {
-                    List<BitCode> bitsSecondElement = codes[pos].Explode2(1, false).Item1;
+                    List<BitCode> bitsSecondElement = codes[pos].Explode(1, false).Item1;
                     List<BitCode> andBits = new List<BitCode>();
 
                     //Determino cual de los elementos posee la menor cantidad de bits

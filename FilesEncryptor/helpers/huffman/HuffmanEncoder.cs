@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.huffman;
+using FilesEncryptor.helpers.processes;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace FilesEncryptor.helpers.huffman
                 _charsCodes.Clear();
 
                 //Primero, obtengo las cantidades de cada caracter del texto
-                DebugUtils.WriteLine("Scanning chars aparitions");
+                DebugUtils.ConsoleWL("Scanning chars aparitions");
                 foreach (char c in _baseText)
                 {
                     if (_charsProbabilities.ContainsKey(c))
@@ -52,14 +53,14 @@ namespace FilesEncryptor.helpers.huffman
                 }
 
                 //Ahora que tengo las cantidades, calculo las probabilidades
-                DebugUtils.WriteLine("Calculating probabilities");
+                DebugUtils.ConsoleWL("Calculating probabilities");
                 foreach (char key in _charsProbabilities.Keys.ToList())
                 {
                     _charsProbabilities[key] /= _baseText.Length;
                 }
 
                 //A continuacion, ordeno las probabilidades de mayor a menor
-                DebugUtils.WriteLine("Creating Probabilities table");
+                DebugUtils.ConsoleWL("Creating Probabilities table");
                 var probabilitiesList = _charsProbabilities.ToList();
                 probabilitiesList.Sort((a, b) => a.Value < b.Value
                     ? 1
@@ -71,12 +72,14 @@ namespace FilesEncryptor.helpers.huffman
             });
         }
 
-        public Task<HuffmanEncodeResult> Encode()
+        public Task<HuffmanEncodeResult> Encode(BaseKryptoProcess currentProcess = null)
         {
             return Task.Run(() =>
             {
                 HuffmanEncodeResult encoded = null;
                 int encodedCharsCount = 0;
+
+                currentProcess?.UpdateStatus("Encoding file with Huffman");
 
                 #region CALCULATE_CODE_PARTS_COUNT
 
@@ -127,11 +130,30 @@ namespace FilesEncryptor.helpers.huffman
 
                         if (encodedCharsCount % wordsDebugStep == 0)
                         {
-                            DebugUtils.WriteLine(string.Format("Encoded {0} chars of {1}", encodedCharsCount, _baseText.Length), "[PROGRESS]");
+                            if (currentProcess != null)
+                            {
+                                currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = $"Encoded {encodedCharsCount} symbols of {_baseText.Length}",
+                                    ProgressAdvance = encodedCharsCount * 100 / (double)_baseText.Length,
+                                    Tag = "[PROGRESS]"
+                                });
+                            }
+                            else
+                            {
+                                DebugUtils.ConsoleWL(string.Format("Encoded {0} chars of {1}", encodedCharsCount, _baseText.Length), "[PROGRESS]");
+                            }
                         }
 
                         #endregion
                     }
+
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Huffman encoding process finished with a {fullCode.CodeLength} bits encoded file",
+                        ProgressAdvance = 100,
+                        Tag="[RESULT]"
+                    });
 
                     #region CALCULATE_CODE_PARTS_SIZE
 
@@ -151,7 +173,7 @@ namespace FilesEncryptor.helpers.huffman
                 }
                 catch (Exception ex)
                 {
-                    DebugUtils.Fail(string.Format("Exception encoding file with huffman, counter = {0}", encodedCharsCount), ex.Message);
+                    DebugUtils.ConsoleF(string.Format("Exception encoding file with huffman, counter = {0}", encodedCharsCount), ex.Message);
                 }
 
                 return encoded;
@@ -165,22 +187,22 @@ namespace FilesEncryptor.helpers.huffman
             //Escribo el BOM del archivo original
             if (baseFileBOM != null)
             {
-                DebugUtils.WriteLine("Dumping original file BOM to file");
+                DebugUtils.ConsoleWL("Dumping original file BOM to file");
                 writeResult = fileHelper.WriteString(string.Format("{0}:", baseFileBOM.Length));
                 writeResult = fileHelper.WriteBytes(baseFileBOM);
             }
             else
             {                
-                DebugUtils.WriteLine("No original file BOM was provided", "[WARN]");
+                DebugUtils.ConsoleWL("No original file BOM was provided", "[WARN]");
                 writeResult = fileHelper.WriteString(string.Format("{0}:", 0));
             }
 
             //Escribo la codificacion usada para leer el archivo original
-            DebugUtils.WriteLine("Dumping original file encoding to file");
+            DebugUtils.ConsoleWL("Dumping original file encoding to file");
             writeResult = fileHelper.WriteString(string.Format("{0}:{1}", baseFileEncoding.CodePage.ToString().Length, baseFileEncoding.CodePage));
 
             //Escribo la tabla de probabilidades
-            DebugUtils.WriteLine("Dumping probabilities table to file");
+            DebugUtils.ConsoleWL("Dumping probabilities table to file");
 
             foreach (var element in encodeResult.ProbabilitiesTable)
             {
@@ -193,7 +215,7 @@ namespace FilesEncryptor.helpers.huffman
             }
 
             //Escribo el texto comprimido
-            DebugUtils.WriteLine("Dumping compressed bytes to file");
+            DebugUtils.ConsoleWL("Dumping compressed bytes to file");
 
             //Escribo la longitud de la primera parte del archivo codificado
             writeResult = fileHelper.WriteString(string.Format(".{0}", encodeResult.CodePartsLengths[0]));

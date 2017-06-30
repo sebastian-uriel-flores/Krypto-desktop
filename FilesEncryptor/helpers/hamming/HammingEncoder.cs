@@ -1,5 +1,6 @@
 ﻿using FilesEncryptor.dto;
 using FilesEncryptor.dto.hamming;
+using FilesEncryptor.helpers.processes;
 using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
@@ -26,126 +27,193 @@ namespace FilesEncryptor.helpers.hamming
             };
         }
 
-        public async Task<HammingEncodeResult> Encode(HammingEncodeType encodeType)
+        public HammingEncodeResult Encode(HammingEncodeType encodeType)
         {
             HammingEncodeResult result = null;
+            KryptoProcess currentProcess = KryptoProcess.GetCurrent();
 
             try
             {
-                await Task.Factory.StartNew(() =>
+                if (encodeType.WordBitsSize > 0)
                 {
-                    if (encodeType.WordBitsSize > 0)
+                    //DebugUtils.ConsoleWL(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
+                    currentProcess.UpdateStatus(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
+
+                    //Obtengo todos los bloques de informacion o palabras
+                    Tuple<List<BitCode>, int> exploded = _baseCode.Explode(encodeType.WordBitsSize, true, false, currentProcess);
+                    List<BitCode> dataBlocks = exploded.Item1;
+
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                     {
-                        DebugUtils.WriteLine(string.Format("Extracting input words of {0} bits", encodeType.WordBitsSize));
+                        Message = $"Input words extracting process finished with a total of {exploded.Item1.Count} input words with {exploded.Item2} redundance bits",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
 
-                        //Obtengo todos los bloques de informacion o palabras
-                        Tuple<List<BitCode>, int> exploded = _baseCode.Explode2(encodeType.WordBitsSize, true, true);
-                        List<BitCode> dataBlocks = exploded.Item1;
+                    //Imprimo todas las palabras de entrada
+                    BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
 
-                        DebugUtils.WriteLine(string.Format("Extracted {0} words with {1} redundance bits", dataBlocks.Count, exploded.Item2));
+                    //Determino el tamaño de los bloques de salida
+                    //sumando la cantidad de bits de la palabra de entrada y la cantidad de bits de control
+                    uint outWordSize = encodeType.WordBitsSize + CalculateControlBits(encodeType);
 
-                        //Imprimo todas las palabras de entrada
-                        BitCodePresenter.From(dataBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Input Words");
+                    currentProcess.UpdateStatus($"Encoding {exploded.Item1.Count} words in {outWordSize} bits output size with {exploded.Item2} redundance bits", true);
 
-                        //Creo la matriz generadora
-                        DebugUtils.WriteLine("Creating generator matrix");
+                    //Creo la lista con los bloques de salida
+                    List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
+                    List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
 
-                        List<BitCode> genMatrix = CreateGeneratorMatrix(encodeType);
+                    //Determino cada cuantas palabras se mostrará el progresso por consola
+                    int wordsDebugStep = (int)Math.Min(0.1 * dataBlocks.Count, 1000);
 
-                        //Determino el tamaño de los bloques de salida
-                        //sumando la cantidad de bits de la palabra de entrada y la cantidad de columnas
-                        //de la matriz generadora
-                        uint outWordSize = encodeType.WordBitsSize + (uint)genMatrix.Count;
+                    foreach (BitCode currentWord in dataBlocks)
+                    {
+                        //Codifico la palabra actual y la agrego a la lista de palabras de salida
+                        outputBlocks.Add(EncodeWord(currentWord, controlBitsIndexes));
 
-                        DebugUtils.WriteLine(string.Format("Encoding words in {0} bits output size", outWordSize));
-
-                        //Creo la lista con los bloques de salida
-                        List<BitCode> outputBlocks = new List<BitCode>((int)outWordSize * dataBlocks.Count);
-                        List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
-
-                        //Determino cada cuantas palabras se mostrará el progresso por consola
-                        int wordsDebugStep = (int)Math.Min(0.1 * dataBlocks.Count, 1000);
-
-                        foreach (BitCode currentWord in dataBlocks)
+                        if (outputBlocks.Count % wordsDebugStep == 0)
                         {
-                            int currentExp = 0;
-                            int currentDataBit = 0;
-                            BitCode currentOutputWord = currentWord.Copy();
-
-                            List<Tuple<int, int>> dataBlocksIndexes = new List<Tuple<int, int>>();
-                            List<Tuple<int, int>> controlBlocksIndexes = new List<Tuple<int, int>>();
-                           
-                            foreach(uint index in controlBitsIndexes)
+                            currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                             {
-                                var code = BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode2(1, false).Item1);
-                                currentOutputWord = currentOutputWord.Insert2(index, code);
-                                currentExp++;
-                            }
-                            
-                            /*for (int i = 0; i < outWordSize; i++)
-                            {
-                                //Si es un bit de control, calculo su valor, basandome en la matriz generadora
-                                if (i + 1 == Math.Pow(2, currentExp))
-                                {
-                                    controlBlocksIndexes.Add(new Tuple<int, int>(i, currentExp));
-                                    //Al realizar un and, estoy haciendo la multiplicacion bit a bit
-                                    //Luego, al Código formado por esa multiplicacion, lo divido en subcodigos de 1 bit
-                                    //Y realizo la suma entre todos los bits, haciendo un xor entre todos
-                                    currentOutputWord.Append(BitOps.Xor(BitOps.And(new List<BitCode>() { currentWord, genMatrix[currentExp] }).Explode(1, false).Item1));
-                                    currentExp++;
-                                }
-                                //Si es un bit de informacion, lo relleno con el siguiente bit de informacion de la palabra
-                                else
-                                {
-                                    dataBlocksIndexes.Add(new Tuple<int, int>(i, currentDataBit));
-                                    currentOutputWord.Append(currentWord.ElementAt((uint)currentDataBit));
-                                    currentDataBit++;
-                                }
-                            }*/
-
-                            //Agrego la palabra recién creada a la lista de palabras de salida
-                            outputBlocks.Add(currentOutputWord);
-
-                            if (outputBlocks.Count % wordsDebugStep  == 0)
-                            {
-                                DebugUtils.WriteLine(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
-                            }
-                        }
-
-                        DebugUtils.WriteLine(string.Format("Encoding process finished with a total of {0} output words", outputBlocks.Count));
-
-                        //Imprimo todas las palabras de salida
-                        BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
-
-                        DebugUtils.WriteLine("Joining encoded words into one array of bytes");
-                        BitCode resultCode = BitOps.Join(outputBlocks);
-
-                        BitCodePresenter.From(new List<BitCode>() { resultCode }).Print(BitCodePresenter.LinesDisposition.Row, "Output words");
-
-                        result = new HammingEncodeResult(resultCode,
-                            encodeType,
-                            new HammingCodeLength()
-                            {
-                                FullCodeLength = (uint)resultCode.CodeLength,
-                                RedundanceCodeLength = (uint)exploded.Item2
+                                Message = $"Encoded {outputBlocks.Count} words of {dataBlocks.Count}",
+                                ProgressAdvance = outputBlocks.Count * 100 / (double)dataBlocks.Count,
+                                Tag = "[PROGRESS]"
                             });
+
+                            //DebugUtils.ConsoleWL(string.Format("Encoded {0} words of {1}", outputBlocks.Count, dataBlocks.Count), "[PROGRESS]");
+                        }
                     }
-                });
+
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Encoding process finished with a total of {outputBlocks.Count} output words",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
+
+                    //DebugUtils.ConsoleWL(string.Format("Encoding process finished with a total of {0} output words", outputBlocks.Count));
+
+                    //Imprimo todas las palabras de salida
+                    BitCodePresenter.From(outputBlocks).Print(BitCodePresenter.LinesDisposition.Row, "Output Words");
+
+                    currentProcess.UpdateStatus("Joining encoded words into one array of bytes", true);
+                    //DebugUtils.ConsoleWL("Joining encoded words into one array of bytes");
+
+                    BitCode resultCode = BitOps.Join(outputBlocks, currentProcess);
+
+                    currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                    {
+                        Message = $"Joining process finished in an encoded file of {resultCode.CodeLength} bits size",
+                        ProgressAdvance = 100,
+                        Tag = "[RESULT]"
+                    });
+
+                    BitCodePresenter.From(new List<BitCode>() { resultCode }).Print(BitCodePresenter.LinesDisposition.Row, "Output words");
+
+                    result = new HammingEncodeResult(resultCode,
+                        encodeType,
+                        new HammingCodeLength()
+                        {
+                            FullCodeLength = (uint)resultCode.CodeLength,
+                            RedundanceCodeLength = (uint)exploded.Item2
+                        });
+                }
             }
             catch (Exception ex)
             {
                 result = null;
+                currentProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                {
+                    Message = $"Encoding process failed because of {ex.Message}",
+                    ProgressAdvance = 100,
+                    Tag = "[RESULT]"
+                });
             }
 
             return result;
         }
 
-        private async Task<bool> Verify(HammingEncodeResult encodeResult)
+        protected BitCode EncodeWord(BitCode inputWord, HammingEncodeType encodeType)
         {
-            var decoded = await HammingDecoder.FromEncoded(encodeResult).Decode();                        
-            return decoded != null && (BitOps.And(BitOps.Xor(new List<BitCode>() { _baseCode, decoded }).Explode(1, false).Item1).Code[0] == 0);
+            BitCode outputWord = inputWord.Copy();
+            List<uint> controlBitsIndexes = GetControlBitsIndexes(encodeType);
+
+            foreach (uint index in controlBitsIndexes)
+            {
+                outputWord = outputWord.Insert(index, BitCode.ZERO);
+            }
+
+            //Calculo los valores que iran en cada bit de control
+            foreach (uint index in controlBitsIndexes)
+            {
+                uint bitsStep = index + 1;
+                List<BitCode> protectedBits = new List<BitCode>();
+                bool take = true;
+                uint count = 0;
+
+                for (uint i = index; i < outputWord.CodeLength; i++)
+                {
+                    if (take)
+                    {
+                        protectedBits.Add(outputWord.ElementAt(i));
+                    }
+                    count++;
+
+                    if (count == bitsStep)
+                    {
+                        count = 0;
+                        take = !take;
+                    }
+                }
+
+
+                BitCode parityBit = BitOps.Xor(protectedBits);
+                outputWord = outputWord.ReplaceAt(index, parityBit);
+            }
+
+            return outputWord;
         }
 
+        protected BitCode EncodeWord(BitCode inputWord, List<uint> controlBitsIndexes)
+        {
+            BitCode outputWord = inputWord.Copy();
+            
+            foreach (uint index in controlBitsIndexes)
+            {
+                outputWord = outputWord.Insert(index, BitCode.ZERO);
+            }
+
+            //Calculo los valores que iran en cada bit de control
+            foreach (uint index in controlBitsIndexes)
+            {
+                uint bitsStep = index + 1;
+                List<BitCode> protectedBits = new List<BitCode>();
+                bool take = true;
+                uint count = 0;
+
+                for (uint i = index; i < outputWord.CodeLength; i++)
+                {
+                    if (take)
+                    {
+                        protectedBits.Add(outputWord.ElementAt(i));
+                    }
+                    count++;
+
+                    if (count == bitsStep)
+                    {
+                        count = 0;
+                        take = !take;
+                    }
+                }
+
+
+                BitCode parityBit = BitOps.Xor(protectedBits);
+                outputWord = outputWord.ReplaceAt(index, parityBit);
+            }
+
+            return outputWord;
+        }
+        
         public static bool WriteEncodedToFile(HammingEncodeResult encodeResult, FileHelper fileHelper)
         {
             bool result = false;
