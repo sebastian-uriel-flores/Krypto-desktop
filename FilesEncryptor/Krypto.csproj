@@ -143,7 +143,10 @@
     <None Include="FilesEncryptor_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Package.StoreAssociation.xml" />
+    <None Include="Package.StoreAssociation.xml">
+      <SubType>Designer</SubType>
+    </None>
+    <Content Include="66x66.png" />
     <Content Include="Assets\AI.scale-400.png" />
     <Content Include="Assets\AI.scale-150.png" />
     <Content Include="Assets\AI.scale-125.png" />

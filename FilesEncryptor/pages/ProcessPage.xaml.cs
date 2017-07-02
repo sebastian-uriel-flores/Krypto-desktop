@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
@@ -45,6 +46,9 @@ namespace FilesEncryptor.pages
         {
             Huffman_Encode, Huffman_Decode, Hamming_Encode, Hamming_Decode, Hamming_Broke
         }
+
+        public const string VIEW_MODEL_PARAM = "view_model";
+        public const string ARGS_PARAM = "args";
 
         private PAGE_MODES _pageMode;
         private FileHelper _fileOpener;
@@ -83,7 +87,7 @@ namespace FilesEncryptor.pages
             _fileOpener = new FileHelper();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -100,10 +104,49 @@ namespace FilesEncryptor.pages
                     AppViewBackButtonVisibility.Collapsed;
             }
 
+            if (e.Parameter is Dictionary<string, object>)
+            {
+                Dictionary<string, object> paramsDict = e.Parameter as Dictionary<string, object>;
+
+                _pageMode = paramsDict.ContainsKey(VIEW_MODEL_PARAM) && paramsDict[VIEW_MODEL_PARAM] is PAGE_MODES
+                    ? (PAGE_MODES)paramsDict[VIEW_MODEL_PARAM]
+                    : PAGE_MODES.Hamming_Encode;
+
+                if (paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IActivatedEventArgs)
+                {
+                    var activatedEventArgs = args as IActivatedEventArgs;
+                    switch ((args as IActivatedEventArgs).Kind)
+                    {
+                        case ActivationKind.ShareTarget:
+                            var shareActivatedEventArgs = activatedEventArgs as ShareTargetActivatedEventArgs;
+                            var sharedItems = await shareActivatedEventArgs.ShareOperation.Data.GetStorageItemsAsync();
+
+                            await new MessageDialog($"Shared Files: {sharedItems.Count}").ShowAsync();
+                            
+                            _fileOpener = new FileHelper(sharedItems[0] as StorageFile);
+                            FileTaked();
+                            break;
+                        case ActivationKind.File:
+                            var fileActivatedEventArgs = activatedEventArgs as FileActivatedEventArgs;
+
+                            await new MessageDialog($"Picked Files: {fileActivatedEventArgs.Files.Count}").ShowAsync();
+
+                            _fileOpener = new FileHelper(fileActivatedEventArgs.Files[0] as StorageFile);
+                            FileTaked();
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                _pageMode = PAGE_MODES.Hamming_Encode;
+            }
+            /*
+
             //Analizo el modo de uso de la pagina
             _pageMode = e.Parameter != null && e.Parameter is PAGE_MODES
                 ? (PAGE_MODES)e.Parameter
-                : PAGE_MODES.Hamming_Encode;
+                : PAGE_MODES.Hamming_Encode;*/
             
             switch(_pageMode)
             {
@@ -137,116 +180,8 @@ namespace FilesEncryptor.pages
         {
             if (await _fileOpener.PickToOpen(GetExtensions(_pageMode)))
             {
-                _rawFileBytes = null;
-                await ShowLoadingPanel();
-
-                confirmBt.IsEnabled = false;
-
-                //Si voy a codificar un archivo con Huffman, 
-                //entonces debo leer la codificacion del archivo original
-                bool takeEncoding = _pageMode == PAGE_MODES.Huffman_Encode;
-
-                if (await _fileOpener.OpenFile(FileAccessMode.Read, takeEncoding))
-                {
-                    //Muestro los datos del archivo cargado
-                    fileNameBlock.Text = _fileOpener.SelectedFileName;
-                    fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
-                    fileDescriptionBlock.Text = string.Format("{0} ({1})", _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension);
-
-                    confirmBt.IsEnabled = true;
-
-                    switch (_pageMode)
-                    {
-                        #region HUFFMAN_ENCODE
-                        case PAGE_MODES.Huffman_Encode:
-                            //TODO Si no se puede obtener el tipo de codificacion del archivo, 
-                            //se solicita al usuario que elija una de las posibles codificaciones
-                            if (_fileOpener.FileBOM == null)
-                            {
-                                _fileOpener.SetFileEncoding(System.Text.Encoding.UTF8);
-                            }
-
-                            //Leo todos los bytes del texto
-                            byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);
-
-                            //Obtengo el texto que sera mostrado en pantalla
-                            string originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
-
-                            //Cierro el archivo
-                            await _fileOpener.Finish();
-
-                            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                             {
-                                 //Seteo el texto en pantalla
-                                 fileContentTextBlock.Text = originalFileContent;
-                                 fileContentTextHeader.Visibility = Visibility.Visible;
-                                 fileContentTextBlock.Visibility = Visibility.Visible;
-                             });
-
-                            //Muestro la informacion del archivo
-                            HideLoadingPanel();
-
-
-                            //Creo el header que tendra el archivo al guardarlo
-                            _fileHeader = new FileHeader()
-                            {
-                                FileName = _fileOpener.SelectedFileDisplayName,
-                                FileDisplayType = _fileOpener.SelectedFileDisplayType,
-                                FileExtension = _fileOpener.SelectedFileExtension
-                            };
-                            break;
-                        #endregion
-
-                        #region HUFFMAN_DECODE
-                        case PAGE_MODES.Huffman_Decode:
-                            _fileHeader = _fileOpener.ReadFileHeader();
-                            _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
-                            break;
-                        #endregion
-
-                        #region HAMMING_ENCODE
-                        case PAGE_MODES.Hamming_Encode:
-                            _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
-                            _fileHeader = new FileHeader()
-                            {
-                                FileName = _fileOpener.SelectedFileDisplayName,
-                                FileDisplayType = _fileOpener.SelectedFileDisplayType,
-                                FileExtension = _fileOpener.SelectedFileExtension
-                            };
-                            hammingEncodeTypeHeader.Visibility = Visibility.Visible;
-                            hammingEncodeTypeSelector.Visibility = Visibility.Visible;
-                            hammingEncodeTypeSelector.SelectedIndex = 0;
-                            break;
-                        #endregion
-
-                        #region HAMMING_DECODE
-                        case PAGE_MODES.Hamming_Decode:
-                            _fileHeader = _fileOpener.ReadFileHeader();
-
-                            HammingEncodeType encodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
-
-                            _decoder = new HammingDecoder(_fileOpener, encodeType);
-
-                            if (_fileHeader.FileExtension == BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION)
-                            {
-                                ConsoleWL("The original file is compressed with Huffman", "[WARN]");
-                            }
-                            break;
-                        #endregion
-
-                        #region HAMMING_BROKE
-                        case PAGE_MODES.Hamming_Broke:
-                            _fileHeader = _fileOpener.ReadFileHeader();
-                            HammingEncodeType fileEncodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
-                            _broker = new HammingBroker(_fileOpener, fileEncodeType);
-                            break;
-                        #endregion
-                    }
-
-                    await _fileOpener.Finish();
-                }
-
-                HideLoadingPanel();
+                FileTaked();
+                
             }
         }
 
@@ -311,14 +246,15 @@ namespace FilesEncryptor.pages
                     extensions.Add(".huf");
                     break;
                 case PAGE_MODES.Hamming_Encode:
-                    extensions = new List<string>(){
+                    extensions.Add("*");
+                    /*extensions = new List<string>(){
                         ".txt",
                         ".huf",
                         ".pdf",
                         ".docx",
                         ".doc",
                         ".jpg"
-                        };
+                        };*/
                     break;
                 case PAGE_MODES.Hamming_Decode:
                 case PAGE_MODES.Hamming_Broke:
@@ -366,6 +302,120 @@ namespace FilesEncryptor.pages
             progressPanelCurrentEvent.Text = "";
             progressPanelProgressBar.Value = 0;
             progressPanelEventsList.Items.Clear();
+        }
+
+        private async void FileTaked()
+        {
+            _rawFileBytes = null;
+            await ShowLoadingPanel();
+
+            confirmBt.IsEnabled = false;
+
+            //Si voy a codificar un archivo con Huffman, 
+            //entonces debo leer la codificacion del archivo original
+            bool takeEncoding = _pageMode == PAGE_MODES.Huffman_Encode;
+
+            if (await _fileOpener.OpenFile(FileAccessMode.Read, takeEncoding))
+            {
+                //Muestro los datos del archivo cargado
+                fileNameBlock.Text = _fileOpener.SelectedFileName;
+                fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
+                fileDescriptionBlock.Text = string.Format("{0} ({1})", _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension);
+
+                confirmBt.IsEnabled = true;
+
+                switch (_pageMode)
+                {
+                    #region HUFFMAN_ENCODE
+                    case PAGE_MODES.Huffman_Encode:
+                        //TODO Si no se puede obtener el tipo de codificacion del archivo, 
+                        //se solicita al usuario que elija una de las posibles codificaciones
+                        if (_fileOpener.FileBOM == null)
+                        {
+                            _fileOpener.SetFileEncoding(System.Text.Encoding.UTF8);
+                        }
+
+                        //Leo todos los bytes del texto
+                        byte[] fileBytes = _fileOpener.ReadBytes(_fileOpener.FileContentSize);
+
+                        //Obtengo el texto que sera mostrado en pantalla
+                        string originalFileContent = _fileOpener.FileEncoding.GetString(fileBytes);
+
+                        //Cierro el archivo
+                        await _fileOpener.Finish();
+
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                        {
+                            //Seteo el texto en pantalla
+                            fileContentTextBlock.Text = originalFileContent;
+                            fileContentTextHeader.Visibility = Visibility.Visible;
+                            fileContentTextBlock.Visibility = Visibility.Visible;
+                        });
+
+                        //Muestro la informacion del archivo
+                        HideLoadingPanel();
+
+
+                        //Creo el header que tendra el archivo al guardarlo
+                        _fileHeader = new FileHeader()
+                        {
+                            FileName = _fileOpener.SelectedFileDisplayName,
+                            FileDisplayType = _fileOpener.SelectedFileDisplayType,
+                            FileExtension = _fileOpener.SelectedFileExtension
+                        };
+                        break;
+                    #endregion
+
+                    #region HUFFMAN_DECODE
+                    case PAGE_MODES.Huffman_Decode:
+                        _fileHeader = _fileOpener.ReadFileHeader();
+                        _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
+                        break;
+                    #endregion
+
+                    #region HAMMING_ENCODE
+                    case PAGE_MODES.Hamming_Encode:
+                        _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
+                        _fileHeader = new FileHeader()
+                        {
+                            FileName = _fileOpener.SelectedFileDisplayName,
+                            FileDisplayType = _fileOpener.SelectedFileDisplayType,
+                            FileExtension = _fileOpener.SelectedFileExtension
+                        };
+                        hammingEncodeTypeHeader.Visibility = Visibility.Visible;
+                        hammingEncodeTypeSelector.Visibility = Visibility.Visible;
+                        hammingEncodeTypeSelector.SelectedIndex = 0;
+                        break;
+                    #endregion
+
+                    #region HAMMING_DECODE
+                    case PAGE_MODES.Hamming_Decode:
+                        _fileHeader = _fileOpener.ReadFileHeader();
+
+                        HammingEncodeType encodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
+
+                        _decoder = new HammingDecoder(_fileOpener, encodeType);
+
+                        if (_fileHeader.FileExtension == BaseHuffmanCodifier.HUFFMAN_FILE_EXTENSION)
+                        {
+                            ConsoleWL("The original file is compressed with Huffman", "[WARN]");
+                        }
+                        break;
+                    #endregion
+
+                    #region HAMMING_BROKE
+                    case PAGE_MODES.Hamming_Broke:
+                        _fileHeader = _fileOpener.ReadFileHeader();
+                        HammingEncodeType fileEncodeType = BaseHammingCodifier.EncodeTypes.First(encType => encType.Extension == _fileOpener.SelectedFileExtension);
+                        _broker = new HammingBroker(_fileOpener, fileEncodeType);
+                        break;
+                        #endregion
+                }
+
+                await _fileOpener.Finish();
+            }
+
+            HideLoadingPanel();
         }
         
         #region KRYPTO_PROCESS_UI_INTERFACE

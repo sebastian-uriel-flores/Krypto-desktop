@@ -75,19 +75,19 @@ namespace FilesEncryptor.pages
             switch ((e.ClickedItem as FrameworkElement).Name)
             {               
                 case "compressFileItem":
-                    Frame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Huffman_Encode);
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Huffman_Encode } } );
                     break;
                 case "uncompressFileItem":
-                    Frame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Huffman_Decode);
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Huffman_Decode } });
                     break;
                 case "encodeFileItem":
-                    Frame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Hamming_Encode);
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode } });
                     break;
                 case "decodeFileItem":
-                    Frame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Hamming_Decode);
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Decode } });
                     break;
                 case "introduceErrorItem":
-                    Frame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Hamming_Broke);
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Broke } });
                     break;
             }            
         }
