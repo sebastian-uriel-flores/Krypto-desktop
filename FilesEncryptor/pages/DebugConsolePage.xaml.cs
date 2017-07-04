@@ -1,4 +1,5 @@
 ﻿using FilesEncryptor.helpers;
+using FilesEncryptor.utils;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,4 +1,6 @@
-﻿using FilesEncryptor.pages;
+﻿using FilesEncryptor.dto.hamming;
+using FilesEncryptor.helpers.hamming;
+using FilesEncryptor.pages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,9 +8,11 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
@@ -34,7 +38,7 @@ namespace FilesEncryptor
         public App()
         {
             this.InitializeComponent();
-            this.Suspending += OnSuspending;                        
+            this.Suspending += OnSuspending;        
         }
 
         private void App_BackRequested(object sender, BackRequestedEventArgs e)
@@ -68,16 +72,111 @@ namespace FilesEncryptor
             return myBrush;
         }
 
-        /// <summary>
-        /// Se invoca cuando el usuario final inicia la aplicación normalmente. Se usarán otros puntos
-        /// de entrada cuando la aplicación se inicie para abrir un archivo específico, por ejemplo.
-        /// </summary>
-        /// <param name="e">Información detallada acerca de la solicitud y el proceso de inicio.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override void OnFileActivated(FileActivatedEventArgs args)
         {
-            var view = SystemNavigationManager.GetForCurrentView();
-            view.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
-            //view.BackRequested += View_BackRequested;
+            base.OnFileActivated(args);
+            IReadOnlyList<IStorageItem> items = args.Files;
+
+            bool decode = false;
+
+            foreach (StorageFile item in items)
+            {
+                decode = false;
+                foreach (HammingEncodeType encodeType in BaseHammingCodifier.EncodeTypes)
+                {
+                    if (encodeType.Extension.Equals(item.FileType))
+                    {
+                        decode = true;
+                        break;
+                    }
+                }
+            }
+
+            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
+
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
+        }
+
+        protected override async void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
+        {
+            base.OnShareTargetActivated(args);
+            IReadOnlyList<IStorageItem> items = await args.ShareOperation.Data.GetStorageItemsAsync();
+
+            bool decode = false;
+
+            foreach(StorageFile item in items)
+            {
+                decode = false;
+                foreach(HammingEncodeType encodeType in BaseHammingCodifier.EncodeTypes)
+                {
+                    if(encodeType.Extension.Equals(item.FileType))
+                    {
+                        decode = true;
+                        break;
+                    }
+                }
+            }
+
+            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
+
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
+        }
+
+        private async void ActivateFrame(Type typeOfPage, Dictionary<string,object> args)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            if(rootFrame == null)
+            {
+                rootFrame = new Frame();
+
+                rootFrame.NavigationFailed += OnNavigationFailed;
+
+                SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+
+                // Poner el marco en la ventana actual.
+                Window.Current.Content = rootFrame;
+
+                rootFrame.Navigate(typeOfPage, args);
+
+                SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+                // Asegurarse de que la ventana actual está activa.
+                Window.Current.Activate();
+
+                SetUpTitleBar();
+            }
+            else
+            {
+                CoreApplicationView _newView = CoreApplication.CreateNewView();
+                
+                int newViewId = 0;
+                await _newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Frame newFrame = new Frame();
+
+                    newFrame.NavigationFailed += OnNavigationFailed;
+
+                    SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+
+                    // Poner el marco en la ventana actual.
+                    Window.Current.Content = newFrame;
+
+                    newFrame.Navigate(typeOfPage, args);
+
+                    SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+                    // Asegurarse de que la ventana actual está activa.
+                    Window.Current.Activate();
+
+                    newViewId = ApplicationView.GetForCurrentView().Id;
+
+                    SetUpTitleBar();
+                });
+                bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
+            }
+        }
+
+        private void SetUpTitleBar()
+        {
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
             {
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
@@ -91,16 +190,22 @@ namespace FilesEncryptor
                     titleBar.ButtonHoverBackgroundColor = secondOrange;
                     titleBar.ButtonInactiveBackgroundColor = mainOrange;
                     titleBar.ButtonInactiveForegroundColor = Colors.White;
-                    
+
                     titleBar.BackgroundColor = mainOrange;
                     titleBar.ForegroundColor = Colors.White;
                     titleBar.InactiveBackgroundColor = mainOrange;
                     titleBar.InactiveForegroundColor = Colors.White;
                 }
             }
+        }
 
-
-
+        /// <summary>
+        /// Se invoca cuando el usuario final inicia la aplicación normalmente. Se usarán otros puntos
+        /// de entrada cuando la aplicación se inicie para abrir un archivo específico, por ejemplo.
+        /// </summary>
+        /// <param name="e">Información detallada acerca de la solicitud y el proceso de inicio.</param>
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        {
             Frame rootFrame = Window.Current.Content as Frame;
 
             // No repetir la inicialización de la aplicación si la ventana tiene contenido todavía,
@@ -118,6 +223,7 @@ namespace FilesEncryptor
                 }
 
                 SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+                                
                 // Poner el marco en la ventana actual.
                 Window.Current.Content = rootFrame;
             }
@@ -136,7 +242,10 @@ namespace FilesEncryptor
                 // Asegurarse de que la ventana actual está activa.
                 Window.Current.Activate();
             }
+
+            SetUpTitleBar();
         }
+        
 
         /// <summary>
         /// Se invoca cuando la aplicación la inicia normalmente el usuario final. Se usarán otros puntos

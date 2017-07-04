@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using FilesEncryptor.utils;
-using System.Collections;
-using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.processes;
 
 namespace FilesEncryptor.dto
