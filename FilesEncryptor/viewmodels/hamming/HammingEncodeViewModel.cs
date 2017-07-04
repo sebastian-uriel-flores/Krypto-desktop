@@ -4,12 +4,8 @@ using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.helpers.processes;
 using FilesEncryptor.utils;
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
 
@@ -53,8 +49,13 @@ namespace Krypto.viewmodels.hamming
             }
         }
 
-        public void TakeFile(StorageFile file)
+        public async void TakeFile(StorageFile file)
         {
+            if (_fileOpener != null)
+            {
+                await _fileOpener.Finish();
+            }
+
             _fileOpener = new FileHelper(file);
             FileTaked();
         }

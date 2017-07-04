@@ -30,6 +30,8 @@ namespace Krypto.viewmodels
 
         void SetTextAreaVisibility(Visibility vis);
 
+        Task SetTextAreaContent(string content);
+
         void SetConfirmButtonStatus(bool enabled);
 
         Task SetLoadingPanelVisibility(Visibility vis);
