@@ -2,6 +2,8 @@
 using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.utils;
+using Krypto.viewmodels.hamming;
+using Krypto.viewmodels.huffman;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -76,19 +78,19 @@ namespace FilesEncryptor.pages
             switch ((e.ClickedItem as FrameworkElement).Name)
             {               
                 case "compressFileItem":
-                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Huffman_Encode } } );
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HuffmanEncodeViewModel() }, { ProcessPage.APP_ACTIVATED_ARGS, false } });
                     break;
                 case "uncompressFileItem":
-                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Huffman_Decode } });
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HuffmanDecodeViewModel() }, { ProcessPage.APP_ACTIVATED_ARGS, false } });
                     break;
                 case "encodeFileItem":
-                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode } });
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.APP_ACTIVATED_ARGS, false } });
                     break;
                 case "decodeFileItem":
-                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Decode } });
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingDecodeViewModel() }, { ProcessPage.APP_ACTIVATED_ARGS, false } });
                     break;
                 case "introduceErrorItem":
-                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Broke } });
+                    Frame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingBrokeViewModel() }, { ProcessPage.APP_ACTIVATED_ARGS, false } });
                     break;
             }            
         }

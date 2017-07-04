@@ -35,18 +35,20 @@
                         <StackPanel 
                             VerticalAlignment="Stretch"                            
                             Orientation="Horizontal"
+                            Height="60"
                             >
-                            <AppBarButton Icon="Back" Foreground="#FF525151" Click="BackBt_Click"/>
+                            <AppBarButton x:Name="backBt" Icon="Back" Foreground="#FF525151" Click="BackBt_Click"/>
                             <TextBlock 
                                 x:Name="pageHeaderContent"
                                 Text="Codificar con Hamming"                                
                                 Style="{StaticResource PanelHeaderStyle}"
-                                Margin="0,0,0,12"
+                                Margin="20,0,0,12"
+                                
                                 />
                         </StackPanel>
                     </CommandBar.Content>
                     <CommandBar.PrimaryCommands>
-                        <AppBarButton x:Name="selectFileButton" Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/>
+                        <AppBarButton x:Name="selectFileBt" Icon="OpenFile" Foreground="#ff9200" Label="Seleccionar archivo" Click="SelectFileBt_Click" Visibility="Visible"/>
                     </CommandBar.PrimaryCommands>
                 </CommandBar>
 
@@ -124,7 +126,6 @@
                     Background="WhiteSmoke"
                     BorderBrush="WhiteSmoke"                    
                     ItemsSource="{x:Bind _encodeTypes}"                                                            
-                    SelectionChanged="HammingEncodeTypeSelector_SelectionChanged"
                     Visibility="Collapsed"
                     x:DeferLoadStrategy="Lazy"
                     >

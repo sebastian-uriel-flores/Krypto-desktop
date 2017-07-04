@@ -5,6 +5,7 @@ using FilesEncryptor.helpers;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.helpers.huffman;
 using FilesEncryptor.helpers.processes;
+using Krypto.viewmodels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -40,7 +41,7 @@ namespace FilesEncryptor.pages
     /// <summary>
     /// Una página vacía que se puede usar de forma independiente o a la que se puede navegar dentro de un objeto Frame.
     /// </summary>
-    public sealed partial class ProcessPage : Page, IKryptoProcessUI
+    public sealed partial class ProcessPage : Page, IProcessView
     {
         public enum PAGE_MODES
         {
@@ -49,8 +50,10 @@ namespace FilesEncryptor.pages
 
         public const string VIEW_MODEL_PARAM = "view_model";
         public const string ARGS_PARAM = "args";
+        public const string APP_ACTIVATED_ARGS = "app_activated_args";
 
         private PAGE_MODES _pageMode;
+        private IProcessViewModel _viewModel;
         private FileHelper _fileOpener;
         private FileHeader _fileHeader;
 
@@ -60,13 +63,7 @@ namespace FilesEncryptor.pages
 
         #endregion
 
-        #region HAMMING_ENCODE
-
-        private int _selectedEncoding;
-        private List<byte> _rawFileBytes;
         private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
-
-        #endregion
 
         #region HAMMING_DECODE
 
@@ -110,16 +107,18 @@ namespace FilesEncryptor.pages
             {
                 paramsDict = e.Parameter as Dictionary<string, object>;
 
-                _pageMode = paramsDict.ContainsKey(VIEW_MODEL_PARAM) && paramsDict[VIEW_MODEL_PARAM] is PAGE_MODES
-                    ? (PAGE_MODES)paramsDict[VIEW_MODEL_PARAM]
-                    : PAGE_MODES.Hamming_Encode;
+                if (paramsDict.ContainsKey(VIEW_MODEL_PARAM) && paramsDict[VIEW_MODEL_PARAM] is IProcessViewModel)
+                {
+                    _viewModel = paramsDict[VIEW_MODEL_PARAM] as IProcessViewModel;
+                    _viewModel.OnNavigatedTo(this, (bool)paramsDict[APP_ACTIVATED_ARGS]);
+                }
             }
             else
             {
-                _pageMode = PAGE_MODES.Hamming_Encode;
+                
             }
             
-            switch(_pageMode)
+            /*switch(_pageMode)
             {
                 case PAGE_MODES.Huffman_Encode:
                     pageHeaderContent.Text = "Compactar con Huffman";
@@ -130,45 +129,31 @@ namespace FilesEncryptor.pages
                     break;
                 case PAGE_MODES.Huffman_Decode:
                     pageHeaderContent.Text = "Des-compactar con Huffman";
-                    break;
-                case PAGE_MODES.Hamming_Encode:
-                    pageHeaderContent.Text = "Codificar con Hamming";
-                    FindName("hammingEncodeTypeHeader");
-                    FindName("hammingEncodeTypeSelector");
-                    hammingEncodeTypeHeader.Visibility = Visibility.Collapsed;
-                    hammingEncodeTypeSelector.Visibility = Visibility.Collapsed;
-                    break;
+                    break;                
                 case PAGE_MODES.Hamming_Decode:
                     pageHeaderContent.Text = "Decodificar con Hamming";
                     break;
                 case PAGE_MODES.Hamming_Broke:
                     pageHeaderContent.Text = "Introducir errores en archivo Hamming";
                     break;
-            }
+            }*/
 
             if (paramsDict != null && paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IReadOnlyList<IStorageItem>)
             {
                 var storageFiles = args as IReadOnlyList<IStorageItem>;
-                _fileOpener = new FileHelper(storageFiles[0] as StorageFile);
-                FileTaked();
+                _viewModel.TakeFile(storageFiles[0] as StorageFile);                
             }
         }
 
-        private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
+        private void SelectFileBt_Click(object sender, RoutedEventArgs e)
         {
-            if (await _fileOpener.PickToOpen(GetExtensions(_pageMode)))
-            {
-                FileTaked();
-            }
-        }
-
-        private void HammingEncodeTypeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            _selectedEncoding = hammingEncodeTypeSelector.SelectedIndex;
+            _viewModel.PickFile();
         }
 
         private async void ConfirmBt_Click(object sender, RoutedEventArgs e)
         {
+            _viewModel.Process();
+            return;
             await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
             {
                 switch (_pageMode)
@@ -178,9 +163,6 @@ namespace FilesEncryptor.pages
                         break;
                     case PAGE_MODES.Huffman_Decode:
                         HuffmanDecode();
-                        break;
-                    case PAGE_MODES.Hamming_Encode:
-                        HammingEncode();
                         break;
                     case PAGE_MODES.Hamming_Decode:
                         HammingDecode();
@@ -207,8 +189,7 @@ namespace FilesEncryptor.pages
 
         private void ProgressPanelCloseButton_Click(object sender, RoutedEventArgs e)
         {
-            HideProgressPanel();
-            ResetProgressPanel();
+            _viewModel.CloseProgressPanelButtonClicked();
         }
 
         private List<string> GetExtensions(PAGE_MODES mode)
@@ -283,7 +264,6 @@ namespace FilesEncryptor.pages
 
         private async void FileTaked()
         {
-            _rawFileBytes = null;
             await ShowLoadingPanel();
 
             confirmBt.IsEnabled = false;
@@ -347,21 +327,6 @@ namespace FilesEncryptor.pages
                     case PAGE_MODES.Huffman_Decode:
                         _fileHeader = _fileOpener.ReadFileHeader();
                         _huffmanDecoder = await HuffmanDecoder.FromFile(_fileOpener);
-                        break;
-                    #endregion
-
-                    #region HAMMING_ENCODE
-                    case PAGE_MODES.Hamming_Encode:
-                        _rawFileBytes = _fileOpener.ReadBytes(_fileOpener.FileSize).ToList();
-                        _fileHeader = new FileHeader()
-                        {
-                            FileName = _fileOpener.SelectedFileDisplayName,
-                            FileDisplayType = _fileOpener.SelectedFileDisplayType,
-                            FileExtension = _fileOpener.SelectedFileExtension
-                        };
-                        hammingEncodeTypeHeader.Visibility = Visibility.Visible;
-                        hammingEncodeTypeSelector.Visibility = Visibility.Visible;
-                        hammingEncodeTypeSelector.SelectedIndex = 0;
                         break;
                     #endregion
 
@@ -726,133 +691,6 @@ namespace FilesEncryptor.pages
             }
         }
 
-        #endregion
-
-        #region HAMMING_ENCODE
-
-        private async void HammingEncode()
-        {
-            BaseKryptoProcess encodingProcess = new BaseKryptoProcess();
-            await ShowProgressPanel();
-            encodingProcess.Start(this);
-
-            HammingEncodeType selectedEncodingType = _encodeTypes[_selectedEncoding];
-
-            //Codifico el archivo original
-            HammingEncoder encoder = new HammingEncoder(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
-            HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType, encodingProcess);
-            encodingProcess.StopWatch();
-
-            //Si el archivo pudo ser codificado con Hamming
-            if (encodeResult != null)
-            {
-                //Si el proceso fue un exito
-                FileHelper fileSaver = new FileHelper();
-                bool pickResult = false;
-
-                pickResult = await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension);
-
-                //Si el usuario no canceló la operación
-                if (pickResult)
-                {
-                    encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                    {
-                        Message = $"Output file selected {fileSaver.SelectedFilePath}",
-                        ProgressAdvance = 100,
-                        Tag = "[INFO]"
-                    });
-
-                    if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
-                    {
-                        encodingProcess.UpdateStatus($"Dumping encoded file to {fileSaver.SelectedFilePath}");
-
-                        if (fileSaver.WriteFileHeader(_fileHeader))
-                        {
-                            encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                            {
-                                Message = "File header dumped properly",
-                                ProgressAdvance = 50,
-                                Tag = "[PROGRESS]"
-                            });
-                            //DebugUtils.ConsoleWL(string.Format("Dumping hamming encoded bytes to \"{0}\"", fileSaver.SelectedFilePath));
-
-                            bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, fileSaver);
-
-                            //Show congrats message
-                            if (writeResult)
-                            {
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "Encoded file dumped properly",
-                                    ProgressAdvance = 100,
-                                    Tag = "[PROGRESS]"
-                                });
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "Closing file",
-                                    ProgressAdvance = 100,
-                                    Tag = "[INFO]"
-                                });
-
-                                //DebugUtils.ConsoleWL("Dumping completed properly");
-                                //DebugUtils.ConsoleWL("Closing file");
-                                await fileSaver.Finish();
-
-                                encodingProcess.UpdateStatus("Completed");
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "File closed",
-                                    ProgressAdvance = 100,
-                                    Tag = "[INFO]"
-                                });
-                            }
-                            else
-                            {
-                                //DebugUtils.ConsoleWL("Dumping uncompleted");
-                                //DebugUtils.ConsoleWL("Closing file");
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "Encoded file dumping uncompleted",
-                                    ProgressAdvance = 100,
-                                    Tag = "[PROGRESS]"
-                                });
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "Closing file",
-                                    ProgressAdvance = 100,
-                                    Tag = "[INFO]"
-                                });
-
-                                await fileSaver.Finish();
-
-                                encodingProcess.UpdateStatus("Failed");
-                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                {
-                                    Message = "File closed",
-                                    ProgressAdvance = 100,
-                                    Tag = "[INFO]"
-                                });
-                            }
-
-                            progressPanelCloseButton.Visibility = Visibility.Visible;
-                        }
-                    }
-                }
-                else
-                {
-                    ConsoleWL("File encoded canceled because user cancel output file selection");
-                    HideProgressPanel();
-                    ResetProgressPanel();
-                }
-            }
-            //Si el archivo no pudo ser codificado con Hamming
-            else
-            {   
-                encodingProcess.Stop(true);
-                progressPanelCloseButton.Visibility = Visibility.Visible;
-            }                        
-        }
-       
         #endregion
 
         #region HAMMING_DECODE
@@ -1269,6 +1107,124 @@ namespace FilesEncryptor.pages
             HideLoadingPanel();
         }
 
+
         #endregion
+
+        public void SetTitle(string title)
+        {
+            pageHeaderContent.Text = title;
+        }
+
+        public void SetSelectorVisibility(Visibility vis)
+        {
+            if (hammingEncodeTypeHeader == null)
+            {
+                FindName("hammingEncodeTypeHeader");
+                FindName("hammingEncodeTypeSelector");
+            }
+            hammingEncodeTypeHeader.Visibility = vis;
+            hammingEncodeTypeSelector.Visibility = vis;
+        }
+
+        public void SetTextAreaVisibility(Visibility vis)
+        {
+
+        }
+
+        public void SetFilePickerButtonVisibility(Visibility vis)
+        {
+            if (selectFileBt == null && vis == Visibility.Visible)
+            {
+                FindName("selectFileBt");
+            }
+            else if (selectFileBt != null)
+            {
+                selectFileBt.Visibility = vis;
+            }
+        }
+
+        public void SetBackButtonVisibility(Visibility vis)
+        {
+            if (backBt == null && vis == Visibility.Visible)
+            {
+                FindName("backBt");
+            }
+            else if (backBt != null)
+            {
+                backBt.Visibility = vis;
+            }
+        }
+
+        async Task IProcessView.SetLoadingPanelVisibility(Visibility vis)
+        {
+            if (loadingPanel == null)
+            {
+                FindName("loadingPanel");
+            }
+            loadingPanel.Visibility = vis;
+            await Task.Delay(200);
+        }
+
+        async Task IProcessView.SetProgressPanelVisibility(Visibility vis)
+        {
+            if (progressPanel == null)
+            {
+                FindName("progressPanel");
+            }
+            progressPanel.Visibility = vis;
+            await Task.Delay(200);
+
+            if (vis == Visibility.Collapsed)
+            {
+                progressPanelStatus.Text = "";
+                progressPanelTime.Text = "";
+                progressPanelCurrentEvent.Text = "";
+                progressPanelProgressBar.Value = 0;
+                progressPanelEventsList.Items.Clear();
+                progressPanelCloseButton.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        public void SetConfirmButtonStatus(bool enabled)
+        {
+            confirmBt.IsEnabled = enabled;
+        }
+
+        public void SetFilePath(string path)
+        {
+            fileNameBlock.Text = path;
+        }
+
+        public void SetFileSize(string size)
+        {
+            fileSizeBlock.Text = size;
+        }
+
+        public void SetFileDescription(string description)
+        {
+            fileDescriptionBlock.Text = description;
+        }
+
+        public void SetSelectorSelectedIndex(int index)
+        {
+            if (hammingEncodeTypeSelector != null)
+            {
+                hammingEncodeTypeSelector.SelectedIndex = index;
+            }
+        }
+
+        public int GetSelectorSelectedIndex()
+        {
+            return hammingEncodeTypeSelector != null ? hammingEncodeTypeSelector.SelectedIndex : -1;
+        }
+
+        public void SetProgressPanelCloseButtonVisibility(Visibility vis)
+        {
+            if (progressPanel != null)
+            {
+                progressPanelCloseButton.Visibility = vis;
+            }
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using FilesEncryptor.dto.hamming;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.pages;
+using Krypto.viewmodels.hamming;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -94,7 +95,7 @@ namespace FilesEncryptor
 
             ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
 
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true} });
         }
 
         protected override async void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
@@ -119,7 +120,7 @@ namespace FilesEncryptor
 
             ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
 
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
         }
 
         private async void ActivateFrame(Type typeOfPage, Dictionary<string,object> args)
