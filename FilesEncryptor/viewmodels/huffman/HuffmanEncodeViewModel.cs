@@ -283,7 +283,14 @@ namespace Krypto.viewmodels.huffman
 
         public void CloseProgressPanelButtonClicked()
         {
-            throw new NotImplementedException();
+            if (_appActivated)
+            {
+                Application.Current.Exit();
+            }
+            else
+            {
+                _view.SetProgressPanelVisibility(Visibility.Collapsed);
+            }
         }
     }
 }
