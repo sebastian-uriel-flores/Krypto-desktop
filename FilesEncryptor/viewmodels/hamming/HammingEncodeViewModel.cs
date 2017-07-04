@@ -107,12 +107,9 @@ namespace Krypto.viewmodels.hamming
             {
                 //Si el proceso fue un exito
                 FileHelper fileSaver = new FileHelper();
-                bool pickResult = false;
-
-                pickResult = await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension);
 
                 //Si el usuario no canceló la operación
-                if (pickResult)
+                if (await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension))
                 {
                     encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                     {
@@ -189,19 +186,25 @@ namespace Krypto.viewmodels.hamming
                         encodingProcess.Stop(true);
                     }
 
-                    _view.SetProgressPanelCloseButtonVisibility(Visibility.Visible);
+                    if (!_appActivated)
+                    {
+                        _view.SetProgressPanelCloseButtonVisibility(Visibility.Visible);
+                    }
                 }
                 else
                 {
                     DebugUtils.ConsoleWL("File encoded canceled because user cancel output file selection");
-                    await _view.SetProgressPanelVisibility(Visibility.Collapsed);
+                    CloseProgressPanelButtonClicked();
                 }
             }
             //Si el archivo no pudo ser codificado con Hamming
             else
             {
                 encodingProcess.Stop(true);
-                _view.SetProgressPanelCloseButtonVisibility(Visibility.Visible);
+                if (!_appActivated)
+                {
+                    _view.SetProgressPanelCloseButtonVisibility(Visibility.Visible);
+                }
             }
         }
 
