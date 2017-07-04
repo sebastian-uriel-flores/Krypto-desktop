@@ -93,8 +93,6 @@ namespace FilesEncryptor
                 }
             }
 
-            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
-
             ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true} });
         }
 
@@ -117,9 +115,6 @@ namespace FilesEncryptor
                     }
                 }
             }
-
-            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
-
             ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
         }
 

@@ -26,33 +26,17 @@ namespace FilesEncryptor.pages
     /// </summary>
     public sealed partial class ProcessPage : Page, IProcessView
     {
-        public enum PAGE_MODES
-        {
-            Huffman_Encode, Huffman_Decode, Hamming_Encode, Hamming_Decode, Hamming_Broke
-        }
-
         public const string VIEW_MODEL_PARAM = "view_model";
         public const string ARGS_PARAM = "args";
         public const string APP_ACTIVATED_ARGS = "app_activated_args";
 
-        private PAGE_MODES _pageMode;
         private IProcessViewModel _viewModel;
-        private FileHelper _fileOpener;
-        private FileHeader _fileHeader;
-
-        #region HUFFMAN_DECODE
-
-        HuffmanDecoder _huffmanDecoder;
-
-        #endregion
 
         private ObservableCollection<HammingEncodeType> _encodeTypes = new ObservableCollection<HammingEncodeType>(BaseHammingCodifier.EncodeTypes);
 
         public ProcessPage()
         {
             this.InitializeComponent();
-            
-            _fileOpener = new FileHelper();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -83,30 +67,16 @@ namespace FilesEncryptor.pages
                     _viewModel = paramsDict[VIEW_MODEL_PARAM] as IProcessViewModel;
                     _viewModel.OnNavigatedTo(this, (bool)paramsDict[APP_ACTIVATED_ARGS]);
                 }
+
+                if(paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IReadOnlyList<IStorageItem>)
+                {
+                    var storageFiles = args as IReadOnlyList<IStorageItem>;
+                    _viewModel.TakeFile(storageFiles[0] as StorageFile);
+                }
             }
             else
             {
                 
-            }
-            
-            /*switch(_pageMode)
-            {
-                case PAGE_MODES.Huffman_Encode:
-                    pageHeaderContent.Text = "Compactar con Huffman";
-                    FindName("fileContentTextHeader");
-                    FindName("fileContentTextBlock");
-                    fileContentTextHeader.Visibility = Visibility.Collapsed;
-                    fileContentTextBlock.Visibility = Visibility.Collapsed;
-                    break;
-                case PAGE_MODES.Huffman_Decode:
-                    pageHeaderContent.Text = "";
-                    break;                
-            }*/
-
-            if (paramsDict != null && paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IReadOnlyList<IStorageItem>)
-            {
-                var storageFiles = args as IReadOnlyList<IStorageItem>;
-                _viewModel.TakeFile(storageFiles[0] as StorageFile);                
             }
         }
 
@@ -115,22 +85,9 @@ namespace FilesEncryptor.pages
             _viewModel.PickFile();
         }
 
-        private async void ConfirmBt_Click(object sender, RoutedEventArgs e)
+        private void ConfirmBt_Click(object sender, RoutedEventArgs e)
         {
             _viewModel.Process();
-            return;
-            await Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
-            {
-                switch (_pageMode)
-                {
-                    case PAGE_MODES.Huffman_Encode:
-                        HuffmanEncode();
-                        break;
-                    case PAGE_MODES.Huffman_Decode:
-                        HuffmanDecode();
-                        break;
-                }
-            });
         }
 
         private void BackBt_Click(object sender, RoutedEventArgs e)
@@ -151,91 +108,6 @@ namespace FilesEncryptor.pages
             _viewModel.CloseProgressPanelButtonClicked();
         }
 
-        private List<string> GetExtensions(PAGE_MODES mode)
-        {
-            List<string> extensions = new List<string>();
-            switch (mode)
-            {
-                case PAGE_MODES.Huffman_Encode:
-                    extensions.Add(".txt");
-                    break;
-                case PAGE_MODES.Huffman_Decode:
-                    extensions.Add(".huf");
-                    break;
-            }
-
-            return extensions;
-        }
-
-        private async Task ShowLoadingPanel()
-        {
-            if(loadingPanel == null)
-            {
-                FindName("loadingPanel");
-            }
-            loadingPanel.Visibility = Visibility.Visible;
-            await Task.Delay(200);
-        }
-
-        private void HideLoadingPanel() => loadingPanel.Visibility = Visibility.Collapsed;
-
-        private async Task ShowProgressPanel()
-        {
-            if (progressPanel == null)
-            {
-                FindName("progressPanel");
-            }
-
-            progressPanelCloseButton.Visibility = Visibility.Collapsed;
-            progressPanel.Visibility = Visibility.Visible;
-            await Task.Delay(200);
-        }
-
-        private void HideProgressPanel() => progressPanel.Visibility = Visibility.Collapsed;
-
-        private void ResetProgressPanel()
-        {
-            progressPanelStatus.Text = "";
-            progressPanelTime.Text = "";
-            progressPanelCurrentEvent.Text = "";
-            progressPanelProgressBar.Value = 0;
-            progressPanelEventsList.Items.Clear();
-        }
-
-        private async void FileTaked()
-        {
-            await ShowLoadingPanel();
-
-            confirmBt.IsEnabled = false;
-
-            //Si voy a codificar un archivo con Huffman, 
-            //entonces debo leer la codificacion del archivo original
-            bool takeEncoding = _pageMode == PAGE_MODES.Huffman_Encode;
-
-            if (await _fileOpener.OpenFile(FileAccessMode.Read, takeEncoding))
-            {
-                //Muestro los datos del archivo cargado
-                fileNameBlock.Text = _fileOpener.SelectedFileName;
-                fileSizeBlock.Text = string.Format("{0} bytes", _fileOpener.FileSize);
-                fileDescriptionBlock.Text = string.Format("{0} ({1})", _fileOpener.SelectedFileDisplayType, _fileOpener.SelectedFileExtension);
-
-                confirmBt.IsEnabled = true;
-
-                switch (_pageMode)
-                {
-                    #region HUFFMAN_ENCODE
-                    case PAGE_MODES.Huffman_Encode:
-                        
-                        break;
-                    #endregion
-                }
-
-                await _fileOpener.Finish();
-            }
-
-            HideLoadingPanel();
-        }
-        
         #region KRYPTO_PROCESS_UI_INTERFACE
 
         public async void SetStatus(string currentStatus)
@@ -290,24 +162,6 @@ namespace FilesEncryptor.pages
         public void SetShowFailureInformationButtonVisible(bool visible)
         {
 
-        }
-
-        #endregion
-
-        #region HUFFMAN_ENCODE
-
-        private async void HuffmanEncode()
-        {
-            
-        }
-
-        #endregion
-
-        #region HUFFMAN_DECODE
-
-        private async void HuffmanDecode()
-        {
-            
         }
 
         #endregion
