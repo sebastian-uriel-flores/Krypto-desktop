@@ -1,4 +1,6 @@
-﻿using FilesEncryptor.pages;
+﻿using FilesEncryptor.dto.hamming;
+using FilesEncryptor.helpers.hamming;
+using FilesEncryptor.pages;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +12,7 @@ using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
@@ -72,16 +75,51 @@ namespace FilesEncryptor
         protected override void OnFileActivated(FileActivatedEventArgs args)
         {
             base.OnFileActivated(args);
-            var items = args.Files;
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });
+            IReadOnlyList<IStorageItem> items = args.Files;
+
+            bool decode = false;
+
+            foreach (StorageFile item in items)
+            {
+                decode = false;
+                foreach (HammingEncodeType encodeType in BaseHammingCodifier.EncodeTypes)
+                {
+                    if (encodeType.Extension.Equals(item.FileType))
+                    {
+                        decode = true;
+                        break;
+                    }
+                }
+            }
+
+            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
+
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
         }
 
         protected override async void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
         {
             base.OnShareTargetActivated(args);
-            var items = await args.ShareOperation.Data.GetStorageItemsAsync();
+            IReadOnlyList<IStorageItem> items = await args.ShareOperation.Data.GetStorageItemsAsync();
 
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });            
+            bool decode = false;
+
+            foreach(StorageFile item in items)
+            {
+                decode = false;
+                foreach(HammingEncodeType encodeType in BaseHammingCodifier.EncodeTypes)
+                {
+                    if(encodeType.Extension.Equals(item.FileType))
+                    {
+                        decode = true;
+                        break;
+                    }
+                }
+            }
+
+            ProcessPage.PAGE_MODES pageMode = decode ? ProcessPage.PAGE_MODES.Hamming_Decode : ProcessPage.PAGE_MODES.Hamming_Encode;
+
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, pageMode }, { ProcessPage.ARGS_PARAM, items } });
         }
 
         private async void ActivateFrame(Type typeOfPage, Dictionary<string,object> args)

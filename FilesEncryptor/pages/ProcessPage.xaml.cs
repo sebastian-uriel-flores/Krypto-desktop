@@ -87,7 +87,7 @@ namespace FilesEncryptor.pages
             _fileOpener = new FileHelper();
         }
 
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -104,49 +104,20 @@ namespace FilesEncryptor.pages
                     AppViewBackButtonVisibility.Collapsed;
             }
 
+            Dictionary<string, object> paramsDict = null;
+
             if (e.Parameter is Dictionary<string, object>)
             {
-                Dictionary<string, object> paramsDict = e.Parameter as Dictionary<string, object>;
+                paramsDict = e.Parameter as Dictionary<string, object>;
 
                 _pageMode = paramsDict.ContainsKey(VIEW_MODEL_PARAM) && paramsDict[VIEW_MODEL_PARAM] is PAGE_MODES
                     ? (PAGE_MODES)paramsDict[VIEW_MODEL_PARAM]
                     : PAGE_MODES.Hamming_Encode;
-
-                if (paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IActivatedEventArgs)
-                {
-                    var activatedEventArgs = args as IActivatedEventArgs;
-                    switch ((args as IActivatedEventArgs).Kind)
-                    {
-                        case ActivationKind.ShareTarget:
-                            var shareActivatedEventArgs = activatedEventArgs as ShareTargetActivatedEventArgs;
-                            var sharedItems = await shareActivatedEventArgs.ShareOperation.Data.GetStorageItemsAsync();
-
-                            await new MessageDialog($"Shared Files: {sharedItems.Count}").ShowAsync();
-                            
-                            _fileOpener = new FileHelper(sharedItems[0] as StorageFile);
-                            FileTaked();
-                            break;
-                        case ActivationKind.File:
-                            var fileActivatedEventArgs = activatedEventArgs as FileActivatedEventArgs;
-
-                            await new MessageDialog($"Picked Files: {fileActivatedEventArgs.Files.Count}").ShowAsync();
-
-                            _fileOpener = new FileHelper(fileActivatedEventArgs.Files[0] as StorageFile);
-                            FileTaked();
-                            break;
-                    }
-                }
             }
             else
             {
                 _pageMode = PAGE_MODES.Hamming_Encode;
             }
-            /*
-
-            //Analizo el modo de uso de la pagina
-            _pageMode = e.Parameter != null && e.Parameter is PAGE_MODES
-                ? (PAGE_MODES)e.Parameter
-                : PAGE_MODES.Hamming_Encode;*/
             
             switch(_pageMode)
             {
@@ -174,6 +145,13 @@ namespace FilesEncryptor.pages
                     pageHeaderContent.Text = "Introducir errores en archivo Hamming";
                     break;
             }
+
+            if (paramsDict != null && paramsDict.TryGetValue(ARGS_PARAM, out object args) && args is IReadOnlyList<IStorageItem>)
+            {
+                var storageFiles = args as IReadOnlyList<IStorageItem>;
+                _fileOpener = new FileHelper(storageFiles[0] as StorageFile);
+                FileTaked();
+            }
         }
 
         private async void SelectFileBt_Click(object sender, RoutedEventArgs e)
@@ -181,7 +159,6 @@ namespace FilesEncryptor.pages
             if (await _fileOpener.PickToOpen(GetExtensions(_pageMode)))
             {
                 FileTaked();
-                
             }
         }
 

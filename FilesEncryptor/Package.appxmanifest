@@ -21,24 +21,29 @@
         <uap:SplashScreen Image="Assets\SS.png" BackgroundColor="#FF9200" />
       </uap:VisualElements>
       <Extensions>
-        <uap:Extension Category="windows.shareTarget">
-          <uap:ShareTarget Description="Bla bla">
-            <uap:SupportedFileTypes>
-              <uap:SupportsAnyFileType />
-            </uap:SupportedFileTypes>
-          </uap:ShareTarget>
-        </uap:Extension>
         <uap:Extension Category="windows.fileTypeAssociation">
           <uap:FileTypeAssociation Name="kpt">
-            <uap:DisplayName>Proteger con Krypto</uap:DisplayName>
+            <uap:DisplayName>Abrir con Krypto</uap:DisplayName>
             <uap:InfoTip>Permite encriptar el archivo seleccionado</uap:InfoTip>
             <uap:EditFlags OpenIsSafe="true" />
             <uap:SupportedFileTypes>
               <uap:FileType>.pdf</uap:FileType>
               <uap:FileType ContentType="image/jpeg">.jpg</uap:FileType>
               <uap:FileType ContentType="text/plain">.txt</uap:FileType>
+              <uap:FileType>.ha0</uap:FileType>
+              <uap:FileType>.ha1</uap:FileType>
+              <uap:FileType>.ha2</uap:FileType>
+              <uap:FileType>.ha3</uap:FileType>
+              <uap:FileType>.ha4</uap:FileType>
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.shareTarget">
+          <uap:ShareTarget Description="Abrir con Krypto">
+            <uap:SupportedFileTypes>
+              <uap:SupportsAnyFileType />
+            </uap:SupportedFileTypes>
+          </uap:ShareTarget>
         </uap:Extension>
       </Extensions>
     </Application>
