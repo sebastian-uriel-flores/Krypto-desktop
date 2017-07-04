@@ -31,7 +31,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-using static FilesEncryptor.helpers.DebugUtils;
+using static FilesEncryptor.utils.DebugUtils;
 
 // La plantilla de elemento Página en blanco está documentada en https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -492,10 +492,11 @@ namespace FilesEncryptor.pages
             await encoder.Scan();
 
             HuffmanEncodeResult encodeResult = await encoder.Encode(encodingProcess);
+            encodingProcess.StopWatch();
 
             //Si el archivo pudo ser codificado con Huffman
             if (encodeResult != null)
-            {
+            {                
                 FileHelper fileSaver = new FileHelper();
 
                 //Si el usuario selecciono correctamente un archivo
@@ -754,128 +755,125 @@ namespace FilesEncryptor.pages
 
         private async void HammingEncode()
         {
+            BaseKryptoProcess encodingProcess = new BaseKryptoProcess();
+            await ShowProgressPanel();
+            encodingProcess.Start(this);
+
             HammingEncodeType selectedEncodingType = _encodeTypes[_selectedEncoding];
 
             //Codifico el archivo original
-            HammingEncoder encoder = HammingEncoder.From(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
+            HammingEncoder encoder = new HammingEncoder(new BitCode(_rawFileBytes, _rawFileBytes.Count * 8));
+            HammingEncodeResult encodeResult = await encoder.Encode(selectedEncodingType, encodingProcess);
+            encodingProcess.StopWatch();
 
-            KryptoProcess<HammingEncodeResult> encodingProcess = new KryptoProcess<HammingEncodeResult>(
-                new Task<HammingEncodeResult>(() => encoder.Encode(selectedEncodingType)));
+            //Si el archivo pudo ser codificado con Hamming
+            if (encodeResult != null)
+            {
+                //Si el proceso fue un exito
+                FileHelper fileSaver = new FileHelper();
+                bool pickResult = false;
 
-            await ShowProgressPanel();
+                pickResult = await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension);
 
-            encodingProcess.Start(this, true,
-                async (result) =>
+                //Si el usuario no canceló la operación
+                if (pickResult)
                 {
-                    //Si el proceso fue un exito
-                    FileHelper fileSaver = new FileHelper();
-                    bool pickResult = false;
-
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                    encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                     {
-                        pickResult = await fileSaver.PickToSave(_fileOpener.SelectedFileDisplayName, selectedEncodingType.LongDescription, selectedEncodingType.Extension);
+                        Message = $"Output file selected {fileSaver.SelectedFilePath}",
+                        ProgressAdvance = 100,
+                        Tag = "[INFO]"
+                    });
 
-                        //Si el usuario no canceló la operación
-                        if (pickResult)
+                    if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                    {
+                        encodingProcess.UpdateStatus($"Dumping encoded file to {fileSaver.SelectedFilePath}");
+
+                        if (fileSaver.WriteFileHeader(_fileHeader))
                         {
                             encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                             {
-                                Message = $"Output file selected {fileSaver.SelectedFilePath}",
-                                ProgressAdvance = 100,
-                                Tag = "[INFO]"
+                                Message = "File header dumped properly",
+                                ProgressAdvance = 50,
+                                Tag = "[PROGRESS]"
                             });
+                            //DebugUtils.ConsoleWL(string.Format("Dumping hamming encoded bytes to \"{0}\"", fileSaver.SelectedFilePath));
 
-                            if (await fileSaver.OpenFile(FileAccessMode.ReadWrite))
+                            bool writeResult = HammingEncoder.WriteEncodedToFile(encodeResult, fileSaver);
+
+                            //Show congrats message
+                            if (writeResult)
                             {
-                                encodingProcess.UpdateStatus($"Dumping encoded file to {fileSaver.SelectedFilePath}");
-
-                                if (fileSaver.WriteFileHeader(_fileHeader))
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
                                 {
-                                    encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                    {
-                                        Message = "File header dumped properly",
-                                        ProgressAdvance = 50,
-                                        Tag = "[PROGRESS]"
-                                    });
-                                    //DebugUtils.ConsoleWL(string.Format("Dumping hamming encoded bytes to \"{0}\"", fileSaver.SelectedFilePath));
+                                    Message = "Encoded file dumped properly",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
 
-                                    bool writeResult = HammingEncoder.WriteEncodedToFile(result, fileSaver);
+                                //DebugUtils.ConsoleWL("Dumping completed properly");
+                                //DebugUtils.ConsoleWL("Closing file");
+                                await fileSaver.Finish();
 
-                                    //Show congrats message
-                                    if (writeResult)
-                                    {
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "Encoded file dumped properly",
-                                            ProgressAdvance = 100,
-                                            Tag = "[PROGRESS]"
-                                        });
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "Closing file",
-                                            ProgressAdvance = 100,
-                                            Tag = "[INFO]"
-                                        });
-
-                                        //DebugUtils.ConsoleWL("Dumping completed properly");
-                                        //DebugUtils.ConsoleWL("Closing file");
-                                        await fileSaver.Finish();
-
-                                        encodingProcess.UpdateStatus("Completed");
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "File closed",
-                                            ProgressAdvance = 100,
-                                            Tag = "[INFO]"
-                                        });
-                                    }
-                                    else
-                                    {
-                                        //DebugUtils.ConsoleWL("Dumping uncompleted");
-                                        //DebugUtils.ConsoleWL("Closing file");
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "Encoded file dumping uncompleted",
-                                            ProgressAdvance = 100,
-                                            Tag = "[PROGRESS]"
-                                        });
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "Closing file",
-                                            ProgressAdvance = 100,
-                                            Tag = "[INFO]"
-                                        });
-
-                                        await fileSaver.Finish();
-
-                                        encodingProcess.UpdateStatus("Failed");
-                                        encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
-                                        {
-                                            Message = "File closed",
-                                            ProgressAdvance = 100,
-                                            Tag = "[INFO]"
-                                        });
-                                    }
-
-                                    progressPanelCloseButton.Visibility = Visibility.Visible;
-                                }
+                                encodingProcess.UpdateStatus("Completed");
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
                             }
+                            else
+                            {
+                                //DebugUtils.ConsoleWL("Dumping uncompleted");
+                                //DebugUtils.ConsoleWL("Closing file");
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Encoded file dumping uncompleted",
+                                    ProgressAdvance = 100,
+                                    Tag = "[PROGRESS]"
+                                });
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "Closing file",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+
+                                await fileSaver.Finish();
+
+                                encodingProcess.UpdateStatus("Failed");
+                                encodingProcess.AddEvent(new BaseKryptoProcess.KryptoEvent()
+                                {
+                                    Message = "File closed",
+                                    ProgressAdvance = 100,
+                                    Tag = "[INFO]"
+                                });
+                            }
+
+                            progressPanelCloseButton.Visibility = Visibility.Visible;
                         }
-                        else
-                        {
-                            ConsoleWL("File encoded canceled because user cancel output file selection");
-                            HideProgressPanel();
-                            ResetProgressPanel();
-                        }
-                    });
-                },
-                async (failedTaskIndex) =>
+                    }
+                }
+                else
                 {
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                    {
-                        progressPanelCloseButton.Visibility = Visibility.Visible;
-                    });
-                });
+                    ConsoleWL("File encoded canceled because user cancel output file selection");
+                    HideProgressPanel();
+                    ResetProgressPanel();
+                }
+            }
+            //Si el archivo no pudo ser codificado con Hamming
+            else
+            {   
+                encodingProcess.Stop(true);
+                progressPanelCloseButton.Visibility = Visibility.Visible;
+            }                        
         }
        
         #endregion

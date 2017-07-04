@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
@@ -71,28 +72,8 @@ namespace FilesEncryptor
         protected override void OnFileActivated(FileActivatedEventArgs args)
         {
             base.OnFileActivated(args);
-
             var items = args.Files;
-
-            Frame rootFrame = Window.Current.Content as Frame;
-
-            if (rootFrame == null)
-            {
-                rootFrame = new Frame();
-
-                rootFrame.NavigationFailed += OnNavigationFailed;
-
-                SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
-
-                // Poner el marco en la ventana actual.
-                Window.Current.Content = rootFrame;
-
-                rootFrame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });
-
-                SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
-                // Asegurarse de que la ventana actual está activa.
-                Window.Current.Activate();
-            }
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });
         }
 
         protected override async void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
@@ -100,6 +81,11 @@ namespace FilesEncryptor
             base.OnShareTargetActivated(args);
             var items = await args.ShareOperation.Data.GetStorageItemsAsync();
 
+            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });            
+        }
+
+        private async void ActivateFrame(Type typeOfPage, Dictionary<string,object> args)
+        {
             Frame rootFrame = Window.Current.Content as Frame;
 
             if(rootFrame == null)
@@ -113,24 +99,46 @@ namespace FilesEncryptor
                 // Poner el marco en la ventana actual.
                 Window.Current.Content = rootFrame;
 
-                rootFrame.Navigate(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, ProcessPage.PAGE_MODES.Hamming_Encode }, { ProcessPage.ARGS_PARAM, args } });
+                rootFrame.Navigate(typeOfPage, args);
 
                 SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
                 // Asegurarse de que la ventana actual está activa.
                 Window.Current.Activate();
+
+                SetUpTitleBar();
+            }
+            else
+            {
+                CoreApplicationView _newView = CoreApplication.CreateNewView();
+                
+                int newViewId = 0;
+                await _newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    Frame newFrame = new Frame();
+
+                    newFrame.NavigationFailed += OnNavigationFailed;
+
+                    SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+
+                    // Poner el marco en la ventana actual.
+                    Window.Current.Content = newFrame;
+
+                    newFrame.Navigate(typeOfPage, args);
+
+                    SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+                    // Asegurarse de que la ventana actual está activa.
+                    Window.Current.Activate();
+
+                    newViewId = ApplicationView.GetForCurrentView().Id;
+
+                    SetUpTitleBar();
+                });
+                bool viewShown = await ApplicationViewSwitcher.TryShowAsStandaloneAsync(newViewId);
             }
         }
 
-        /// <summary>
-        /// Se invoca cuando el usuario final inicia la aplicación normalmente. Se usarán otros puntos
-        /// de entrada cuando la aplicación se inicie para abrir un archivo específico, por ejemplo.
-        /// </summary>
-        /// <param name="e">Información detallada acerca de la solicitud y el proceso de inicio.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        private void SetUpTitleBar()
         {
-            var view = SystemNavigationManager.GetForCurrentView();
-            view.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
-            //view.BackRequested += View_BackRequested;
             if (ApiInformation.IsTypePresent("Windows.UI.ViewManagement.ApplicationView"))
             {
                 var titleBar = ApplicationView.GetForCurrentView().TitleBar;
@@ -144,16 +152,22 @@ namespace FilesEncryptor
                     titleBar.ButtonHoverBackgroundColor = secondOrange;
                     titleBar.ButtonInactiveBackgroundColor = mainOrange;
                     titleBar.ButtonInactiveForegroundColor = Colors.White;
-                    
+
                     titleBar.BackgroundColor = mainOrange;
                     titleBar.ForegroundColor = Colors.White;
                     titleBar.InactiveBackgroundColor = mainOrange;
                     titleBar.InactiveForegroundColor = Colors.White;
                 }
             }
+        }
 
-
-
+        /// <summary>
+        /// Se invoca cuando el usuario final inicia la aplicación normalmente. Se usarán otros puntos
+        /// de entrada cuando la aplicación se inicie para abrir un archivo específico, por ejemplo.
+        /// </summary>
+        /// <param name="e">Información detallada acerca de la solicitud y el proceso de inicio.</param>
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        {
             Frame rootFrame = Window.Current.Content as Frame;
 
             // No repetir la inicialización de la aplicación si la ventana tiene contenido todavía,
@@ -183,25 +197,15 @@ namespace FilesEncryptor
                     // Cuando no se restaura la pila de navegación, navegar a la primera página,
                     // configurando la nueva página pasándole la información requerida como
                     //parámetro de navegación
-                    if(e.Kind == ActivationKind.ShareTarget)
-                    {
-                        rootFrame.Navigate(typeof(DebugConsolePage), ProcessPage.PAGE_MODES.Hamming_Encode);
-                    }
-
-                    else if (e.Kind == ActivationKind.FileOpenPicker)
-                    {
-                        rootFrame.Navigate(typeof(ProcessPage), ProcessPage.PAGE_MODES.Hamming_Encode);
-                    }
-                    else
-                    {
-                        rootFrame.Navigate(typeof(BifurcatorPage), e.Arguments);
-                    }
+                    rootFrame.Navigate(typeof(BifurcatorPage), e.Arguments);
                 }
 
                 SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
                 // Asegurarse de que la ventana actual está activa.
                 Window.Current.Activate();
             }
+
+            SetUpTitleBar();
         }
         
 

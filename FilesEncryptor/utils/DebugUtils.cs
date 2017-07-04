@@ -11,7 +11,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
-namespace FilesEncryptor.helpers
+namespace FilesEncryptor.utils
 {
     public static class DebugUtils
     {

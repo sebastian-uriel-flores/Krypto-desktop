@@ -106,7 +106,7 @@
     <Compile Include="dto\hamming\HammingEncodeResult.cs" />
     <Compile Include="dto\hamming\HammingEncodeType.cs" />
     <Compile Include="helpers\BitCodePresenter.cs" />
-    <Compile Include="helpers\DebugUtils.cs" />
+    <Compile Include="utils\DebugUtils.cs" />
     <Compile Include="helpers\file_management\FileHelper.cs" />
     <Compile Include="helpers\hamming\BaseHammingCodifier.cs" />
     <Compile Include="helpers\hamming\HammingBroker.cs" />
