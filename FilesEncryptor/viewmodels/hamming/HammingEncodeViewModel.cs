@@ -23,7 +23,7 @@ namespace Krypto.viewmodels.hamming
         public void OnNavigatedTo(IProcessView view, bool appActivated)
         {
             _view = view;
-            _view.SetTitle("Codificar con Hamming");
+            _view.SetTitle("Proteger archivo");
             _view.SetSelectorVisibility(Visibility.Collapsed);
 
             _appActivated = appActivated;

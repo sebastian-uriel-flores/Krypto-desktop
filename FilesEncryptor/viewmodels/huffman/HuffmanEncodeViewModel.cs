@@ -63,7 +63,7 @@ namespace Krypto.viewmodels.huffman
             await _view.SetLoadingPanelVisibility(Visibility.Visible);
             _view.SetConfirmButtonStatus(false);
 
-            if (await _fileOpener.OpenFile(FileAccessMode.Read))
+            if (await _fileOpener.OpenFile(FileAccessMode.Read, true))
             {
                 //Muestro los datos del archivo cargado
                 _view.SetFilePath(_fileOpener.SelectedFileName);
