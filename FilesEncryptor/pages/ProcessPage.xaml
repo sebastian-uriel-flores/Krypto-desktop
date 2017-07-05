@@ -36,6 +36,20 @@
                     </VisualState.StateTriggers>
                 </VisualState>
             </VisualStateGroup>
+            <VisualStateGroup x:Name="AppStates">
+                <VisualState x:Name="Normal"/>
+                <VisualState x:Name="FinishAndClose">
+                    <VisualState.Setters>
+                        <Setter Target="pageHeaderContent.(FrameworkElement.Margin)">
+                            <Setter.Value>
+                                <Thickness>20,0,0,12</Thickness>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Target="backBt.(UIElement.Visibility)" Value="Collapsed"/>
+                        <Setter Target="selectFileBt.(UIElement.Visibility)" Value="Collapsed"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
 
         <RelativePanel
@@ -64,11 +78,11 @@
                             Orientation="Horizontal"
                             Height="60"
                             >
-                            <AppBarButton x:Name="backBt" Icon="Back" Foreground="White" Click="BackBt_Click" Margin="0,0,-20,0"/>
+                            <AppBarButton x:Name="backBt" Icon="Back" Foreground="White" Click="BackBt_Click"/>
                             <TextBlock 
                                 x:Name="pageHeaderContent"
                                 Text="Codificar con Hamming" 
-                                Margin="20,0,0,12"
+                                Margin="0,0,0,12"
                                 FontSize="16"
                                 Foreground="White"
                                 VerticalAlignment="Center"
@@ -209,9 +223,9 @@
                     RelativePanel.AlignRightWithPanel="True"
                     RelativePanel.AlignBottomWithPanel="True"
                     Height="50"                
-                    Background="WhiteSmoke"
+                    Background="White"
                     Visibility="Visible"
-                    Margin="0,20,0,0"
+                    Margin="0,10,0,0"
                     >
                     <AppBarButton 
                         x:Name="confirmBt"
@@ -220,7 +234,7 @@
                         VerticalAlignment="Stretch"
                         HorizontalAlignment="Center"
                         Click="ConfirmBt_Click"
-                        IsEnabled="False"                        
+                        IsEnabled="False"      
                         />
                 </Grid>
                 

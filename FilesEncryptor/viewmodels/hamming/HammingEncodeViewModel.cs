@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Windows.Storage;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 namespace Krypto.viewmodels.hamming
 {
@@ -27,15 +28,14 @@ namespace Krypto.viewmodels.hamming
             _view.SetSelectorVisibility(Visibility.Collapsed);
 
             _appActivated = appActivated;
-            if(_appActivated)
+
+            if (_appActivated)
             {
-                _view.SetBackButtonVisibility(Visibility.Collapsed);
-                _view.SetFilePickerButtonVisibility(Visibility.Collapsed);
+                _view.SetVisualState("FinishAndClose", true);
             }
             else
             {
-                _view.SetBackButtonVisibility(Visibility.Visible);
-                _view.SetFilePickerButtonVisibility(Visibility.Visible);
+                _view.SetVisualState("Normal", true);
             }
         }
 

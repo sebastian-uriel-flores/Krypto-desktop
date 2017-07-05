@@ -300,5 +300,10 @@ namespace FilesEncryptor.pages
                 });
             }
         }
+
+        public void SetVisualState(string state, bool useTransitions)
+        {
+            VisualStateManager.GoToState(this, state, useTransitions);
+        }
     }
 }

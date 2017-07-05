@@ -27,13 +27,11 @@ namespace Krypto.viewmodels.huffman
             _appActivated = appActivated;
             if (_appActivated)
             {
-                _view.SetBackButtonVisibility(Visibility.Collapsed);
-                _view.SetFilePickerButtonVisibility(Visibility.Collapsed);
+                _view.SetVisualState("FinishAndClose", true);
             }
             else
             {
-                _view.SetBackButtonVisibility(Visibility.Visible);
-                _view.SetFilePickerButtonVisibility(Visibility.Visible);
+                _view.SetVisualState("Normal", true);
             }
         }
 
@@ -54,6 +52,7 @@ namespace Krypto.viewmodels.huffman
                 await _fileOpener.Finish();
             }
             _fileOpener = new FileHelper(file);
+            FileTaked();
         }
 
         private async void FileTaked()

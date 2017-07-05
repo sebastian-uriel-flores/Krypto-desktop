@@ -39,5 +39,7 @@ namespace Krypto.viewmodels
         Task SetProgressPanelVisibility(Visibility vis);
 
         void SetProgressPanelCloseButtonVisibility(Visibility vis);
+
+        void SetVisualState(string state, bool useTransitions);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using FilesEncryptor.dto.hamming;
 using FilesEncryptor.helpers.hamming;
 using FilesEncryptor.pages;
+using Krypto.viewmodels;
 using Krypto.viewmodels.hamming;
 using System;
 using System.Collections.Generic;
@@ -93,7 +94,14 @@ namespace FilesEncryptor
                 }
             }
 
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true} });
+            if (decode)
+            {
+                ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingDecodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
+            }
+            else
+            {
+                ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
+            }
         }
 
         protected override async void OnShareTargetActivated(ShareTargetActivatedEventArgs args)
@@ -115,7 +123,15 @@ namespace FilesEncryptor
                     }
                 }
             }
-            ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
+
+            if (decode)
+            {
+                ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingDecodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
+            }
+            else
+            {
+                ActivateFrame(typeof(ProcessPage), new Dictionary<string, object>() { { ProcessPage.VIEW_MODEL_PARAM, new HammingEncodeViewModel() }, { ProcessPage.ARGS_PARAM, items }, { ProcessPage.APP_ACTIVATED_ARGS, true } });
+            }
         }
 
         private async void ActivateFrame(Type typeOfPage, Dictionary<string,object> args)
