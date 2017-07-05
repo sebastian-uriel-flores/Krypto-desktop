@@ -86,6 +86,7 @@
                     RelativePanel.AlignRightWithPanel="True"                    
                     RelativePanel.Below="pageHeaderBar"
                     RelativePanel.Above="pageCommands"
+                    VerticalScrollBarVisibility="Auto"
                     >
                   <RelativePanel>
                     <TextBlock
