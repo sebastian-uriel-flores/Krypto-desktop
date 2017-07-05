@@ -184,7 +184,14 @@ namespace FilesEncryptor.pages
 
         public void SetTextAreaVisibility(Visibility vis)
         {
+            if (fileContentTextBlock == null)
+            {
+                FindName("fileContentTextHeader");
+                FindName("fileContentTextBlock");
+            }
 
+            fileContentTextHeader.Visibility = vis;
+            fileContentTextBlock.Visibility = vis;
         }
 
         public void SetFilePickerButtonVisibility(Visibility vis)

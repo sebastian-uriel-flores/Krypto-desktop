@@ -27,7 +27,7 @@ namespace Krypto.viewmodels.hamming
         public void OnNavigatedTo(IProcessView view, bool appActivated)
         {
             _view = view;
-            _view.SetTitle("Decodificar con Hamming");
+            _view.SetTitle("Recuperar archivo");
 
             _appActivated = appActivated;
             if (_appActivated)
